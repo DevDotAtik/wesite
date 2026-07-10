@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wesite
 
-## Getting Started
+Wesite is a macOS Finder-style bookmark and website organizer built with Next.js App Router, TailwindCSS, MongoDB, and Mongoose.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 App Router and route handlers
+- TailwindCSS 4
+- MongoDB with Mongoose
+- JWT auth with HTTP-only cookies
+- Recharts, lucide-react, sonner
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create `.env.local` from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Set `MONGODB_URI` and `JWT_SECRET`.
+
+4. Seed demo data:
+
+```bash
+npm run seed
+```
+
+5. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Demo login after seeding:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+demo@wesite.local
+password123
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- Email/password auth, profile updates, logout, and basic reset-token flow
+- Folder tree with nested folders and drag-to-folder website moves
+- Website CRUD, duplicate detection, soft trash, restore, export/import
+- Server-side metadata scraping for title, description, favicon, Open Graph image
+- Visit tracking, history list, and aggregate website stats
+- Analytics dashboard with line, bar, donut, summary cards, and heatmap
+- Global search and `Cmd/Ctrl+K` command palette
+- Responsive Finder-style layout with mobile sidebar drawer
 
-To learn more about Next.js, take a look at the following resources:
+## Environment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/wesite
+JWT_SECRET=replace-with-a-long-random-secret
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` starts local development
+- `npm run build` creates a production build
+- `npm run lint` runs ESLint
+- `npm run seed` creates a demo account and sample data
