@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  BarChart3,
   Clock,
   FileText,
   Film,
@@ -49,6 +50,7 @@ const globalViews = [
   { id: "unsorted", label: "Unsorted", icon: Layers },
   { id: "favorite", label: "Favorites", icon: Heart },
   { id: "recent", label: "Recently Added", icon: Clock },
+  { id: "visited", label: "Most Visited", icon: BarChart3 },
 ];
 
 const mediaTypes = [
@@ -254,6 +256,29 @@ function SidebarContent(props: SidebarProps) {
               </button>
             );
           })}
+        </div>
+      </section>
+
+      {/* Quick Links */}
+      <section>
+        <h2 className="nb-tag mb-2 w-full">
+          Insights
+        </h2>
+        <div className="space-y-1">
+          <a
+            href="/analytics"
+            className="nb-sidebar-item"
+          >
+            <BarChart3 className="size-4 opacity-60" />
+            <span className="min-w-0 flex-1 truncate">Analytics Dashboard</span>
+          </a>
+          <a
+            href="/history"
+            className="nb-sidebar-item"
+          >
+            <Clock className="size-4 opacity-60" />
+            <span className="min-w-0 flex-1 truncate">Browsing History</span>
+          </a>
         </div>
       </section>
 

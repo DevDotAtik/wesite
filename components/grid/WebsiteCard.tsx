@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Copy, ExternalLink, Pencil, RotateCcw, Star, Trash2 } from "lucide-react";
+import { BarChart3, Copy, ExternalLink, Pencil, RotateCcw, Star, Trash2 } from "lucide-react";
 
 export type WebsiteItem = {
   _id: string;
@@ -66,6 +66,15 @@ export default function WebsiteCard({
   ];
   const accent = accentColors[website._id.charCodeAt(0) % accentColors.length];
 
+  const visitCount = website.visitCount ?? 0;
+  const visitBadgeColor = visitCount >= 10
+    ? "var(--nb-bruto-mint)"
+    : visitCount >= 5
+      ? "var(--nb-bruto-blue)"
+      : visitCount >= 1
+        ? "var(--nb-bruto-yellow)"
+        : "var(--nb-surface-alt)";
+
   return (
     <article
       draggable
@@ -85,22 +94,42 @@ export default function WebsiteCard({
       >
         <div className={view === "list" ? "mr-3 shrink-0" : "mb-4 shrink-0"}>
           {website.customIconUrl || website.faviconUrl ? (
-            <Image
-              src={website.customIconUrl || website.faviconUrl || ""}
-              alt=""
-              width={42}
-              height={42}
-              className="size-10 rounded-xl border-[3px] bg-white object-cover"
-              style={{ borderColor: "var(--nb-border)" }}
-              unoptimized
-            />
+            <div className="relative">
+              <Image
+                src={website.customIconUrl || website.faviconUrl || ""}
+                alt=""
+                width={42}
+                height={42}
+                className="size-10 rounded-xl border-[3px] bg-white object-cover"
+                style={{ borderColor: "var(--nb-border)" }}
+                unoptimized
+              />
+              {mode !== "trash" && visitCount > 0 ? (
+                <span
+                  className="absolute -bottom-1 -right-1 grid min-w-4 place-items-center rounded-md border-[2px] px-1 text-[8px] font-extrabold"
+                  style={{ background: visitBadgeColor, borderColor: "var(--nb-border)", color: "var(--nb-fg)" }}
+                >
+                  {visitCount}
+                </span>
+              ) : null}
+            </div>
           ) : (
-            <span
-              className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-white text-sm"
-              style={{ background: accent, borderColor: "var(--nb-border)" }}
-            >
-              {(website.title || website.domain || "W").charAt(0).toUpperCase()}
-            </span>
+            <div className="relative">
+              <span
+                className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-white text-sm"
+                style={{ background: accent, borderColor: "var(--nb-border)" }}
+              >
+                {(website.title || website.domain || "W").charAt(0).toUpperCase()}
+              </span>
+              {mode !== "trash" && visitCount > 0 ? (
+                <span
+                  className="absolute -bottom-1 -right-1 grid min-w-4 place-items-center rounded-md border-[2px] px-1 text-[8px] font-extrabold"
+                  style={{ background: visitBadgeColor, borderColor: "var(--nb-border)", color: "var(--nb-fg)" }}
+                >
+                  {visitCount}
+                </span>
+              ) : null}
+            </div>
           )}
         </div>
         <div className="min-w-0 max-w-full flex-1 overflow-hidden">
@@ -128,7 +157,12 @@ export default function WebsiteCard({
           ) : null}
           <div className="mt-3 flex max-w-full items-center gap-2 overflow-hidden text-xs" style={{ color: "var(--nb-muted)" }}>
             <span className="shrink-0 font-semibold">{mode === "trash" ? "Deleted" : lastVisited}</span>
-            <span className="truncate">{website.visitCount ?? 0} visits</span>
+            {mode !== "trash" ? (
+              <span className="inline-flex shrink-0 items-center gap-1 font-semibold">
+                <BarChart3 className="size-3" />
+                {visitCount}
+              </span>
+            ) : null}
             {createdOn ? <span className="truncate">Added {createdOn}</span> : null}
           </div>
         </div>
