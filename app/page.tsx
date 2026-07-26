@@ -1,5 +1,5 @@
-import WesiteApp from "@/components/WesiteApp";
+import LandingPage from "@/components/LandingPage";
 
 export default function Home() {
-  return <WesiteApp />;
+  return <LandingPage />;
 }

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const sort = searchParams.get("sort") ?? "smart";
   const query: Record<string, unknown> = { userId: auth.user._id };
 
-  if (folderId === "root") query.folderId = null;
+  if (folderId === "root" || folderId === "unsorted") query.folderId = null;
   else if (folderId) query.folderId = folderId;
   if (tag) query.tags = tag;
   if (favorite === "true") query.isFavorite = true;

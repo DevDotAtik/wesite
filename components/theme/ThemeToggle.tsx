@@ -35,7 +35,7 @@ export default function ThemeToggle() {
       aria-label="Toggle theme"
       title={`Theme: ${theme}`}
       onClick={cycleTheme}
-      className="grid size-8 place-items-center rounded-md border border-zinc-300 bg-white text-zinc-700 shadow-sm hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10"
+      className="nb-btn nb-btn-icon nb-btn-surface nb-btn-sm"
     >
       <Icon className="size-4" />
     </button>

@@ -17,16 +17,16 @@ export default function ActivityHeatmap({ data }: { data: { date: string; count:
         <span
           key={day.key}
           title={`${day.key}: ${day.count} visits`}
-          className="size-3 rounded-sm"
+          className="nb-heatmap-cell"
           style={{
             background:
               day.count === 0
-                ? "rgb(228 228 231)"
+                ? "var(--nb-surface-alt)"
                 : day.count < 3
-                  ? "#bfdbfe"
+                  ? "var(--nb-bruto-blue)"
                   : day.count < 7
-                    ? "#60a5fa"
-                    : "#2563eb",
+                    ? "var(--nb-primary)"
+                    : "var(--nb-secondary)",
           }}
         />
       ))}

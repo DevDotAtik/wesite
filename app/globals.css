@@ -3,39 +3,130 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans-system);
-  --font-mono: var(--font-mono-system);
+  --color-background: var(--nb-bg);
+  --color-foreground: var(--nb-fg);
+  --color-primary: var(--nb-primary);
+  --color-primary-foreground: var(--nb-primary-fg);
+  --color-secondary: var(--nb-secondary);
+  --color-secondary-foreground: var(--nb-secondary-fg);
+  --color-accent: var(--nb-accent);
+  --color-accent-foreground: var(--nb-accent-fg);
+  --color-surface: var(--nb-surface);
+  --color-surface-alt: var(--nb-surface-alt);
+  --color-surface-strong: var(--nb-surface-strong);
+  --color-muted: var(--nb-muted);
+  --color-border: var(--nb-border);
+  --color-success: var(--nb-success);
+  --color-warning: var(--nb-warning);
+  --color-danger: var(--nb-danger);
+  --color-card: var(--nb-card);
+  --font-sans: var(--nb-font);
+  --font-mono: var(--nb-font-mono);
 }
+
+/* ============================================
+   NEO-BRUTALIST DESIGN SYSTEM
+   ============================================ */
 
 :root,
 [data-theme="light"] {
-  --background: #f5f1ea;
-  --foreground: #111827;
-  --font-sans-system: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono-system: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: #fffdfa;
-  --surface-muted: rgba(244, 239, 230, 0.9);
-  --border: rgba(120, 113, 108, 0.18);
-  --muted: #6b7280;
-  --accent: #2563eb;
+  --nb-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --nb-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  --nb-bg: #fef9ef;
+  --nb-fg: #1a1a2e;
+
+  --nb-surface: #ffffff;
+  --nb-surface-alt: #fef3c7;
+  --nb-surface-strong: #f8fafc;
+
+  --nb-card: #ffffff;
+
+  --nb-primary: #2563eb;
+  --nb-primary-fg: #ffffff;
+  --nb-secondary: #7c3aed;
+  --nb-secondary-fg: #ffffff;
+  --nb-accent: #f59e0b;
+  --nb-accent-fg: #1a1a2e;
+
+  --nb-muted: #6b7280;
+  --nb-border: #1a1a2e;
+
+  --nb-success: #10b981;
+  --nb-warning: #f59e0b;
+  --nb-danger: #ef4444;
+
+  --nb-shadow: #1a1a2e;
+  --nb-shadow-sm: 3px 3px 0 0 #1a1a2e;
+  --nb-shadow-md: 5px 5px 0 0 #1a1a2e;
+  --nb-shadow-lg: 8px 8px 0 0 #1a1a2e;
+  --nb-shadow-xl: 12px 12px 0 0 #1a1a2e;
+
+  --nb-bruto-yellow: #fbbf24;
+  --nb-bruto-orange: #fb923c;
+  --nb-bruto-coral: #f87171;
+  --nb-bruto-pink: #f472b6;
+  --nb-bruto-purple: #a78bfa;
+  --nb-bruto-blue: #60a5fa;
+  --nb-bruto-cyan: #22d3ee;
+  --nb-bruto-mint: #34d399;
+  --nb-bruto-lime: #a3e635;
+
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --background: #07080c;
-  --foreground: #e5e7eb;
-  --font-sans-system: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono-system: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  --surface: rgba(17, 20, 26, 0.88);
-  --surface-strong: #0f131a;
-  --surface-muted: rgba(24, 28, 36, 0.92);
-  --border: rgba(255, 255, 255, 0.1);
-  --muted: #9ca3af;
-  --accent: #60a5fa;
+  --nb-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --nb-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  --nb-bg: #0f0f1a;
+  --nb-fg: #f0f0f5;
+
+  --nb-surface: #1a1a2e;
+  --nb-surface-alt: #16213e;
+  --nb-surface-strong: #1a1a2e;
+
+  --nb-card: #1a1a2e;
+
+  --nb-primary: #60a5fa;
+  --nb-primary-fg: #0f0f1a;
+  --nb-secondary: #a78bfa;
+  --nb-secondary-fg: #0f0f1a;
+  --nb-accent: #fbbf24;
+  --nb-accent-fg: #0f0f1a;
+
+  --nb-muted: #9ca3af;
+  --nb-border: #e2e8f0;
+
+  --nb-success: #34d399;
+  --nb-warning: #fbbf24;
+  --nb-danger: #fb7185;
+
+  --nb-shadow: #e2e8f0;
+  --nb-shadow-sm: 3px 3px 0 0 rgba(226, 232, 240, 0.3);
+  --nb-shadow-md: 5px 5px 0 0 rgba(226, 232, 240, 0.25);
+  --nb-shadow-lg: 8px 8px 0 0 rgba(226, 232, 240, 0.2);
+  --nb-shadow-xl: 12px 12px 0 0 rgba(226, 232, 240, 0.15);
+
+  --nb-bruto-yellow: #fbbf24;
+  --nb-bruto-orange: #fb923c;
+  --nb-bruto-coral: #f87171;
+  --nb-bruto-pink: #f472b6;
+  --nb-bruto-purple: #a78bfa;
+  --nb-bruto-blue: #60a5fa;
+  --nb-bruto-cyan: #22d3ee;
+  --nb-bruto-mint: #34d399;
+  --nb-bruto-lime: #a3e635;
+
   color-scheme: dark;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
 }
 
 html,
@@ -44,23 +135,702 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.07), transparent 24%),
-    var(--background);
-  background-attachment: fixed;
-  color: var(--foreground);
-  font-family: var(--font-sans-system);
+  background: var(--nb-bg);
+  color: var(--nb-fg);
+  font-family: var(--nb-font);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button,
-a,
-input,
-textarea,
-select {
-  letter-spacing: 0;
+* {
+  border-color: var(--nb-border);
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.24);
+  background: var(--nb-primary);
+  color: var(--nb-primary-fg);
 }
+
+/* ============================================
+   SCROLLBAR STYLES
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nb-surface);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nb-muted);
+  border-radius: 0;
+  border: 2px solid var(--nb-surface);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nb-fg);
+}
+
+/* ============================================
+   NB CARD — Foundation Component
+   ============================================ */
+
+.nb-card {
+  background: var(--nb-card);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-md);
+  border-radius: 16px;
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nb-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--nb-shadow-lg);
+}
+
+.nb-card-static {
+  background: var(--nb-card);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-md);
+  border-radius: 16px;
+}
+
+.nb-card-sm {
+  background: var(--nb-card);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-sm);
+  border-radius: 12px;
+}
+
+/* ============================================
+   NB BUTTON — Primary Component
+   ============================================ */
+
+.nb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: 3px solid var(--nb-border);
+  border-radius: 12px;
+  font-family: var(--nb-font);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: var(--nb-shadow-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nb-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--nb-shadow-md);
+}
+
+.nb-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.nb-btn:focus-visible {
+  outline: 3px solid var(--nb-primary);
+  outline-offset: 2px;
+}
+
+.nb-btn-primary {
+  background: var(--nb-primary);
+  color: var(--nb-primary-fg);
+}
+
+.nb-btn-secondary {
+  background: var(--nb-secondary);
+  color: var(--nb-secondary-fg);
+}
+
+.nb-btn-accent {
+  background: var(--nb-accent);
+  color: var(--nb-accent-fg);
+}
+
+.nb-btn-danger {
+  background: var(--nb-danger);
+  color: #ffffff;
+}
+
+.nb-btn-surface {
+  background: var(--nb-surface);
+  color: var(--nb-fg);
+}
+
+.nb-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.nb-btn-ghost:hover {
+  background: var(--nb-surface);
+  transform: none;
+  box-shadow: none;
+}
+
+.nb-btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 10px;
+}
+
+.nb-btn-icon {
+  padding: 0.5rem;
+  aspect-ratio: 1;
+}
+
+.nb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: var(--nb-shadow-sm) !important;
+}
+
+/* ============================================
+   NB INPUT — Form Component
+   ============================================ */
+
+.nb-input {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 3px solid var(--nb-border);
+  border-radius: 12px;
+  background: var(--nb-surface);
+  color: var(--nb-fg);
+  font-family: var(--nb-font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.nb-input::placeholder {
+  color: var(--nb-muted);
+  font-weight: 600;
+}
+
+.nb-input:focus {
+  border-color: var(--nb-primary);
+  box-shadow: 3px 3px 0 0 var(--nb-primary);
+}
+
+.nb-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nb-input-error {
+  border-color: var(--nb-danger) !important;
+}
+
+.nb-input-error:focus {
+  box-shadow: 3px 3px 0 0 var(--nb-danger) !important;
+}
+
+textarea.nb-input {
+  height: auto;
+  min-height: 5rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+select.nb-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+/* ============================================
+   NB TAG
+   ============================================ */
+
+.nb-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border: 3px solid var(--nb-border);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+.nb-tag-primary {
+  background: var(--nb-primary);
+  color: var(--nb-primary-fg);
+}
+
+.nb-tag-accent {
+  background: var(--nb-accent);
+  color: var(--nb-accent-fg);
+}
+
+.nb-tag-success {
+  background: var(--nb-success);
+  color: #ffffff;
+}
+
+.nb-tag-danger {
+  background: var(--nb-danger);
+  color: #ffffff;
+}
+
+.nb-tag-secondary {
+  background: var(--nb-secondary);
+  color: var(--nb-secondary-fg);
+}
+
+/* ============================================
+   NB BADGE — Color Dots
+   ============================================ */
+
+.nb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 3px solid var(--nb-border);
+}
+
+/* ============================================
+   NB SECTION HEADER
+   ============================================ */
+
+.nb-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 3px solid var(--nb-border);
+}
+
+.nb-section-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   NB SIDEBAR
+   ============================================ */
+
+.nb-sidebar {
+  border-right: 3px solid var(--nb-border);
+  background: var(--nb-surface);
+}
+
+.nb-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border: 3px solid transparent;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--nb-fg);
+}
+
+.nb-sidebar-item:hover {
+  background: var(--nb-surface-alt);
+  border-color: var(--nb-border);
+  transform: translateX(2px);
+}
+
+.nb-sidebar-item-active {
+  background: var(--nb-primary);
+  color: var(--nb-primary-fg);
+  border-color: var(--nb-border);
+  box-shadow: var(--nb-shadow-sm);
+}
+
+.nb-sidebar-item-active:hover {
+  background: var(--nb-primary);
+  color: var(--nb-primary-fg);
+  transform: translateX(2px);
+}
+
+/* ============================================
+   NB TABLE
+   ============================================ */
+
+.nb-table-wrap {
+  overflow: hidden;
+  border: 3px solid var(--nb-border);
+  border-radius: 16px;
+  background: var(--nb-card);
+  box-shadow: var(--nb-shadow-md);
+}
+
+.nb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.nb-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.nb-table th {
+  background: var(--nb-surface-alt);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 3px solid var(--nb-border);
+}
+
+.nb-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--nb-border);
+}
+
+.nb-table tr:last-child td {
+  border-bottom: none;
+}
+
+.nb-table tbody tr {
+  transition: background 0.1s ease;
+}
+
+.nb-table tbody tr:hover {
+  background: var(--nb-surface-alt);
+}
+
+/* ============================================
+   NB MODAL / OVERLAY
+   ============================================ */
+
+.nb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.nb-modal {
+  background: var(--nb-card);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-xl);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 36rem;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.nb-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 3px solid var(--nb-border);
+}
+
+.nb-modal-body {
+  padding: 1.5rem;
+}
+
+.nb-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 3px solid var(--nb-border);
+}
+
+/* ============================================
+   NB TOAST OVERRIDES (Sonner)
+   ============================================ */
+
+[data-sonner-toaster] [data-sonner-toast] {
+  border: 3px solid var(--nb-border) !important;
+  border-radius: 12px !important;
+  font-family: var(--nb-font) !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nb-shadow-md) !important;
+}
+
+/* ============================================
+   NB ANIMATIONS
+   ============================================ */
+
+@keyframes nb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes nb-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nb-slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nb-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes nb-bounce-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes nb-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes nb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.nb-animate-fade-in {
+  animation: nb-fade-in 0.3s ease both;
+}
+
+.nb-animate-slide-up {
+  animation: nb-slide-up 0.3s ease both;
+}
+
+.nb-animate-slide-down {
+  animation: nb-slide-down 0.3s ease both;
+}
+
+.nb-animate-scale-in {
+  animation: nb-scale-in 0.2s ease both;
+}
+
+.nb-animate-bounce-in {
+  animation: nb-bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.nb-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--nb-surface) 25%,
+    var(--nb-surface-alt) 50%,
+    var(--nb-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: nb-shimmer 1.5s infinite;
+}
+
+.nb-float {
+  animation: nb-float 3s ease-in-out infinite;
+}
+
+/* ============================================
+   NB UTILITY — Colored Card Variants
+   ============================================ */
+
+.nb-card-yellow {
+  background: var(--nb-bruto-yellow);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-orange {
+  background: var(--nb-bruto-orange);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-coral {
+  background: var(--nb-bruto-coral);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-pink {
+  background: var(--nb-bruto-pink);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-purple {
+  background: var(--nb-bruto-purple);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-blue {
+  background: var(--nb-bruto-blue);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-cyan {
+  background: var(--nb-bruto-cyan);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-mint {
+  background: var(--nb-bruto-mint);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+.nb-card-lime {
+  background: var(--nb-bruto-lime);
+  border-color: var(--nb-border);
+  color: #1a1a2e;
+}
+
+/* ============================================
+   NB UTILITY — Dot grid background
+   ============================================ */
+
+.nb-dot-bg {
+  background-image: radial-gradient(circle at 1px 1px, var(--nb-border) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* ============================================
+   NB HEATMAP OVERRIDES
+   ============================================ */
+
+.nb-heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 3px solid var(--nb-border);
+  transition: all 0.1s ease;
+}
+
+.nb-heatmap-cell:hover {
+  transform: scale(1.4);
+  z-index: 1;
+}
+
+/* ============================================
+   LEGACY BRUTALIST CLASSES (for compat)
+   ============================================ */
+
+.brutalist {
+  --bruto-bg: var(--nb-bg);
+  --bruto-fg: var(--nb-fg);
+  --bruto-accent-1: var(--nb-bruto-yellow);
+  --bruto-accent-2: var(--nb-bruto-orange);
+  --bruto-accent-3: var(--nb-secondary);
+  --bruto-accent-4: var(--nb-bruto-cyan);
+  --bruto-border: var(--nb-border);
+  --bruto-shadow: var(--nb-shadow);
+  --bruto-card-bg: var(--nb-card);
+}
+
+.brutalist-card {
+  background: var(--nb-card);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-md);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 16px;
+}
+
+.brutalist-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--nb-shadow-lg);
+}
+
+.brutalist-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--nb-shadow-sm);
+}
+
+.brutalist-btn {
+  background: var(--nb-accent);
+  border: 3px solid var(--nb-border);
+  box-shadow: var(--nb-shadow-sm);
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.1s ease;
+  border-radius: 12px;
+  color: var(--nb-accent-fg);
+}
+
+.brutalist-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--nb-shadow-md);
+}
+
+.brutalist-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.brutalist-header {
+  border-bottom: 3px solid var(--nb-border) !important;
+  background: var(--nb-surface) !important;
+}
+
+.brutalist-sidebar {
+  border-right: 3px solid var(--nb-border) !important;
+  background: var(--nb-surface) !important;
+}
+
+.brutalist-tag {
+  border: 2px solid var(--nb-border);
+  padding: 2px 8px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border-radius: 8px;
+}
+
+.brutalist-card-y { background: var(--nb-bruto-yellow); }
+.brutalist-card-o { background: var(--nb-bruto-orange); }
+.brutalist-card-p { background: var(--nb-secondary); color: #fff; }
+.brutalist-card-c { background: var(--nb-bruto-cyan); }

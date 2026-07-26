@@ -49,86 +49,89 @@ export default function AnalyticsPage() {
       if (foldersRes.ok) setFolders((await foldersRes.json()).data);
       if (heatmapRes.ok) setHeatmap((await heatmapRes.json()).data);
     }
-
     load();
   }, []);
 
+  const summaryCards = [
+    { label: "Websites", value: summary?.totalWebsites ?? 0, color: "var(--nb-bruto-yellow)" },
+    { label: "Folders", value: summary?.totalFolders ?? 0, color: "var(--nb-bruto-blue)" },
+    { label: "Visits", value: summary?.totalVisits ?? 0, color: "var(--nb-bruto-mint)" },
+    { label: "Today", value: summary?.visitsToday ?? 0, color: "var(--nb-bruto-orange)" },
+    { label: "Avg/day", value: summary?.averageVisitsPerDay ?? 0, color: "var(--nb-bruto-purple)" },
+    { label: "Favorites", value: summary?.favoriteWebsites ?? 0, color: "var(--nb-bruto-coral)" },
+  ];
+
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar />
       <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
-        <div className="overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_18px_50px_rgba(0,0,0,0.08)] backdrop-blur">
-          <div className="border-b border-[color:var(--border)] px-6 py-6 sm:px-8">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="grid size-11 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
-                <BarChart3 className="size-5" />
-              </span>
-              <div>
-                <h1 className="text-2xl font-semibold">Analytics</h1>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">A clearer view of bookmarks, activity, tasks, and health.</p>
-              </div>
+        <div className="nb-card-static">
+          <div className="nb-section-header">
+            <span className="nb-section-icon" style={{ background: "var(--nb-primary)" }}>
+              <BarChart3 className="size-5" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>Analytics</h1>
+              <p className="mt-1 text-sm" style={{ color: "var(--nb-muted)" }}>A clearer view of bookmarks, activity, tasks, and health.</p>
             </div>
           </div>
 
           <div className="p-4 sm:p-6">
+            {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-          {[
-            ["Websites", summary?.totalWebsites ?? 0],
-            ["Folders", summary?.totalFolders ?? 0],
-            ["Visits", summary?.totalVisits ?? 0],
-            ["Today", summary?.visitsToday ?? 0],
-            ["Avg/day", summary?.averageVisitsPerDay ?? 0],
-            ["Favorites", summary?.favoriteWebsites ?? 0],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{label}</p>
-              <p className="mt-2 text-2xl font-semibold">{value}</p>
-            </div>
-          ))}
+              {summaryCards.map((card) => (
+                <div key={card.label} className="nb-card-static p-4" style={{ background: card.color }}>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>{card.label}</p>
+                  <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-5 grid gap-5 xl:grid-cols-2">
-              <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm xl:col-span-2">
+              {/* At a Glance */}
+              <section className="nb-card-static p-5 xl:col-span-2" style={{ background: "var(--nb-surface-alt)" }}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-sm font-semibold">At a glance</h2>
-                    <p className="text-sm text-[color:var(--muted)]">Activity, retention, and workspace balance.</p>
+                    <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>At a glance</h2>
+                    <p className="text-sm" style={{ color: "var(--nb-muted)" }}>Activity, retention, and workspace balance.</p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full border border-[color:var(--border)] px-3 py-1 text-xs text-[color:var(--muted)]">
-                    <TrendingUp className="size-3.5 text-blue-600" />
+                  <div className="nb-tag">
+                    <TrendingUp className="size-3.5" style={{ color: "var(--nb-primary)" }} />
                     {summary?.completedTodos ?? 0} completed tasks
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   {[
-                    { label: "Todos open", value: summary?.activeTodos ?? 0, icon: FolderOpen },
-                    { label: "Archived trash", value: summary?.trashedWebsites ?? 0, icon: Trash2 },
-                    { label: "Completed tasks", value: summary?.completedTodos ?? 0, icon: Flame },
+                    { label: "Todos open", value: summary?.activeTodos ?? 0, icon: FolderOpen, color: "var(--nb-bruto-blue)" },
+                    { label: "Archived trash", value: summary?.trashedWebsites ?? 0, icon: Trash2, color: "var(--nb-bruto-coral)" },
+                    { label: "Completed tasks", value: summary?.completedTodos ?? 0, icon: Flame, color: "var(--nb-bruto-mint)" },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-                      <div className="flex items-center gap-2 text-sm text-[color:var(--muted)]">
-                        <item.icon className="size-4 text-blue-600" />
+                    <div key={item.label} className="nb-card-sm p-4" style={{ background: item.color }}>
+                      <div className="flex items-center gap-2 text-sm font-bold" style={{ color: "var(--nb-fg)", opacity: 0.7 }}>
+                        <item.icon className="size-4" />
                         {item.label}
                       </div>
-                      <p className="mt-3 text-3xl font-semibold">{item.value}</p>
+                      <p className="mt-3 text-3xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{item.value}</p>
                     </div>
                   ))}
                 </div>
               </section>
-              <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
-                <h2 className="text-sm font-semibold">Visits Over Time</h2>
+
+              {/* Charts */}
+              <section className="nb-card-static p-5">
+                <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Visits Over Time</h2>
                 <VisitsLineChart data={visits} />
               </section>
-              <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
-                <h2 className="text-sm font-semibold">Most Visited</h2>
+              <section className="nb-card-static p-5">
+                <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Most Visited</h2>
                 <TopWebsitesBarChart data={top} />
               </section>
-              <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
-                <h2 className="text-sm font-semibold">Folder Distribution</h2>
+              <section className="nb-card-static p-5">
+                <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Folder Distribution</h2>
                 <FolderDistributionPieChart data={folders} />
               </section>
-              <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
-                <h2 className="text-sm font-semibold">Activity Heatmap</h2>
+              <section className="nb-card-static p-5">
+                <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Activity Heatmap</h2>
                 <div className="mt-5">
                   <ActivityHeatmap data={heatmap} />
                 </div>

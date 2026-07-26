@@ -54,6 +54,18 @@ export default function WebsiteCard({
     ? new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(website.createdAt))
     : "";
 
+  const accentColors = [
+    "var(--nb-bruto-yellow)",
+    "var(--nb-bruto-orange)",
+    "var(--nb-bruto-coral)",
+    "var(--nb-bruto-pink)",
+    "var(--nb-bruto-purple)",
+    "var(--nb-bruto-blue)",
+    "var(--nb-bruto-cyan)",
+    "var(--nb-bruto-mint)",
+  ];
+  const accent = accentColors[website._id.charCodeAt(0) % accentColors.length];
+
   return (
     <article
       draggable
@@ -62,8 +74,8 @@ export default function WebsiteCard({
         event.dataTransfer.setData("application/x-wesite-website-id", website._id);
         event.dataTransfer.setData("text/plain", website._id);
       }}
-      className={`group min-w-0 overflow-hidden border border-zinc-300 bg-zinc-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-zinc-900 ${
-        view === "list" ? "flex items-center gap-3 rounded-md p-3" : "flex min-h-44 flex-col rounded-lg p-4"
+      className={`nb-card group min-w-0 overflow-hidden ${
+        view === "list" ? "flex items-center gap-3 p-3" : "flex min-h-44 flex-col p-4"
       }`}
     >
       <button
@@ -78,45 +90,44 @@ export default function WebsiteCard({
               alt=""
               width={42}
               height={42}
-              className="size-10 rounded-md border border-zinc-300 bg-white object-cover dark:border-white/10"
+              className="size-10 rounded-xl border-[3px] bg-white object-cover"
+              style={{ borderColor: "var(--nb-border)" }}
               unoptimized
             />
           ) : (
-            <span className="grid size-10 place-items-center rounded-md bg-blue-600 font-semibold text-white">
+            <span
+              className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-white text-sm"
+              style={{ background: accent, borderColor: "var(--nb-border)" }}
+            >
               {(website.title || website.domain || "W").charAt(0).toUpperCase()}
             </span>
           )}
         </div>
         <div className="min-w-0 max-w-full flex-1 overflow-hidden">
           <div className="flex min-w-0 max-w-full items-center gap-2">
-            <h3 className="min-w-0 max-w-full flex-1 truncate text-sm font-semibold text-zinc-950 dark:text-white" title={website.title || website.domain}>
+            <h3 className="min-w-0 max-w-full flex-1 truncate text-sm font-bold" style={{ color: "var(--nb-fg)" }} title={website.title || website.domain}>
               {website.title || website.domain}
             </h3>
-            {website.isFavorite ? <Star className="size-3.5 shrink-0 fill-amber-400 text-amber-400" /> : null}
+            {website.isFavorite ? <Star className="size-3.5 shrink-0 fill-[var(--nb-warning)] text-[var(--nb-warning)]" /> : null}
           </div>
           <p
-            className="mt-1 max-w-full overflow-hidden text-xs leading-5 text-zinc-500 dark:text-zinc-400"
+            className="mt-1 max-w-full overflow-hidden text-xs leading-5"
+            style={{ color: "var(--nb-muted)", display: "-webkit-box", WebkitLineClamp: view === "list" ? 1 : 2, WebkitBoxOrient: "vertical", overflowWrap: "anywhere" }}
             title={website.description || website.domain}
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: view === "list" ? 1 : 2,
-              WebkitBoxOrient: "vertical",
-              overflowWrap: "anywhere",
-            }}
           >
             {website.description || website.domain}
           </p>
           {website.tags?.length ? (
             <div className="mt-3 flex flex-wrap gap-1">
               {website.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                <span key={tag} className="nb-tag text-[10px]">
                   {tag}
                 </span>
               ))}
             </div>
           ) : null}
-          <div className="mt-3 flex max-w-full items-center gap-2 overflow-hidden text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="shrink-0">{mode === "trash" ? "Deleted" : lastVisited}</span>
+          <div className="mt-3 flex max-w-full items-center gap-2 overflow-hidden text-xs" style={{ color: "var(--nb-muted)" }}>
+            <span className="shrink-0 font-semibold">{mode === "trash" ? "Deleted" : lastVisited}</span>
             <span className="truncate">{website.visitCount ?? 0} visits</span>
             {createdOn ? <span className="truncate">Added {createdOn}</span> : null}
           </div>
@@ -126,63 +137,28 @@ export default function WebsiteCard({
       <div className={`flex shrink-0 ${view === "list" ? "items-center" : "mt-4 justify-end"} gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100`}>
         {mode === "trash" ? (
           <>
-            <button
-              type="button"
-              aria-label="Restore website"
-              onClick={() => onRestore?.(website)}
-              className="grid size-8 place-items-center rounded-md hover:bg-zinc-100 dark:hover:bg-white/10"
-            >
+            <button type="button" aria-label="Restore website" onClick={() => onRestore?.(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <RotateCcw className="size-4" />
             </button>
-            <button
-              type="button"
-              aria-label="Delete permanently"
-              onClick={() => onPermanentDelete?.(website)}
-              className="grid size-8 place-items-center rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-            >
+            <button type="button" aria-label="Delete permanently" onClick={() => onPermanentDelete?.(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm" style={{ color: "var(--nb-danger)" }}>
               <Trash2 className="size-4" />
             </button>
           </>
         ) : (
           <>
-            <button
-              type="button"
-              aria-label="Edit website"
-              onClick={() => onEdit(website)}
-              className="grid size-8 place-items-center rounded-md hover:bg-zinc-100 dark:hover:bg-white/10"
-            >
+            <button type="button" aria-label="Edit website" onClick={() => onEdit(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <Pencil className="size-4" />
             </button>
-            <button
-              type="button"
-              aria-label="Favorite"
-              onClick={() => onToggleFavorite(website)}
-              className="grid size-8 place-items-center rounded-md hover:bg-zinc-100 dark:hover:bg-white/10"
-            >
-              <Star className={`size-4 ${website.isFavorite ? "fill-amber-400 text-amber-400" : ""}`} />
+            <button type="button" aria-label="Favorite" onClick={() => onToggleFavorite(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
+              <Star className={`size-4 ${website.isFavorite ? "fill-[var(--nb-warning)] text-[var(--nb-warning)]" : ""}`} />
             </button>
-            <button
-              type="button"
-              aria-label="Copy website"
-              onClick={() => onCopy(website)}
-              className="grid size-8 place-items-center rounded-md hover:bg-zinc-100 dark:hover:bg-white/10"
-            >
+            <button type="button" aria-label="Copy website" onClick={() => onCopy(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <Copy className="size-4" />
             </button>
-            <button
-              type="button"
-              aria-label="Open website"
-              onClick={() => onOpen(website)}
-              className="grid size-8 place-items-center rounded-md hover:bg-zinc-100 dark:hover:bg-white/10"
-            >
+            <button type="button" aria-label="Open website" onClick={() => onOpen(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <ExternalLink className="size-4" />
             </button>
-            <button
-              type="button"
-              aria-label="Delete website"
-              onClick={() => onDelete(website)}
-              className="grid size-8 place-items-center rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-            >
+            <button type="button" aria-label="Delete website" onClick={() => onDelete(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm" style={{ color: "var(--nb-danger)" }}>
               <Trash2 className="size-4" />
             </button>
           </>

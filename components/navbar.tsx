@@ -26,73 +26,75 @@ export default function Navbar({
   userName,
 }: NavbarProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-300/80 bg-zinc-100/85 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/70">
-      <div className="flex h-12 items-center gap-3 px-3 sm:px-5">
+    <header className="sticky top-0 z-40 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+      <div className="flex h-14 items-center gap-3 px-3 sm:px-5">
+        {/* Mobile sidebar toggle */}
         <button
           type="button"
           aria-label="Open sidebar"
           onClick={onOpenSidebar}
-          className="grid size-8 place-items-center rounded-md text-zinc-700 hover:bg-zinc-200/70 dark:text-zinc-200 dark:hover:bg-white/10 lg:hidden"
+          className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm lg:hidden"
         >
           <Menu className="size-4" />
         </button>
 
+        {/* Logo */}
         <Link href="/" className="flex min-w-fit items-center gap-2">
-          <span className="grid size-7 place-items-center rounded-md bg-blue-600 text-sm font-bold text-white">
+          <span className="nb-card-yellow grid size-8 place-items-center rounded-lg border-[3px] text-sm font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "2px 2px 0 0 var(--nb-shadow)" }}>
             W
           </span>
-          <span className="text-sm font-semibold text-zinc-950 dark:text-white">Wesite</span>
+          <span className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 text-sm text-zinc-600 dark:text-zinc-300 md:flex">
-          <Link className="rounded-md px-2 py-1 hover:bg-zinc-200/70 dark:hover:bg-white/10" href="/">
-            <Grid3X3 className="mr-1 inline size-3.5" />
-            Library
-          </Link>
-          <Link className="rounded-md px-2 py-1 hover:bg-zinc-200/70 dark:hover:bg-white/10" href="/history">
-            <Clock className="mr-1 inline size-3.5" />
-            History
-          </Link>
-          <Link className="rounded-md px-2 py-1 hover:bg-zinc-200/70 dark:hover:bg-white/10" href="/todo">
-            <SquareCheckBig className="mr-1 inline size-3.5" />
-            Todo
-          </Link>
-          <Link className="rounded-md px-2 py-1 hover:bg-zinc-200/70 dark:hover:bg-white/10" href="/analytics">
-            <BarChart3 className="mr-1 inline size-3.5" />
-            Analytics
-          </Link>
-          <Link className="rounded-md px-2 py-1 hover:bg-zinc-200/70 dark:hover:bg-white/10" href="/settings">
-            <Settings className="mr-1 inline size-3.5" />
-            Settings
-          </Link>
+        {/* Nav Links */}
+        <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
+          {[
+            { href: "/", label: "Library", icon: Grid3X3 },
+            { href: "/history", label: "History", icon: Clock },
+            { href: "/todo", label: "Todo", icon: SquareCheckBig },
+            { href: "/analytics", label: "Analytics", icon: BarChart3 },
+            { href: "/settings", label: "Settings", icon: Settings },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              className="nb-btn nb-btn-ghost nb-btn-sm text-xs"
+              href={link.href}
+            >
+              <link.icon className="size-3.5" />
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
+        {/* Right Actions */}
         <div className="ml-auto flex flex-1 items-center justify-end gap-2">
+          {/* Search */}
           <label className="relative hidden w-full max-w-md sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" style={{ color: "var(--nb-muted)" }} />
             <input
               value={search}
               onChange={(event) => onSearchChange?.(event.target.value)}
               placeholder="Search websites, tags, folders"
-              className="h-8 w-full rounded-md border border-zinc-300 bg-white pl-9 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/10"
+              className="nb-input h-9 pl-9 pr-10 text-xs"
             />
             <button
               type="button"
               aria-label="Open command palette"
               onClick={onOpenCommand}
-              className="absolute right-1.5 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10"
+              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm absolute right-1 top-1/2 -translate-y-1/2"
             >
               <Command className="size-3.5" />
             </button>
           </label>
 
+          {/* View Toggle */}
           {onViewChange ? (
-            <div className="hidden rounded-md border border-zinc-300 bg-zinc-200/70 p-0.5 dark:border-white/10 dark:bg-white/10 sm:flex">
+            <div className="hidden sm:flex items-center rounded-xl border-3 p-0.5" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
               <button
                 type="button"
                 aria-label="Grid view"
                 onClick={() => onViewChange("grid")}
-                className={`grid size-7 place-items-center rounded ${view === "grid" ? "bg-white shadow-sm dark:bg-zinc-800" : ""}`}
+                className={`nb-btn nb-btn-icon nb-btn-sm ${view === "grid" ? "nb-btn-primary" : "nb-btn-ghost"}`}
               >
                 <Grid3X3 className="size-3.5" />
               </button>
@@ -100,7 +102,7 @@ export default function Navbar({
                 type="button"
                 aria-label="List view"
                 onClick={() => onViewChange("list")}
-                className={`grid size-7 place-items-center rounded ${view === "list" ? "bg-white shadow-sm dark:bg-zinc-800" : ""}`}
+                className={`nb-btn nb-btn-icon nb-btn-sm ${view === "list" ? "nb-btn-primary" : "nb-btn-ghost"}`}
               >
                 <List className="size-3.5" />
               </button>
@@ -109,21 +111,23 @@ export default function Navbar({
 
           <ThemeToggle />
 
+          {/* Add Button */}
           <button
             type="button"
             aria-label="Add website"
             onClick={onAddWebsite}
-            className="grid size-8 place-items-center rounded-md bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+            className="nb-btn nb-btn-primary nb-btn-icon nb-btn-sm"
           >
             <Plus className="size-4" />
           </button>
 
+          {/* User */}
           <Link
             href={userName ? "/settings" : "/login"}
-            className="hidden items-center gap-2 rounded-md px-2 py-1 text-sm text-zinc-700 hover:bg-zinc-200/70 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex"
+            className="hidden items-center gap-2 nb-btn nb-btn-ghost nb-btn-sm sm:flex"
           >
             <UserCircle className="size-5" />
-            <span className="max-w-24 truncate">{userName ?? "Account"}</span>
+            <span className="max-w-24 truncate text-xs">{userName ?? "Account"}</span>
           </Link>
         </div>
       </div>
