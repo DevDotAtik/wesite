@@ -21,8 +21,15 @@ export function applyThemePreference(preference: ThemePreference) {
   root.classList.toggle("dark", resolved === "dark");
   root.dataset.theme = resolved;
   root.style.colorScheme = resolved;
-  window.localStorage.setItem(THEME_STORAGE_KEY, preference);
   window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
+}
+
+export function setThemePreference(preference: ThemePreference) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(THEME_STORAGE_KEY, preference);
+  applyThemePreference(preference);
 }
 
 export function readThemePreference(): ThemePreference {

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, json, parseBody, requireUser, serializeDocument, escapeRegex } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { normalizeUrl, scrapeMetadata } from "@/lib/scrapeMetadata";
 import { websiteCreateSchema } from "@/lib/validators/schemas";
@@ -32,11 +32,12 @@ export async function GET(request: NextRequest) {
   query.isTrashed = trashed === "true";
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
-      { domain: { $regex: search, $options: "i" } },
-      { tags: { $regex: search, $options: "i" } },
+      { title: { $regex: safeSearch, $options: "i" } },
+      { description: { $regex: safeSearch, $options: "i" } },
+      { domain: { $regex: safeSearch, $options: "i" } },
+      { tags: { $regex: safeSearch, $options: "i" } },
     ];
   }
 

@@ -42,3 +42,7 @@ export function isValidObjectId(id: string) {
 export function serializeDocument<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
+
+export function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

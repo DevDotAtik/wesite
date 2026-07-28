@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BarChart3, Clock, ExternalLink, Grid3X3, Search, Settings, SquareCheckBig, X } from "lucide-react";
+import { BarChart3, Bell, Clock, ExternalLink, Grid3X3, Search, Settings, SquareCheckBig, X } from "lucide-react";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 
 type CommandPaletteProps = {
@@ -15,6 +15,7 @@ const navCommands = [
   { id: "library", label: "Go to Library", icon: Grid3X3, href: "/" },
   { id: "analytics", label: "Go to Analytics", icon: BarChart3, href: "/analytics" },
   { id: "history", label: "Go to History", icon: Clock, href: "/history" },
+  { id: "monitoring", label: "Go to Monitoring", icon: Bell, href: "/monitoring" },
   { id: "todo", label: "Go to Todo", icon: SquareCheckBig, href: "/todo" },
   { id: "settings", label: "Go to Settings", icon: Settings, href: "/settings" },
 ];

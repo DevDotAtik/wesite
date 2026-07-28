@@ -52,7 +52,6 @@ export default function TodoPage() {
   }, [filter, query]);
 
   useEffect(() => { const timer = window.setTimeout(() => { load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
-  useEffect(() => { const timer = window.setTimeout(() => { load(); }, 250); return () => window.clearTimeout(timer); }, [filter, load, query]);
 
   async function createTodo(event: React.FormEvent) {
     event.preventDefault();

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { json, parseBody, requireUser, serializeDocument } from "@/lib/api";
+import { json, parseBody, requireUser, serializeDocument, escapeRegex } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { todoCreateSchema } from "@/lib/validators/schemas";
 import Todo from "@/models/Todo";
@@ -30,9 +30,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { notes: { $regex: search, $options: "i" } },
+      { title: { $regex: safeSearch, $options: "i" } },
+      { notes: { $regex: safeSearch, $options: "i" } },
     ];
     baseQuery.$or = query.$or;
   }

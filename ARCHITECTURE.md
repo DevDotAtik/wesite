@@ -605,19 +605,19 @@ npm run lint
 
 ## 📝 Next Steps & Improvements
 
-Potential enhancements:
-- [ ] Email notifications for password resets
-- [ ] Browser extension for quick saving
-- [ ] Collaborative folders (share with other users)
-- [ ] Tags autocomplete
-- [ ] Bulk operations (delete, move folders)
-- [ ] Webhooks for integrations
-- [ ] Mobile app (React Native)
-- [ ] OAuth login (Google, GitHub)
-- [ ] Two-factor authentication
-- [ ] Website monitoring/change detection
-- [ ] Browser-based archive/screenshot
-- [ ] Custom domain support
+   Potential enhancements:
+   - [ ] Email notifications for password resets
+   - [ ] Browser extension for quick saving
+   - [ ] Collaborative folders (share with other users)
+   - [ ] Tags autocomplete
+   - [ ] Bulk operations (delete, move folders)
+   - [ ] Webhooks for integrations
+   - [ ] Mobile app (React Native)
+   - [ ] OAuth login (Google, GitHub)
+   - [ ] Two-factor authentication
+   - [ ] Website monitoring/change detection
+   - [ ] Browser-based archive/screenshot
+   - [ ] Custom domain support
 
 ---
 

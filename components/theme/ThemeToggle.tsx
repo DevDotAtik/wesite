@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Laptop, Moon, Sun } from "lucide-react";
-import { applyThemePreference, readThemePreference, type ThemePreference } from "@/lib/theme";
+import { setThemePreference, readThemePreference, type ThemePreference } from "@/lib/theme";
 
 const themes: ThemePreference[] = ["system", "light", "dark"];
 
@@ -23,7 +23,7 @@ export default function ThemeToggle() {
   function cycleTheme() {
     const currentIndex = themes.indexOf(theme);
     const nextTheme = themes[(currentIndex + 1) % themes.length];
-    applyThemePreference(nextTheme);
+    setThemePreference(nextTheme);
     setTheme(nextTheme);
   }
 

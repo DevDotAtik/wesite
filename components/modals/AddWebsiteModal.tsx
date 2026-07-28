@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Loader2, X } from "lucide-react";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
@@ -8,6 +8,11 @@ import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 type FolderOption = {
   _id: string;
   name: string;
+};
+
+type TagSuggestion = {
+  tag: string;
+  count: number;
 };
 
 type AddWebsiteModalProps = {
@@ -39,6 +44,11 @@ export default function AddWebsiteModal({
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<TagSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const isEdit = mode === "edit";
   const folderOptions = folders;
@@ -61,6 +71,66 @@ export default function AddWebsiteModal({
 
     return () => window.clearTimeout(timer);
   }, [folderId, open, website]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetch("/api/websites/tags").then((r) => r.json()).then((data) => {
+      setTagSuggestions(data.tags ?? []);
+    }).catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const currentTagInput = useMemo(() => {
+    const parts = tags.split(",");
+    return parts[parts.length - 1]?.trim().toLowerCase() ?? "";
+  }, [tags]);
+
+  const filteredSuggestions = useMemo(() => {
+    if (!currentTagInput) return [];
+    const existingTags = new Set(tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean));
+    return tagSuggestions
+      .filter((s) => s.tag.toLowerCase().includes(currentTagInput) && !existingTags.has(s.tag.toLowerCase()))
+      .slice(0, 8);
+  }, [currentTagInput, tagSuggestions, tags]);
+
+  const addTag = useCallback((tag: string) => {
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    const parts = tags.split(",");
+    parts[parts.length - 1] = trimmed;
+    setTags(parts.join(", ") + ", ");
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+    tagInputRef.current?.focus();
+  }, [tags]);
+
+  function handleTagKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveSuggestion((prev) => Math.min(prev + 1, filteredSuggestions.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveSuggestion((prev) => Math.max(prev - 1, -1));
+    } else if (event.key === "Enter" && activeSuggestion >= 0) {
+      event.preventDefault();
+      addTag(filteredSuggestions[activeSuggestion].tag);
+    } else if ((event.key === "Enter" || event.key === ",") && activeSuggestion === -1) {
+      const value = tagInputRef.current?.value?.trim().replace(/,/g, "");
+      if (value) {
+        event.preventDefault();
+        addTag(value);
+      }
+    }
+  }
 
   if (!open) return null;
 
@@ -141,9 +211,39 @@ export default function AddWebsiteModal({
               Description
               <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Short note about this site" className="nb-input mt-2" />
             </label>
-            <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+            <label className="block text-xs font-bold relative sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
               Tags
-              <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="design, docs, inspiration" className="nb-input mt-2" />
+              <input
+                ref={tagInputRef}
+                value={tags}
+                onChange={(event) => { setTags(event.target.value); setShowSuggestions(true); setActiveSuggestion(-1); }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={handleTagKeyDown}
+                placeholder="design, docs, inspiration"
+                className="nb-input mt-2"
+                autoComplete="off"
+              />
+              {showSuggestions && filteredSuggestions.length > 0 ? (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-50 mt-1 w-full rounded-xl border-[3px] overflow-hidden"
+                  style={{ background: "var(--nb-card)", borderColor: "var(--nb-border)", boxShadow: "5px 5px 0 0 var(--nb-shadow)" }}
+                >
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <button
+                      key={suggestion.tag}
+                      type="button"
+                      onClick={() => addTag(suggestion.tag)}
+                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs font-semibold transition-colors ${index === activeSuggestion ? "bg-[var(--nb-primary)] text-white" : "hover:bg-[var(--nb-surface-alt)]"}`}
+                    >
+                      <span>{suggestion.tag}</span>
+                      <span className={`text-[10px] ${index === activeSuggestion ? "opacity-70" : ""}`} style={index !== activeSuggestion ? { color: "var(--nb-muted)" } : {}}>
+                        {suggestion.count}x
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </label>
             <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
               Custom Icon URL

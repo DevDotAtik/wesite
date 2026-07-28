@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Clock, Command, Grid3X3, List, Menu, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
+import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type NavbarProps = {
@@ -49,10 +49,11 @@ export default function Navbar({
         {/* Nav Links */}
         <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
           {[
-            { href: "/", label: "Library", icon: Grid3X3 },
+            { href: "/dashboard", label: "Library", icon: Grid3X3 },
             { href: "/history", label: "History", icon: Clock },
             { href: "/todo", label: "Todo", icon: SquareCheckBig },
             { href: "/analytics", label: "Analytics", icon: BarChart3 },
+            { href: "/monitoring", label: "Monitor", icon: Bell },
             { href: "/settings", label: "Settings", icon: Settings },
           ].map((link) => (
             <Link

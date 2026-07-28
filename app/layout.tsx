@@ -8,6 +8,20 @@ export const metadata: Metadata = {
   description: "A smart bookmark and website organizer with neo-brutalist design.",
 };
 
+const themeScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('wesite-theme-preference');
+    var pref = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+    var isDark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var root = document.documentElement;
+    root.classList.toggle('dark', isDark);
+    root.dataset.theme = isDark ? 'dark' : 'light';
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+  } catch(e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning data-theme="light">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

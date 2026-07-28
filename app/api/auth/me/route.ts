@@ -4,6 +4,11 @@ import { connectToDatabase } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { profilePatchSchema } from "@/lib/validators/schemas";
 import User from "@/models/User";
+import Website from "@/models/Website";
+import Visit from "@/models/Visit";
+import Folder from "@/models/Folder";
+import Todo from "@/models/Todo";
+import Monitor from "@/models/Monitor";
 
 export async function GET(request: NextRequest) {
   const { user, response } = await requireUser(request);
@@ -69,6 +74,16 @@ export async function DELETE(request: NextRequest) {
   }
 
   await connectToDatabase();
-  await User.findByIdAndDelete(auth.user._id);
+  const userId = auth.user._id;
+
+  await Promise.all([
+    Website.deleteMany({ userId }),
+    Visit.deleteMany({ userId }),
+    Folder.deleteMany({ userId }),
+    Todo.deleteMany({ userId }),
+    Monitor.deleteMany({ userId }),
+    User.findByIdAndDelete(userId),
+  ]);
+
   return json({ ok: true });
 }

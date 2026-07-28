@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, context: Context) {
 
     const website = await Website.findOneAndUpdate(
       { _id: id, userId: auth.user._id },
-      { $set: { ...data, url: normalizeUrl(data.url), normalizedUrl, isTrashed: false, trashedAt: null } },
+      { $set: { ...data, url: normalizeUrl(data.url), normalizedUrl } },
       { new: true },
     ).lean();
 

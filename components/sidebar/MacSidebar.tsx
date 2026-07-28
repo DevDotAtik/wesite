@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   BarChart3,
+  Bell,
   Clock,
   FileText,
   Film,
@@ -278,6 +279,13 @@ function SidebarContent(props: SidebarProps) {
           >
             <Clock className="size-4 opacity-60" />
             <span className="min-w-0 flex-1 truncate">Browsing History</span>
+          </a>
+          <a
+            href="/monitoring"
+            className="nb-sidebar-item"
+          >
+            <Bell className="size-4 opacity-60" />
+            <span className="min-w-0 flex-1 truncate">Website Monitoring</span>
           </a>
         </div>
       </section>

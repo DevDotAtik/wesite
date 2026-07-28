@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wesite</title>
+  <style>
+    :root {
+      --bg: #fef9ef;
+      --fg: #1a1a2e;
+      --surface: #ffffff;
+      --surface-alt: #fef3c7;
+      --border: #1a1a2e;
+      --primary: #2563eb;
+      --primary-fg: #ffffff;
+      --accent: #f59e0b;
+      --muted: #6b7280;
+      --danger: #ef4444;
+      --success: #10b981;
+      --shadow: 3px 3px 0 0 #1a1a2e;
+      --bruto-yellow: #fbbf24;
+      --bruto-blue: #60a5fa;
+      --bruto-mint: #34d399;
+      --bruto-orange: #fb923c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      max-height: 520px;
+      overflow-y: auto;
+      font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+      font-weight: 500;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 3px solid var(--border);
+      background: var(--surface);
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      background: var(--bruto-yellow);
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 2px 2px 0 0 var(--border);
+    }
+
+    .header-text h1 {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .header-text p {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      box-shadow: 2px 2px 0 0 var(--border);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 0 var(--border);
+    }
+
+    .btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: none;
+    }
+
+    .btn-primary { background: var(--primary); color: var(--primary-fg); }
+    .btn-ghost { background: transparent; box-shadow: none; border-color: transparent; }
+    .btn-ghost:hover { background: var(--surface-alt); transform: none; box-shadow: none; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 8px; }
+    .btn-icon { padding: 5px; aspect-ratio: 1; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .section {
+      padding: 14px 16px;
+      border-bottom: 3px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 2px 2px 0 0 var(--primary);
+    }
+
+    .input::placeholder { color: var(--muted); font-weight: 600; }
+
+    .input-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .input-row:last-child { margin-bottom: 0; }
+    .input-row .input { flex: 1; }
+
+    .tag-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 6px 8px;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      min-height: 36px;
+      cursor: text;
+      transition: all 0.15s ease;
+    }
+
+    .tag-input-wrap:focus-within {
+      border-color: var(--primary);
+      box-shadow: 2px 2px 0 0 var(--primary);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      background: var(--bruto-blue);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .tag button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--fg);
+      line-height: 1;
+      padding: 0;
+    }
+
+    .tag-input-wrap input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--fg);
+      min-width: 60px;
+      flex: 1;
+    }
+
+    .tag-input-wrap input::placeholder { color: var(--muted); }
+
+    select.input {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 28px;
+    }
+
+    textarea.input {
+      height: auto;
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .current-page {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface-alt);
+      border: 3px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .current-page .favicon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      object-fit: cover;
+    }
+
+    .current-page .page-info { min-width: 0; flex: 1; }
+
+    .current-page .page-title {
+      font-size: 13px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .current-page .page-url {
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .save-actions {
+      display: flex;
+      gap: 6px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-top: 3px solid var(--border);
+      position: sticky;
+      bottom: 0;
+    }
+
+    .save-actions .btn { flex: 1; }
+
+    /* Login */
+    .login-wrap {
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .login-wrap h2 {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .login-wrap p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .login-wrap .input { margin-bottom: 8px; }
+    .login-wrap .btn { width: 100%; margin-top: 4px; }
+
+    .error-msg {
+      padding: 8px 12px;
+      background: var(--danger);
+      color: #fff;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .success-msg {
+      padding: 8px 12px;
+      background: var(--success);
+      color: #fff;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .recent-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .recent-item:hover { background: var(--surface-alt); }
+
+    .recent-item .favicon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .recent-item .recent-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .recent-item .recent-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .recent-item .recent-domain {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid var(--border);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 3px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -3px;
+      transition: all 0.1s;
+    }
+
+    .tab:hover { color: var(--fg); background: var(--surface-alt); }
+
+    .tab.active {
+      color: var(--fg);
+      border-bottom-color: var(--primary);
+      background: var(--surface);
+    }
+
+    .hidden { display: none !important; }
+
+    .link {
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .link:hover { text-decoration: underline; }
+
+    .api-url-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .api-url-row .input { flex: 1; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <!-- Login View -->
+  <div id="login-view" class="hidden">
+    <div class="header">
+      <div class="logo">W</div>
+      <div class="header-text">
+        <h1>Wesite</h1>
+        <p>Quick Save Bookmarks</p>
+      </div>
+    </div>
+    <div class="login-wrap">
+      <h2>Sign in</h2>
+      <p>Connect to your Wesite account</p>
+      <div id="login-error" class="error-msg hidden"></div>
+      <div class="api-url-row">
+        <input id="api-url" class="input" placeholder="Wesite URL (e.g. https://wesite.app)" />
+      </div>
+      <input id="login-email" class="input" type="email" placeholder="Email" />
+      <input id="login-password" class="input" type="password" placeholder="Password" />
+      <button id="login-btn" class="btn btn-primary">Sign In</button>
+      <p style="margin-top:12px;font-size:11px;color:var(--muted)">
+        Don't have an account? <a class="link" id="open-register">Register on Wesite</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Main View -->
+  <div id="main-view" class="hidden">
+    <div class="header">
+      <div class="logo">W</div>
+      <div class="header-text">
+        <h1>Wesite</h1>
+        <p id="header-user"></p>
+      </div>
+      <div class="header-actions">
+        <button id="refresh-btn" class="btn btn-ghost btn-icon btn-sm" title="Refresh folders">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        </button>
+        <button id="logout-btn" class="btn btn-ghost btn-icon btn-sm" title="Sign out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="save">Save Page</button>
+      <button class="tab" data-tab="recent">Recent</button>
+    </div>
+
+    <!-- Save Tab -->
+    <div id="tab-save" class="tab-content">
+      <div class="section">
+        <div class="current-page" id="current-page-info">
+          <img class="favicon" id="page-favicon" src="" alt="" />
+          <div class="page-info">
+            <div class="page-title" id="page-title">Loading...</div>
+            <div class="page-url" id="page-url"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="save-success" class="success-msg hidden" style="margin: 12px 16px 0;"></div>
+      <div id="save-error" class="error-msg hidden" style="margin: 12px 16px 0;"></div>
+
+      <div class="section">
+        <div class="section-label">Folder</div>
+        <select id="folder-select" class="input">
+          <option value="">Unsorted</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Tags</div>
+        <div class="tag-input-wrap" id="tag-wrap">
+          <input id="tag-input" placeholder="Add tag..." />
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Notes</div>
+        <textarea id="save-notes" class="input" placeholder="Optional notes..." rows="2"></textarea>
+      </div>
+
+      <div class="section" style="border-bottom:none;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="save-favorite" style="width:16px;height:16px;accent-color:var(--primary);" />
+          Save as favorite
+        </label>
+      </div>
+
+      <div class="save-actions">
+        <button id="save-btn" class="btn btn-primary">Save to Wesite</button>
+      </div>
+    </div>
+
+    <!-- Recent Tab -->
+    <div id="tab-recent" class="tab-content hidden">
+      <div class="section">
+        <div class="section-label">Recently saved</div>
+        <div id="recent-list" class="recent-list">
+          <div class="empty-state">No recent saves yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

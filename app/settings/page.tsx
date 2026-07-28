@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, RotateCcw, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import Navbar from "@/components/navbar";
-import { applyThemePreference, type ThemePreference } from "@/lib/theme";
+import { setThemePreference, type ThemePreference } from "@/lib/theme";
 
 type User = {
   name: string;
@@ -24,7 +24,6 @@ export default function SettingsPage() {
     if (me.ok) {
       const payload = await me.json();
       setUser(payload.user);
-      if (payload.user?.themePreference) applyThemePreference(payload.user.themePreference);
     }
     if (trashed.ok) setTrash((await trashed.json()).websites ?? []);
   }
@@ -46,7 +45,7 @@ export default function SettingsPage() {
       setError(payload?.error ?? "Could not save profile");
       return;
     }
-    applyThemePreference(themePreference);
+    setThemePreference(themePreference);
     setStatus("Saved");
     load();
   }

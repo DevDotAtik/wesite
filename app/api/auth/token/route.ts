@@ -1,0 +1,27 @@
+import type { NextRequest } from "next/server";
+import { apiError, json, parseBody, serializeDocument } from "@/lib/api";
+import { connectToDatabase } from "@/lib/db";
+import { signAuthToken, verifyPassword } from "@/lib/auth";
+import { loginSchema } from "@/lib/validators/schemas";
+import User from "@/models/User";
+
+export async function POST(request: NextRequest) {
+  const { data, error } = await parseBody(request, loginSchema);
+
+  if (error) return error;
+
+  await connectToDatabase();
+
+  const user = await User.findOne({ email: data.email.toLowerCase() });
+
+  if (!user || !(await verifyPassword(data.password, user.passwordHash))) {
+    return apiError("Invalid email or password", 401);
+  }
+
+  const token = signAuthToken({ userId: user._id.toString(), email: user.email });
+
+  return json({
+    token,
+    user: serializeDocument({ ...user.toObject(), passwordHash: undefined }),
+  });
+}

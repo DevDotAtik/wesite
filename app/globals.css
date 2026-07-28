@@ -79,44 +79,44 @@
   --nb-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --nb-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  --nb-bg: #0f0f1a;
-  --nb-fg: #f0f0f5;
+  --nb-bg: #12131a;
+  --nb-fg: #d1d5e0;
 
-  --nb-surface: #1a1a2e;
-  --nb-surface-alt: #16213e;
-  --nb-surface-strong: #1a1a2e;
+  --nb-surface: #1a1b26;
+  --nb-surface-alt: #1e2030;
+  --nb-surface-strong: #222436;
 
-  --nb-card: #1a1a2e;
+  --nb-card: #1a1b26;
 
-  --nb-primary: #60a5fa;
-  --nb-primary-fg: #0f0f1a;
-  --nb-secondary: #a78bfa;
-  --nb-secondary-fg: #0f0f1a;
-  --nb-accent: #fbbf24;
-  --nb-accent-fg: #0f0f1a;
+  --nb-primary: #7aa2f7;
+  --nb-primary-fg: #1a1b26;
+  --nb-secondary: #bb9af7;
+  --nb-secondary-fg: #1a1b26;
+  --nb-accent: #e0af68;
+  --nb-accent-fg: #1a1b26;
 
-  --nb-muted: #9ca3af;
-  --nb-border: #e2e8f0;
+  --nb-muted: #565f89;
+  --nb-border: #3b3f57;
 
-  --nb-success: #34d399;
-  --nb-warning: #fbbf24;
-  --nb-danger: #fb7185;
+  --nb-success: #9ece6a;
+  --nb-warning: #e0af68;
+  --nb-danger: #f7768e;
 
-  --nb-shadow: #e2e8f0;
-  --nb-shadow-sm: 3px 3px 0 0 rgba(226, 232, 240, 0.3);
-  --nb-shadow-md: 5px 5px 0 0 rgba(226, 232, 240, 0.25);
-  --nb-shadow-lg: 8px 8px 0 0 rgba(226, 232, 240, 0.2);
-  --nb-shadow-xl: 12px 12px 0 0 rgba(226, 232, 240, 0.15);
+  --nb-shadow: #0d0e14;
+  --nb-shadow-sm: 3px 3px 0 0 rgba(0, 0, 0, 0.35);
+  --nb-shadow-md: 5px 5px 0 0 rgba(0, 0, 0, 0.3);
+  --nb-shadow-lg: 8px 8px 0 0 rgba(0, 0, 0, 0.25);
+  --nb-shadow-xl: 12px 12px 0 0 rgba(0, 0, 0, 0.2);
 
-  --nb-bruto-yellow: #fbbf24;
-  --nb-bruto-orange: #fb923c;
-  --nb-bruto-coral: #f87171;
-  --nb-bruto-pink: #f472b6;
-  --nb-bruto-purple: #a78bfa;
-  --nb-bruto-blue: #60a5fa;
-  --nb-bruto-cyan: #22d3ee;
-  --nb-bruto-mint: #34d399;
-  --nb-bruto-lime: #a3e635;
+  --nb-bruto-yellow: #e0af68;
+  --nb-bruto-orange: #ff9e64;
+  --nb-bruto-coral: #f7768e;
+  --nb-bruto-pink: #ff007c;
+  --nb-bruto-purple: #bb9af7;
+  --nb-bruto-blue: #7aa2f7;
+  --nb-bruto-cyan: #7dcfff;
+  --nb-bruto-mint: #9ece6a;
+  --nb-bruto-lime: #a9d157;
 
   color-scheme: dark;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { BarChart3, Copy, ExternalLink, Pencil, RotateCcw, Star, Trash2 } from "lucide-react";
+import { BarChart3, CheckSquare, Copy, ExternalLink, Pencil, RotateCcw, Square, Star, Trash2 } from "lucide-react";
 
 export type WebsiteItem = {
   _id: string;
@@ -26,6 +26,8 @@ type WebsiteCardProps = {
   website: WebsiteItem;
   view: "grid" | "list";
   mode?: "normal" | "trash";
+  selected?: boolean;
+  onSelect?: (id: string, selected: boolean) => void;
   onOpen: (website: WebsiteItem) => void;
   onEdit: (website: WebsiteItem) => void;
   onCopy: (website: WebsiteItem) => void;
@@ -39,6 +41,8 @@ export default function WebsiteCard({
   website,
   view,
   mode = "normal",
+  selected = false,
+  onSelect,
   onOpen,
   onEdit,
   onCopy,
@@ -77,16 +81,28 @@ export default function WebsiteCard({
 
   return (
     <article
-      draggable
+      draggable={!selected}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("application/x-wesite-website-id", website._id);
         event.dataTransfer.setData("text/plain", website._id);
       }}
-      className={`nb-card group min-w-0 overflow-hidden ${
+      className={`nb-card group relative min-w-0 overflow-hidden ${selected ? "ring-2 ring-[var(--nb-primary)]" : ""} ${
         view === "list" ? "flex items-center gap-3 p-3" : "flex min-h-44 flex-col p-4"
       }`}
     >
+      {/* Selection checkbox */}
+      {onSelect && mode !== "trash" ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onSelect(website._id, !selected); }}
+          className="absolute right-2 top-2 z-10 nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
+          style={{ color: selected ? "var(--nb-primary)" : "var(--nb-muted)" }}
+        >
+          {selected ? <CheckSquare className="size-4" /> : <Square className="size-4" />}
+        </button>
+      ) : null}
+
       <button
         type="button"
         onClick={mode === "trash" ? undefined : () => onOpen(website)}

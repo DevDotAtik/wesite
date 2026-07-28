@@ -38,7 +38,14 @@ export function verifyAuthToken(token: string) {
 }
 
 export async function getAuthUser(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE)?.value;
+  let token = request.cookies.get(AUTH_COOKIE)?.value;
+
+  if (!token) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
+  }
 
   if (!token) {
     return null;

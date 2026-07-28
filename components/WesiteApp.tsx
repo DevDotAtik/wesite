@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Clock3, ClipboardPaste, FolderPlus, Loader2, Sparkles, SquareCheckBig } from "lucide-react";
+import { ArrowUpRight, CheckSquare, Clock3, ClipboardPaste, FolderPlus, Loader2, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -10,7 +10,7 @@ import WebsiteCard, { type WebsiteItem } from "@/components/grid/WebsiteCard";
 import AddWebsiteModal from "@/components/modals/AddWebsiteModal";
 import FolderModal from "@/components/modals/FolderModal";
 import MacSidebar, { type FolderNode } from "@/components/sidebar/MacSidebar";
-import { applyThemePreference, type ThemePreference } from "@/lib/theme";
+import { type ThemePreference } from "@/lib/theme";
 
 type User = {
   _id: string;
@@ -47,6 +47,10 @@ export default function WesiteApp() {
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<FolderNode | null>(null);
   const [folderMode, setFolderMode] = useState<"add" | "edit">("add");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [bulkFolderId, setBulkFolderId] = useState<string>("");
+  const [bulkTags, setBulkTags] = useState("");
   const flatFolders = useMemo(() => flattenFolders(folders), [folders]);
   const selectedFolderNode = flatFolders.find((folder) => folder._id === selectedFolder);
   const visibleChildFolders = selectedFolderNode?.children ?? (selectedFolder === "home" ? folders : []);
@@ -125,13 +129,11 @@ export default function WesiteApp() {
     if (!me.ok) { setUser(null); setLoading(false); return; }
     const payload = await me.json();
     setUser(payload.user);
-    if (payload.user?.themePreference) applyThemePreference(payload.user.themePreference);
     await Promise.all([loadFolders(), loadWebsites()]);
     setLoading(false);
   }, [loadFolders, loadWebsites]);
 
   useEffect(() => { const timer = window.setTimeout(() => { bootstrap(); }, 0); return () => window.clearTimeout(timer); }, [bootstrap]);
-  useEffect(() => { if (!user) return; const timer = window.setTimeout(() => { loadWebsites(); }, 0); return () => window.clearTimeout(timer); }, [loadWebsites, user]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -155,6 +157,59 @@ export default function WesiteApp() {
   function openFolderEditor(folder: FolderNode) { setFolderMode("edit"); setEditingFolder(folder); setFolderModalOpen(true); }
   async function pasteCopiedWebsite() { if (!copiedWebsite) return; if (!canPasteHere) { toast.error("Select Home, All Websites, or a folder before pasting"); return; } const targetFolderId = selectedFolderNode ? selectedFolderNode._id : null; await moveWebsiteToFolder(copiedWebsite._id, targetFolderId, `Pasted into ${pasteTargetLabel}`); setCopiedWebsite(null); }
   async function deleteFolder(folder: FolderNode) { const confirmed = window.confirm(`Delete "${folder.name}"? Websites inside will be moved up a level.`); if (!confirmed) return; const response = await fetch(`/api/folders/${folder._id}`, { method: "DELETE" }); if (!response.ok) { toast.error("Could not delete folder"); return; } toast.success("Folder deleted"); loadFolders(); loadWebsites(); }
+
+  function toggleSelect(id: string, selected: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelectedIds((prev) => {
+      if (prev.size === websites.length) return new Set();
+      return new Set(websites.map((w) => w._id));
+    });
+  }
+
+  async function executeBulkAction(action: string) {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+
+    let body: Record<string, unknown> = { ids, action };
+
+    if (action === "move") {
+      body.folderId = bulkFolderId || null;
+    } else if (action === "favorite") {
+      body.isFavorite = true;
+    } else if (action === "tag") {
+      const parsedTags = bulkTags.split(",").map((t) => t.trim()).filter(Boolean);
+      if (!parsedTags.length) { toast.error("Add at least one tag"); return; }
+      body.tags = parsedTags;
+    }
+
+    const response = await fetch("/api/websites/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Bulk action failed");
+      return;
+    }
+
+    toast.success(`${action} applied to ${ids.length} item${ids.length !== 1 ? "s" : ""}`);
+    setSelectedIds(new Set());
+    setBulkAction(null);
+    setBulkFolderId("");
+    setBulkTags("");
+    loadWebsites();
+    loadFolders();
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -219,6 +274,10 @@ export default function WesiteApp() {
                   <p className="text-sm font-semibold" style={{ color: "var(--nb-muted)" }}>{activeWebsites.length} websites saved here</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button type="button" onClick={selectAll} className="nb-btn nb-btn-ghost nb-btn-sm">
+                    {selectedIds.size === websites.length && websites.length > 0 ? <CheckSquare className="size-4" /> : <Square className="size-4" />}
+                    {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
+                  </button>
                   <button type="button" onClick={createFolder} className="nb-btn nb-btn-surface nb-btn-sm">
                     <FolderPlus className="size-4" />
                     Folder
@@ -241,6 +300,65 @@ export default function WesiteApp() {
                   ) : null}
                 </div>
               </div>
+
+              {/* Bulk Action Bar */}
+              {selectedIds.size > 0 ? (
+                <div className="nb-card-static mb-5 p-3 flex flex-wrap items-center gap-2" style={{ background: "var(--nb-primary)", borderColor: "var(--nb-primary)" }}>
+                  <span className="text-xs font-extrabold text-white">{selectedIds.size} selected</span>
+                  <div className="flex flex-wrap items-center gap-1 ml-2">
+                    <button type="button" onClick={() => { setBulkAction(bulkAction === "move" ? null : "move"); }} className={`nb-btn nb-btn-sm text-xs ${bulkAction === "move" ? "bg-white text-[var(--nb-primary)]" : "bg-white/20 text-white"}`}>
+                      <Move className="size-3.5" /> Move
+                    </button>
+                    <button type="button" onClick={() => executeBulkAction("favorite")} className="nb-btn nb-btn-sm text-xs bg-white/20 text-white">
+                      <Star className="size-3.5" /> Favorite
+                    </button>
+                    <button type="button" onClick={() => { setBulkAction(bulkAction === "tag" ? null : "tag"); }} className={`nb-btn nb-btn-sm text-xs ${bulkAction === "tag" ? "bg-white text-[var(--nb-primary)]" : "bg-white/20 text-white"}`}>
+                      <Tag className="size-3.5" /> Tag
+                    </button>
+                    <button type="button" onClick={() => executeBulkAction("trash")} className="nb-btn nb-btn-sm text-xs bg-white/20 text-white" style={{ color: "#fff" }}>
+                      <Trash2 className="size-3.5" /> Trash
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => { setSelectedIds(new Set()); setBulkAction(null); }} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm ml-auto text-white">
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Bulk Move Panel */}
+              {bulkAction === "move" && selectedIds.size > 0 ? (
+                <div className="nb-card-static mb-5 p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                  <div className="flex items-end gap-3">
+                    <label className="block text-xs font-bold flex-1" style={{ color: "var(--nb-fg)" }}>
+                      Move to folder
+                      <select value={bulkFolderId} onChange={(e) => setBulkFolderId(e.target.value)} className="nb-input mt-1">
+                        <option value="">Unsorted</option>
+                        {flatFolders.map((folder) => (
+                          <option key={folder._id} value={folder._id}>{folder.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <button type="button" onClick={() => executeBulkAction("move")} className="nb-btn nb-btn-primary nb-btn-sm">
+                      <Move className="size-4" /> Move {selectedIds.size}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Bulk Tag Panel */}
+              {bulkAction === "tag" && selectedIds.size > 0 ? (
+                <div className="nb-card-static mb-5 p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                  <div className="flex items-end gap-3">
+                    <label className="block text-xs font-bold flex-1" style={{ color: "var(--nb-fg)" }}>
+                      Add tags (comma-separated)
+                      <input value={bulkTags} onChange={(e) => setBulkTags(e.target.value)} placeholder="design, docs" className="nb-input mt-1" />
+                    </label>
+                    <button type="button" onClick={() => executeBulkAction("tag")} className="nb-btn nb-btn-primary nb-btn-sm">
+                      <Tag className="size-4" /> Tag {selectedIds.size}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {/* Smart Insights */}
               {showInsights ? (
@@ -335,6 +453,8 @@ export default function WesiteApp() {
                           website={website}
                           view={view}
                           mode={selectedFolder === "trash" ? "trash" : "normal"}
+                          selected={selectedIds.has(website._id)}
+                          onSelect={selectedFolder !== "trash" ? toggleSelect : undefined}
                           onOpen={openWebsite}
                           onEdit={openWebsiteEditor}
                           onCopy={copyWebsite}
