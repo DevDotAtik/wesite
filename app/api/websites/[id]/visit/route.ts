@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, context: Context) {
         },
       },
     ],
-    { new: true },
+    { new: true, updatePipeline: true },
   ).lean();
 
   if (!website) return apiError("Website not found", 404);

@@ -6,8 +6,8 @@ export default function TopWebsitesBarChart({ data }: { data: { name: string; vi
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
-        <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600 }} tickLine={false} axisLine={false} allowDecimals={false} />
+        <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }} tickLine={false} axisLine={false} stroke="var(--nb-border)" />
+        <YAxis tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }} tickLine={false} axisLine={false} allowDecimals={false} stroke="var(--nb-border)" />
         <Tooltip
           contentStyle={{
             border: "3px solid var(--nb-border)",

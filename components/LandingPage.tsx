@@ -34,7 +34,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             <span className="nb-card-yellow grid size-10 place-items-center rounded-2xl border-3 text-lg font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}>
               W
             </span>
-            <span className="text-xl font-bold tracking-tight" style={{ color: "var(--nb-fg)" }}>Wesite</span>
+            <span className="text-xl font-bold tracking-tight" style={{ color: "var(--nb-fg)" }}>WeSite</span>
           </Link>
 
           <nav className="hidden items-center gap-2 text-sm font-semibold md:flex">
@@ -63,10 +63,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         <div className="absolute inset-0 nb-dot-bg opacity-30" />
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           {/* Announcement pill */}
-          <div className="nb-tag nb-tag-accent mx-auto mb-8 inline-flex">
-            <Sparkles className="size-3.5" />
-            Raindrop-inspired digital asset workspace
-          </div>
+    
 
           <h1 className="mx-auto max-w-4xl text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl" style={{ color: "var(--nb-fg)" }}>
             All your bookmarks{" "}

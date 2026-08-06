@@ -7,6 +7,7 @@ import ActivityHeatmap from "@/components/charts/ActivityHeatmap";
 import FolderDistributionPieChart from "@/components/charts/FolderDistributionPieChart";
 import TopWebsitesBarChart from "@/components/charts/TopWebsitesBarChart";
 import VisitsLineChart from "@/components/charts/VisitsLineChart";
+import { clientTzOffsetMinutes } from "@/lib/date-buckets";
 
 type Summary = {
   totalWebsites: number;
@@ -46,14 +47,15 @@ export default function AnalyticsPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
+      const tz = String(clientTzOffsetMinutes());
       const [summaryRes, visitsRes, topRes, foldersRes, heatmapRes, streakRes, peakRes] = await Promise.all([
-        fetch("/api/analytics/summary"),
-        fetch(`/api/analytics/visits-over-time?range=${range}`),
+        fetch(`/api/analytics/summary?tz=${tz}`),
+        fetch(`/api/analytics/visits-over-time?range=${range}&tz=${tz}`),
         fetch("/api/analytics/top-websites"),
         fetch("/api/analytics/folder-distribution"),
-        fetch("/api/analytics/heatmap"),
-        fetch("/api/analytics/streak"),
-        fetch("/api/analytics/peak-stats"),
+        fetch(`/api/analytics/heatmap?tz=${tz}`),
+        fetch(`/api/analytics/streak?tz=${tz}`),
+        fetch(`/api/analytics/peak-stats?tz=${tz}`),
       ]);
 
       if (summaryRes.ok) setSummary(await summaryRes.json());

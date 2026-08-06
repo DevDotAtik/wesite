@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, CheckSquare, Clock3, ClipboardPaste, FolderPlus, Loader2, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, CheckSquare, Clock3, ClipboardPaste, FolderOpen, FolderPlus, Heart, Loader2, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -90,9 +90,9 @@ export default function WesiteApp() {
   const showInsights = selectedFolder === "home" || selectedFolder === "all";
   const smartStats = useMemo(
     () => [
-      { label: "Saved", value: activeWebsites.length, note: "Active bookmarks", color: "var(--nb-bruto-yellow)" },
-      { label: "Folders", value: flatFolders.length, note: "Organized spaces", color: "var(--nb-bruto-blue)" },
-      { label: "Loved", value: activeWebsites.filter((website) => website.isFavorite).length, note: "Pinned by you", color: "var(--nb-bruto-coral)" },
+      { label: "Saved", value: activeWebsites.length, note: "Active bookmarks", icon: Bookmark, color: "var(--nb-bruto-yellow)" },
+      { label: "Folders", value: flatFolders.length, note: "Organized spaces", icon: FolderOpen, color: "var(--nb-bruto-blue)" },
+      { label: "Loved", value: activeWebsites.filter((website) => website.isFavorite).length, note: "Pinned by you", icon: Heart, color: "var(--nb-bruto-coral)" },
     ],
     [activeWebsites, flatFolders.length],
   );
@@ -178,7 +178,7 @@ export default function WesiteApp() {
     const ids = Array.from(selectedIds);
     if (!ids.length) return;
 
-    let body: Record<string, unknown> = { ids, action };
+    const body: Record<string, unknown> = { ids, action };
 
     if (action === "move") {
       body.folderId = bulkFolderId || null;
@@ -363,14 +363,34 @@ export default function WesiteApp() {
               {/* Smart Insights */}
               {showInsights ? (
                 <div className="mb-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {smartStats.map((card) => (
-                      <div key={card.label} className="nb-card-static p-4" style={{ background: card.color }}>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.7 }}>{card.label}</p>
-                        <p className="mt-2 text-3xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
-                        <p className="mt-1 text-xs font-semibold" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>{card.note}</p>
+                  <div>
+                    <div className="nb-card-static p-4 sm:p-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Library overview</p>
+                          <p className="mt-0.5 text-xs" style={{ color: "var(--nb-muted)" }}>Your workspace at a glance</p>
+                        </div>
+                        <span className="nb-tag" style={{ color: "var(--nb-primary)" }}>
+                          <Sparkles className="size-3.5" />
+                          Smart
+                        </span>
                       </div>
-                    ))}
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--nb-border)]">
+                        {smartStats.map((card) => (
+                          <div key={card.label} className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+                            <span className="grid size-11 shrink-0 place-items-center rounded-xl border-[3px]" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-strong)" }}>
+                              <card.icon className="size-5" style={{ color: card.color }} />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>{card.label}</p>
+                              <p className="mt-0.5 text-2xl font-extrabold leading-none" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
+                              <p className="mt-1 truncate text-[10px] font-semibold" style={{ color: "var(--nb-muted)" }}>{card.note}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
                     <div className="flex items-center justify-between gap-2">
@@ -399,7 +419,7 @@ export default function WesiteApp() {
                                 onClick={() => openWebsite(website)}
                                 className="nb-sidebar-item text-xs py-1.5"
                               >
-                                <span className="nb-card-yellow grid size-6 shrink-0 place-items-center rounded-lg border text-[9px] font-extrabold text-white" style={{ borderColor: "var(--nb-border)" }}>
+                                <span className="nb-card-yellow grid size-6 shrink-0 place-items-center rounded-lg border text-[9px] font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
                                   {(website.title || website.domain || "W").charAt(0).toUpperCase()}
                                 </span>
                                 <span className="min-w-0 flex-1">

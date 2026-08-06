@@ -37,6 +37,10 @@ On the login screen, set your **Wesite URL** (e.g., `https://wesite.app` or `htt
 
 The extension stores your auth token in `chrome.storage.local` and never sends it to third parties.
 
+The manifest includes `host_permissions` for all `http://`/`https://` hosts so the popup and background
+worker can call whichever Wesite URL you configure. After changing any file in this folder, reload the
+extension from `chrome://extensions/` (click the refresh icon) for changes to take effect.
+
 ## API
 
 The extension communicates with the Wesite API using Bearer token authentication. The token is obtained during login and stored securely in the browser's extension storage.

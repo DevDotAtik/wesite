@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
+import { parseTzOffset, tzOffsetLabel } from "@/lib/date-buckets";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -9,13 +10,14 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
+  const timezone = tzOffsetLabel(parseTzOffset(request.nextUrl.searchParams.get("tz")));
 
   const [hourlyRows, weekdayRows, peakDayRow] = await Promise.all([
     Visit.aggregate([
       { $match: { userId: auth.user._id } },
       {
         $group: {
-          _id: { $hour: "$visitedAt" },
+          _id: { $hour: { date: "$visitedAt", timezone } },
           count: { $sum: 1 },
         },
       },
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
       { $match: { userId: auth.user._id } },
       {
         $group: {
-          _id: { $dayOfWeek: "$visitedAt" },
+          _id: { $dayOfWeek: { date: "$visitedAt", timezone } },
           count: { $sum: 1 },
         },
       },
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
       { $match: { userId: auth.user._id } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt", timezone } },
           count: { $sum: 1 },
         },
       },

@@ -171,7 +171,7 @@ function showLogin() {
   $("#login-btn").addEventListener("click", doLogin);
   $("#login-password").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
   $("#login-email").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
-});
+}
 
 async function doLogin() {
   const email = $("#login-email").value.trim();

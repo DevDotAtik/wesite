@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
+import { parseTzOffset, startOfLocalDayUtc, tzOffsetLabel } from "@/lib/date-buckets";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -9,14 +10,13 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
-  const start = new Date();
-  start.setFullYear(start.getFullYear() - 1);
-  start.setHours(0, 0, 0, 0);
+  const tzOffset = parseTzOffset(request.nextUrl.searchParams.get("tz"));
+  const start = startOfLocalDayUtc(Date.now(), tzOffset) - 364 * 86_400_000;
   const rows = await Visit.aggregate([
-    { $match: { userId: auth.user._id, visitedAt: { $gte: start } } },
+    { $match: { userId: auth.user._id, visitedAt: { $gte: new Date(start) } } },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt" } },
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt", timezone: tzOffsetLabel(tzOffset) } },
         count: { $sum: 1 },
       },
     },

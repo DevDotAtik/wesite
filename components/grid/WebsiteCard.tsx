@@ -116,7 +116,7 @@ export default function WebsiteCard({
                 alt=""
                 width={42}
                 height={42}
-                className="size-10 rounded-xl border-[3px] bg-white object-cover"
+                className="size-10 rounded-xl border-[3px] bg-[var(--nb-surface-strong)] object-cover"
                 style={{ borderColor: "var(--nb-border)" }}
                 unoptimized
               />
@@ -132,8 +132,8 @@ export default function WebsiteCard({
           ) : (
             <div className="relative">
               <span
-                className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-white text-sm"
-                style={{ background: accent, borderColor: "var(--nb-border)" }}
+                className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-sm"
+                style={{ background: accent, borderColor: "var(--nb-border)", color: "var(--nb-fg)" }}
               >
                 {(website.title || website.domain || "W").charAt(0).toUpperCase()}
               </span>

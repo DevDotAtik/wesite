@@ -1,15 +1,18 @@
 "use client";
 
+import { clientTzOffsetMinutes, dateKeyAtOffset } from "@/lib/date-buckets";
+
 const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function ActivityHeatmap({ data }: { data: { date: string; count: number }[] }) {
   const map = new Map(data.map((item) => [item.date, item.count]));
   const today = new Date();
+  const tzOffset = clientTzOffsetMinutes();
   const days = Array.from({ length: 365 }, (_, index) => {
     const date = new Date(today);
     date.setDate(today.getDate() - (364 - index));
-    const key = date.toISOString().slice(0, 10);
+    const key = dateKeyAtOffset(date.getTime(), tzOffset);
     const count = map.get(key) ?? 0;
     return { key, count, date };
   });

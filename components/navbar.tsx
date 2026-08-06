@@ -33,7 +33,7 @@ export default function Navbar({
           type="button"
           aria-label="Open sidebar"
           onClick={onOpenSidebar}
-          className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm lg:hidden"
+          className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm lg:hidden!"
         >
           <Menu className="size-4" />
         </button>
@@ -84,7 +84,7 @@ export default function Navbar({
               onClick={onOpenCommand}
               className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm absolute right-1 top-1/2 -translate-y-1/2"
             >
-              <Command className="size-3.5" />
+              <Command className="size-3.5" />+ k
             </button>
           </label>
 

@@ -6,8 +6,8 @@ export default function VisitsLineChart({ data }: { data: { date: string; visits
   return (
     <ResponsiveContainer width="100%" height={260}>
       <AreaChart data={data} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
-        <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600 }} tickLine={false} axisLine={false} allowDecimals={false} />
+        <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }} tickLine={false} axisLine={false} stroke="var(--nb-border)" />
+        <YAxis tick={{ fontSize: 11, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }} tickLine={false} axisLine={false} allowDecimals={false} stroke="var(--nb-border)" />
         <Tooltip
           contentStyle={{
             border: "3px solid var(--nb-border)",

@@ -2,6 +2,9 @@ import type { NextRequest } from "next/server";
 import { json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
+import { dateKeyAtOffset, parseTzOffset, startOfLocalDayUtc, tzOffsetLabel } from "@/lib/date-buckets";
+
+const DAY_MS = 86_400_000;
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -9,15 +12,14 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
-  const start = new Date();
-  start.setFullYear(start.getFullYear() - 1);
-  start.setHours(0, 0, 0, 0);
+  const tzOffset = parseTzOffset(request.nextUrl.searchParams.get("tz"));
+  const start = startOfLocalDayUtc(Date.now(), tzOffset) - 364 * DAY_MS;
 
   const rows = await Visit.aggregate([
-    { $match: { userId: auth.user._id, visitedAt: { $gte: start } } },
+    { $match: { userId: auth.user._id, visitedAt: { $gte: new Date(start) } } },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt" } },
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt", timezone: tzOffsetLabel(tzOffset) } },
         count: { $sum: 1 },
       },
     },
@@ -27,16 +29,14 @@ export async function GET(request: NextRequest) {
   const activeDays = rows.map((row) => row._id);
   let currentStreak = 0;
   let longestStreak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   const activeDaySet = new Set(activeDays);
 
   // Calculate current streak from today backwards
-  const checkDate = new Date(today);
-  while (activeDaySet.has(checkDate.toISOString().slice(0, 10))) {
+  let checkDayStart = startOfLocalDayUtc(Date.now(), tzOffset);
+  while (activeDaySet.has(dateKeyAtOffset(checkDayStart, tzOffset))) {
     currentStreak++;
-    checkDate.setDate(checkDate.getDate() - 1);
+    checkDayStart -= DAY_MS;
   }
 
   // Calculate longest streak
@@ -45,10 +45,9 @@ export async function GET(request: NextRequest) {
     if (i === 0) {
       tempStreak = 1;
     } else {
-      const prev = new Date(activeDays[i - 1]);
-      const curr = new Date(activeDays[i]);
-      const diffMs = curr.getTime() - prev.getTime();
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      const prev = new Date(`${activeDays[i - 1]}T00:00:00Z`).getTime();
+      const curr = new Date(`${activeDays[i]}T00:00:00Z`).getTime();
+      const diffDays = Math.round((curr - prev) / DAY_MS);
       if (diffDays === 1) {
         tempStreak++;
       } else {

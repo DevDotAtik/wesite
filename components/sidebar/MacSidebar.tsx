@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   BarChart3,
-  Bell,
+  ChevronRight,
   Clock,
   FileText,
   Film,
@@ -109,6 +109,11 @@ function FolderTreeItem({
   onDropWebsite?: (folderId: string, websiteId: string) => void;
 }) {
   const [isDropTarget, setIsDropTarget] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+
+  const hasChildren = Boolean(folder.children?.length);
+  const isSelected = selectedFolder === folder._id;
+  const indentStep = 14;
 
   return (
     <div className="group relative">
@@ -124,10 +129,19 @@ function FolderTreeItem({
           setIsDropTarget(false);
           onDropWebsite?.(folder._id, event.dataTransfer.getData("application/x-wesite-website-id") || event.dataTransfer.getData("text/plain"));
         }}
-        style={{ paddingLeft: `${8 + depth * 16}px` }}
-        className={`nb-sidebar-item ${selectedFolder === folder._id ? "nb-sidebar-item-active" : ""} ${isDropTarget ? "nb-sidebar-item-active !border-[var(--nb-success)]" : ""}`}
+        style={{ paddingLeft: `${8 + depth * indentStep}px` }}
+        className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""} ${isDropTarget ? "nb-sidebar-item-active !border-[var(--nb-success)]" : ""}`}
       >
-        <span className="grid size-6 shrink-0 place-items-center rounded-lg border-[3px] bg-white shadow-sm" style={{ borderColor: "var(--nb-border)" }}>
+        <span className="grid w-3.5 shrink-0 place-items-center">
+          {hasChildren ? (
+            <ChevronRight
+              className={`size-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+              style={{ color: isSelected ? "var(--nb-primary-fg)" : "var(--nb-muted)" }}
+              onClick={(event) => { event.stopPropagation(); setExpanded((value) => !value); }}
+            />
+          ) : null}
+        </span>
+        <span className="grid size-6 shrink-0 place-items-center rounded-lg border-[3px] bg-[var(--nb-surface-strong)] shadow-sm" style={{ borderColor: "var(--nb-border)" }}>
           <FolderIcon value={folder.icon} className="size-3.5" color={folder.color ?? "#3b82f6"} />
         </span>
         <span className="min-w-0 flex-1 truncate">{folder.name}</span>
@@ -147,15 +161,21 @@ function FolderTreeItem({
           <Pencil className="size-3" />
         </button>
       ) : null}
-      {folder.children?.length ? (
-        <FolderTree
-          folders={folder.children}
-          depth={depth + 1}
-          selectedFolder={selectedFolder}
-          onSelectFolder={onSelectFolder}
-          onEditFolder={onEditFolder}
-          onDropWebsite={onDropWebsite}
-        />
+      {hasChildren && expanded ? (
+        <div className="relative">
+          <span
+            className="absolute bottom-3 top-0 w-px"
+            style={{ left: `${15 + depth * indentStep}px`, background: "var(--nb-border)", opacity: 0.6 }}
+          />
+          <FolderTree
+            folders={folder.children ?? []}
+            depth={depth + 1}
+            selectedFolder={selectedFolder}
+            onSelectFolder={onSelectFolder}
+            onEditFolder={onEditFolder}
+            onDropWebsite={onDropWebsite}
+          />
+        </div>
       ) : null}
     </div>
   );
@@ -233,15 +253,24 @@ export default function MacSidebar({
   );
 }
 
+function SectionHeader({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="mb-1.5 flex min-h-6 items-center justify-between gap-2 px-3">
+      <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>
+        {children}
+      </p>
+      {action}
+    </div>
+  );
+}
+
 function SidebarContent(props: SidebarProps) {
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto">
       {/* Global Navigation Views */}
       <section>
-        <h2 className="nb-tag mb-2 w-full">
-          Organizer
-        </h2>
-        <div className="space-y-1">
+        <SectionHeader>Organizer</SectionHeader>
+        <div className="space-y-0.5">
           {globalViews.map((item) => {
             const Icon = item.icon;
             const isSelected = props.selectedFolder === item.id && !props.selectedTag;
@@ -252,7 +281,7 @@ function SidebarContent(props: SidebarProps) {
                 onClick={() => { props.onSelectTag?.(""); props.onSelectFolder(item.id); }}
                 className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""}`}
               >
-                <Icon className={`size-4 ${isSelected ? "" : "opacity-60"}`} />
+                <Icon className={`size-4 shrink-0 ${isSelected ? "" : "opacity-60"}`} />
                 <span className="min-w-0 flex-1 truncate">{item.label}</span>
               </button>
             );
@@ -260,49 +289,18 @@ function SidebarContent(props: SidebarProps) {
         </div>
       </section>
 
-      {/* Quick Links */}
-      <section>
-        <h2 className="nb-tag mb-2 w-full">
-          Insights
-        </h2>
-        <div className="space-y-1">
-          <a
-            href="/analytics"
-            className="nb-sidebar-item"
-          >
-            <BarChart3 className="size-4 opacity-60" />
-            <span className="min-w-0 flex-1 truncate">Analytics Dashboard</span>
-          </a>
-          <a
-            href="/history"
-            className="nb-sidebar-item"
-          >
-            <Clock className="size-4 opacity-60" />
-            <span className="min-w-0 flex-1 truncate">Browsing History</span>
-          </a>
-          <a
-            href="/monitoring"
-            className="nb-sidebar-item"
-          >
-            <Bell className="size-4 opacity-60" />
-            <span className="min-w-0 flex-1 truncate">Website Monitoring</span>
-          </a>
-        </div>
-      </section>
-
       {/* Media Type Filters */}
       <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="nb-tag w-full">
-            Media Types
-          </h2>
-          {props.selectedMediaType !== "all" ? (
-            <button type="button" onClick={() => props.onSelectMediaType?.("all")} className="nb-btn nb-btn-primary nb-btn-sm">
+        <SectionHeader
+          action={props.selectedMediaType !== "all" ? (
+            <button type="button" onClick={() => props.onSelectMediaType?.("all")} className="nb-btn nb-btn-ghost nb-btn-sm text-[10px]">
               Reset
             </button>
-          ) : null}
-        </div>
-        <div className="space-y-1">
+          ) : undefined}
+        >
+          Media Types
+        </SectionHeader>
+        <div className="space-y-0.5">
           {mediaTypes.map((item) => {
             const Icon = item.icon;
             const isSelected = props.selectedMediaType === item.id;
@@ -313,7 +311,7 @@ function SidebarContent(props: SidebarProps) {
                 onClick={() => props.onSelectMediaType?.(isSelected ? "all" : item.id)}
                 className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""}`}
               >
-                <Icon className={`size-3.5 ${isSelected ? "" : "opacity-60"}`} />
+                <Icon className={`size-3.5 shrink-0 ${isSelected ? "" : "opacity-60"}`} />
                 <span className="min-w-0 flex-1 truncate">{item.label}</span>
               </button>
             );
@@ -323,11 +321,8 @@ function SidebarContent(props: SidebarProps) {
 
       {/* Collections / Folders Tree */}
       <section className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="nb-tag w-full">
-            Collections
-          </h2>
-          {props.onCreateFolder ? (
+        <SectionHeader
+          action={props.onCreateFolder ? (
             <button
               type="button"
               onClick={props.onCreateFolder}
@@ -336,8 +331,10 @@ function SidebarContent(props: SidebarProps) {
             >
               <Plus className="size-3.5" />
             </button>
-          ) : null}
-        </div>
+          ) : undefined}
+        >
+          Collections
+        </SectionHeader>
         <div className="space-y-0.5">
           {props.folders.length ? (
             <FolderTree
@@ -364,10 +361,8 @@ function SidebarContent(props: SidebarProps) {
       {/* Popular Tags */}
       {props.tags && props.tags.length > 0 ? (
         <section>
-          <h2 className="nb-tag mb-2 w-full">
-            Tags
-          </h2>
-          <div className="flex flex-wrap gap-1">
+          <SectionHeader>Tags</SectionHeader>
+          <div className="flex flex-wrap gap-1 px-1">
             {props.tags.slice(0, 10).map((tag) => {
               const isSelected = props.selectedTag === tag;
               return (

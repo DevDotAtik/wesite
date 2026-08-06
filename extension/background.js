@@ -6,56 +6,68 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "save-page") {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      if (!tab?.url) return;
-
-      chrome.storage.local.get(["wesite_token", "wesite_api_url"], async (storage) => {
-        const token = storage.wesite_token;
-        const baseUrl = storage.wesite_api_url || "http://localhost:3000";
-
-        if (!token) {
-          chrome.action.openPopup();
-          return;
-        }
-
-        try {
-          const response = await fetch(`${baseUrl}/api/websites`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-            body: JSON.stringify({ url: tab.url }),
-          });
-
-          const data = await response.json().catch(() => ({}));
-
-          if (response.ok) {
-            chrome.notifications?.create({
-              type: "basic",
-              iconUrl: "icons/icon-128.png",
-              title: "Wesite",
-              message: `Saved: ${data.website?.title || tab.url}`,
-            });
-          } else if (response.status === 409) {
-            chrome.notifications?.create({
-              type: "basic",
-              iconUrl: "icons/icon-128.png",
-              title: "Wesite",
-              message: "This page is already saved!",
-            });
-          } else {
-            chrome.action.openPopup();
-          }
-        } catch {
-          chrome.action.openPopup();
-        }
-      });
-    });
+function openPopupSafely() {
+  try {
+    chrome.action.openPopup();
+  } catch {
+    // openPopup requires a user gesture in some contexts; fall back silently.
   }
+}
+
+function notify(message) {
+  if (!chrome.notifications) return;
+  try {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon-128.png",
+      title: "Wesite",
+      message,
+    });
+  } catch {
+    // Notifications are best-effort.
+  }
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command !== "save-page") return;
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (!tab?.url) return;
+
+    chrome.storage.local.get(["wesite_token", "wesite_api_url"], async (storage) => {
+      const token = storage.wesite_token;
+      const baseUrl = storage.wesite_api_url || "http://localhost:3000";
+
+      if (!token) {
+        openPopupSafely();
+        return;
+      }
+
+      try {
+        const response = await fetch(`${baseUrl}/api/websites`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url: tab.url }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+          notify(`Saved: ${data.website?.title || tab.url}`);
+        } else if (response.status === 409) {
+          notify("This page is already saved!");
+        } else if (response.status === 401) {
+          openPopupSafely();
+        }
+      } catch {
+        openPopupSafely();
+      }
+    });
+  });
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

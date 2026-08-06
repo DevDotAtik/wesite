@@ -5,6 +5,7 @@ import Folder from "@/models/Folder";
 import Todo from "@/models/Todo";
 import Visit from "@/models/Visit";
 import Website from "@/models/Website";
+import { parseTzOffset, startOfLocalDayUtc } from "@/lib/date-buckets";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -12,8 +13,8 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const tzOffset = parseTzOffset(request.nextUrl.searchParams.get("tz"));
+  const startOfToday = new Date(startOfLocalDayUtc(Date.now(), tzOffset));
   const [totalWebsites, totalFolders, totalVisits, visitsToday, firstVisit, favoriteWebsites, trashedWebsites, activeTodos, completedTodos] = await Promise.all([
     Website.countDocuments({ userId: auth.user._id, isTrashed: false }),
     Folder.countDocuments({ userId: auth.user._id }),
