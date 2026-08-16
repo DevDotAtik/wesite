@@ -39,8 +39,16 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full">
+        <a
+          href="#main-content"
+          className="sr-only z-50 focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-xl focus:border-3 focus:px-4 focus:py-2 focus:font-bold"
+          style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", borderColor: "var(--nb-border)" }}
+        >
+          Skip to content
+        </a>
+        <div className="nb-noise" aria-hidden="true" />
         <ThemeProvider />
-        {children}
+        <main id="main-content">{children}</main>
         <Toaster
           richColors
           position="top-right"

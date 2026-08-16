@@ -79,7 +79,7 @@
   --nb-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --nb-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  --nb-bg: #000000;
+  --nb-bg: #0b0b0d;
   --nb-fg: #ededed;
 
   --nb-surface: #0a0a0a;
@@ -160,6 +160,24 @@ body {
 ::selection {
   background: var(--nb-primary);
   color: var(--nb-primary-fg);
+}
+
+/* ============================================
+   NB NOISE — Global grain overlay
+   ============================================ */
+
+.nb-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+
+[data-theme="dark"] .nb-noise {
+  opacity: 0.06;
 }
 
 /* ============================================
@@ -679,6 +697,204 @@ select.nb-input {
 
 .nb-float {
   animation: nb-float 3s ease-in-out infinite;
+}
+
+/* ============================================
+   NB 3D BACKGROUND — Animated scene layer
+   ============================================ */
+
+.nb-bg3d {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.nb-bg3d-scene {
+  position: absolute;
+  inset: 0;
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+}
+
+.nb-bg3d-blur {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--nb-bg) 48%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Perspective grid floor */
+.nb-bg3d-grid {
+  position: absolute;
+  inset: auto -20% -22% -20%;
+  height: 45%;
+  background-image:
+    linear-gradient(var(--nb-border) 3px, transparent 3px),
+    linear-gradient(90deg, var(--nb-border) 3px, transparent 3px);
+  background-size: 56px 56px;
+  opacity: 0.4;
+  transform: perspective(900px) rotateX(72deg);
+  transform-origin: top center;
+  animation: nb-grid-move 3.5s linear infinite;
+  will-change: background-position;
+  mask-image: linear-gradient(to bottom, transparent, black 45%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 45%);
+}
+
+@keyframes nb-grid-move {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 56px, 56px 0; }
+}
+
+/* Rotating wireframe cubes */
+.nb-cube3d {
+  position: absolute;
+  transform-style: preserve-3d;
+  animation: nb-cube-spin 26s linear infinite;
+  will-change: transform;
+}
+
+.nb-cube3d-lg {
+  --nb-cube-half: 150px;
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  right: -3%;
+}
+
+.nb-cube3d-sm {
+  --nb-cube-half: 80px;
+  width: 160px;
+  height: 160px;
+  bottom: 6%;
+  left: 5%;
+  animation-duration: 20s;
+  animation-direction: reverse;
+}
+
+.nb-cube3d-blue { color: var(--nb-bruto-blue); }
+.nb-cube3d-pink { color: var(--nb-bruto-pink); }
+
+.nb-cube3d-face {
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--nb-border);
+  background: currentColor;
+  opacity: 0.14;
+  box-shadow: 0 0 48px currentColor;
+}
+
+.nb-cube3d-face-front  { transform: translateZ(var(--nb-cube-half)); }
+.nb-cube3d-face-back   { transform: rotateY(180deg) translateZ(var(--nb-cube-half)); }
+.nb-cube3d-face-left   { transform: rotateY(-90deg) translateZ(var(--nb-cube-half)); }
+.nb-cube3d-face-right  { transform: rotateY(90deg) translateZ(var(--nb-cube-half)); }
+.nb-cube3d-face-top    { transform: rotateX(90deg) translateZ(var(--nb-cube-half)); }
+.nb-cube3d-face-bottom { transform: rotateX(-90deg) translateZ(var(--nb-cube-half)); }
+
+@keyframes nb-cube-spin {
+  from { transform: rotateX(-18deg) rotateY(0deg); }
+  to { transform: rotateX(-18deg) rotateY(360deg); }
+}
+
+/* 3D rings */
+.nb-ring {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border: 8px solid var(--nb-bruto-yellow);
+  border-radius: 50%;
+  opacity: 0.45;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.nb-ring-1 {
+  top: -8%;
+  left: -7%;
+  animation: nb-ring-spin-x 22s linear infinite;
+}
+
+.nb-ring-2 {
+  bottom: -16%;
+  right: -5%;
+  border-color: var(--nb-bruto-mint);
+  animation: nb-ring-spin-y 28s linear infinite;
+}
+
+@keyframes nb-ring-spin-x {
+  from { transform: rotateX(72deg) rotateZ(0deg); }
+  to { transform: rotateX(72deg) rotateZ(360deg); }
+}
+
+@keyframes nb-ring-spin-y {
+  from { transform: rotateY(60deg) rotateZ(0deg); }
+  to { transform: rotateY(60deg) rotateZ(-360deg); }
+}
+
+/* Floating accent shapes */
+.nb-shape {
+  position: absolute;
+  border: 3px solid var(--nb-border);
+  opacity: 0.7;
+  animation: nb-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.nb-shape-1 {
+  width: 28px;
+  height: 28px;
+  top: 24%;
+  left: 20%;
+  background: var(--nb-bruto-yellow);
+  transform: rotate(14deg);
+}
+
+.nb-shape-2 {
+  width: 18px;
+  height: 18px;
+  top: 64%;
+  right: 18%;
+  border-radius: 50%;
+  background: var(--nb-bruto-orange);
+  animation-delay: -2.5s;
+}
+
+.nb-shape-3 {
+  width: 42px;
+  height: 42px;
+  bottom: 28%;
+  left: 11%;
+  background: var(--nb-bruto-cyan);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  animation-delay: -4s;
+}
+
+.nb-shape-4 {
+  width: 14px;
+  height: 14px;
+  top: 36%;
+  right: 30%;
+  background: var(--nb-secondary);
+  animation-delay: -6s;
+}
+
+@media (max-width: 768px) {
+  .nb-cube3d-lg { --nb-cube-half: 90px; width: 180px; height: 180px; }
+  .nb-cube3d-sm { display: none; }
+  .nb-ring { width: 260px; height: 260px; }
+  .nb-shape-3 { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-cube3d,
+  .nb-ring,
+  .nb-shape,
+  .nb-bg3d-grid {
+    animation: none;
+  }
 }
 
 /* ============================================

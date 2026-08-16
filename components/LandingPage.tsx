@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import LandingBackground3D from "@/components/landing/LandingBackground3D";
 import {
   ArrowRight,
   CheckCircle2,
@@ -8,6 +9,7 @@ import {
   Compass,
   FileText,
   Film,
+  Fingerprint,
   FolderPlus,
   Globe,
   ImageIcon,
@@ -15,7 +17,6 @@ import {
   Newspaper,
   Plus,
   Search,
-  Shield,
   Sparkles,
 } from "lucide-react";
 
@@ -26,7 +27,9 @@ type LandingPageProps = {
 export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
+    <div className="relative isolate min-h-screen overflow-hidden">
+      <LandingBackground3D />
+
       {/* 1. Marketing Header */}
       <header className="sticky top-0 z-50 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -65,13 +68,13 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
           {/* Announcement pill */}
     
 
-          <h1 className="mx-auto max-w-4xl text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl" style={{ color: "var(--nb-fg)" }}>
+          <h1 className="mx-auto max-w-4xl text-balance text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl" style={{ color: "var(--nb-fg)" }}>
             All your bookmarks{" "}
             <span style={{ color: "var(--nb-primary)" }}>in one place.</span>
           </h1>
 
           <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl" style={{ color: "var(--nb-muted)" }}>
-            Wesite is the modern curation workspace to save articles, design inspirations, videos, and code tools. Organize seamlessly into visual collections.
+            Wesite is the modern curation workspace to save articles, design inspirations, videos, and code tools. Organize them into visual collections.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -200,11 +203,11 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       <section id="features" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
-              Supercharged Curation
+            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+              Built for serious curators
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
-              Everything you need for shortcutting research and organizing your personal knowledge base.
+              Save fast, find faster. Organize research, inspiration, and references without the mess.
             </p>
           </div>
 
@@ -267,7 +270,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             {/* Card 5: Privacy */}
             <div className="nb-card-static p-6" style={{ background: "var(--nb-surface)" }}>
               <div className="nb-card-mint grid size-12 place-items-center rounded-2xl border-[3px]" style={{ borderColor: "var(--nb-border)" }}>
-                <Shield className="size-6" />
+                <Fingerprint className="size-6" />
               </div>
               <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Private & Isolated</h3>
               <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
@@ -281,50 +284,76 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       {/* 5. How it Works */}
       <section id="how-it-works" className="py-20 lg:py-28" style={{ background: "var(--nb-surface)", borderTop: "3px solid var(--nb-border)", borderBottom: "3px solid var(--nb-border)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
-              Curate in seconds
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
-              From a raw web link to an organized visual collection in three simple steps.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {[
-              {
-                step: "1",
-                title: "Save",
-                desc: "Collect articles, design inspirations, code repositories, and videos instantly.",
-                icon: Plus,
-                colorClass: "nb-card-yellow",
-              },
-              {
-                step: "2",
-                title: "Organize",
-                desc: "Group bookmarks into nested collections, add custom tags, and set media types.",
-                icon: FolderPlus,
-                colorClass: "nb-card-blue",
-              },
-              {
-                step: "3",
-                title: "Find",
-                desc: "Locate any saved resource in milliseconds with search and command palette.",
-                icon: Compass,
-                colorClass: "nb-card-mint",
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="nb-card-static p-8 text-center"
-              >
-                <div className={`${item.colorClass} mx-auto grid size-14 place-items-center rounded-2xl border-3 text-lg font-extrabold`} style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}>
-                  {item.step}
+          <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
+            {/* Sticky intro */}
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-28">
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--nb-primary)" }}>
+                  How it works
+                </p>
+                <h2 className="mt-3 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+                  Curate in seconds
+                </h2>
+                <p className="mt-4 max-w-sm text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
+                  From a raw web link to an organized visual collection in three simple steps.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-2">
+                  {["Save", "Organize", "Find"].map((label) => (
+                    <span key={label} className="nb-tag nb-tag-secondary">{label}</span>
+                  ))}
                 </div>
-                <h3 className="mt-6 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>{item.desc}</p>
               </div>
-            ))}
+            </div>
+
+            {/* Vertical steps */}
+            <div className="relative lg:col-span-7">
+              <div
+                className="absolute bottom-4 left-8 top-4 hidden w-[3px] sm:block"
+                style={{ background: "var(--nb-border)", opacity: 0.18 }}
+                aria-hidden="true"
+              />
+              <div>
+                {[
+                  {
+                    step: "1",
+                    title: "Save",
+                    desc: "Collect articles, design inspirations, code repositories, and videos instantly.",
+                    icon: Plus,
+                    colorClass: "nb-card-yellow",
+                  },
+                  {
+                    step: "2",
+                    title: "Organize",
+                    desc: "Group bookmarks into nested collections, add custom tags, and set media types.",
+                    icon: FolderPlus,
+                    colorClass: "nb-card-blue",
+                  },
+                  {
+                    step: "3",
+                    title: "Find",
+                    desc: "Locate any saved resource in milliseconds with search and command palette.",
+                    icon: Compass,
+                    colorClass: "nb-card-mint",
+                  },
+                ].map((item) => (
+                  <div key={item.step} className="group flex gap-5 pb-12 last:pb-0">
+                    <div
+                      className={`${item.colorClass} relative z-10 grid size-16 shrink-0 place-items-center rounded-2xl border-3 text-xl font-extrabold transition-transform duration-200 group-hover:-translate-y-1 group-hover:-rotate-2`}
+                      style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}
+                    >
+                      {item.step}
+                    </div>
+                    <div className="pt-1">
+                      <div className="flex items-center gap-2.5">
+                        <item.icon className="size-5" style={{ color: "var(--nb-primary)" }} />
+                        <h3 className="text-2xl font-bold" style={{ color: "var(--nb-fg)" }}>{item.title}</h3>
+                      </div>
+                      <p className="mt-2 max-w-md text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -333,7 +362,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       <section id="pricing" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
               Simple, transparent pricing
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
@@ -347,7 +376,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Free Starter</h3>
               <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>Perfect for individual bookmarking</p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold" style={{ color: "var(--nb-fg)" }}>$0</span>
+                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$0</span>
                 <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ forever</span>
               </div>
               <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
@@ -376,7 +405,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Pro Workspace</h3>
               <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>For power users and researchers</p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold" style={{ color: "var(--nb-fg)" }}>$4.99</span>
+                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$4.99</span>
                 <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ month</span>
               </div>
               <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
@@ -404,7 +433,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="nb-card-static px-6 py-14 text-center sm:px-14 sm:py-18" style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)" }}>
-            <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to organize the web?</h2>
+            <h2 className="text-balance text-3xl font-extrabold sm:text-4xl">Ready to organize the web?</h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed opacity-80">
               Join thousands of creatives, researchers, and power users who have upgraded their digital curation workspace.
             </p>
@@ -439,6 +468,8 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               <a href="#pricing" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Pricing</a>
               <Link href="/login" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Sign In</Link>
               <Link href="/register" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Register</Link>
+              <Link href="/privacy" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Privacy</Link>
+              <Link href="/terms" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Terms</Link>
             </div>
             <p className="text-xs" style={{ color: "var(--nb-muted)" }}>
               &copy; {new Date().getFullYear()} Wesite. All rights reserved.
