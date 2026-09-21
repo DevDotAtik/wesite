@@ -29,7 +29,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
+    <main className="min-h-[100dvh]" style={{ background: "var(--nb-bg)" }}>
       <section className="py-16 lg:py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <Link href="/" className="nb-btn nb-btn-ghost nb-btn-sm">← Back to home</Link>

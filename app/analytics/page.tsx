@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, Flame, FolderOpen, Loader2, Trash2, TrendingUp } from "lucide-react";
+import { BarChart3, Flame, FolderOpen, Trash2, TrendingUp } from "lucide-react";
 import Navbar from "@/components/navbar";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ActivityHeatmap from "@/components/charts/ActivityHeatmap";
 import FolderDistributionPieChart from "@/components/charts/FolderDistributionPieChart";
 import TopWebsitesBarChart from "@/components/charts/TopWebsitesBarChart";
@@ -86,7 +87,7 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
+    <div className="min-h-[100dvh]" style={{ background: "var(--nb-bg)" }}>
       <Navbar />
       <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
@@ -114,8 +115,8 @@ export default function AnalyticsPage() {
 
           <div className="p-4 sm:p-6">
             {loading ? (
-              <div className="grid min-h-72 place-items-center">
-                <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
+              <div className="min-h-72">
+                <LoadingSkeleton />
               </div>
             ) : (
               <>

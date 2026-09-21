@@ -14,7 +14,15 @@ export async function POST(request: NextRequest) {
 
   const user = await User.findOne({ email: data.email.toLowerCase() });
 
-  if (!user || !(await verifyPassword(data.password, user.passwordHash))) {
+  if (!user) {
+    return apiError("Invalid email or password", 401);
+  }
+
+  if (!user.passwordHash) {
+    return apiError("This account uses Google sign-in. Please continue with Google.", 401);
+  }
+
+  if (!(await verifyPassword(data.password, user.passwordHash))) {
     return apiError("Invalid email or password", 401);
   }
 

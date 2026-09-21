@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="grid min-h-screen place-items-center p-6" style={{ background: "var(--nb-bg)" }}>
+    <main className="grid min-h-[100dvh] place-items-center p-6" style={{ background: "var(--nb-bg)" }}>
       <section className="nb-card-static w-full max-w-md p-8 text-center">
         <div className="nb-card-coral mx-auto mb-6 grid size-16 place-items-center rounded-2xl border-3 text-2xl font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-md)" }}>
           404

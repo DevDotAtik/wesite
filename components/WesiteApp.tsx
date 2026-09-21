@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Bookmark, CheckSquare, Clock3, ClipboardPaste, FolderOpen, FolderPlus, Heart, Loader2, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, CheckSquare, Clock3, ClipboardPaste, FolderOpen, FolderPlus, Heart, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FolderCard from "@/components/grid/FolderCard";
 import WebsiteCard, { type WebsiteItem } from "@/components/grid/WebsiteCard";
@@ -212,7 +213,7 @@ export default function WesiteApp() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-[100dvh] flex-col">
       <Navbar
         search={search}
         onSearchChange={setSearch}
@@ -439,8 +440,8 @@ export default function WesiteApp() {
 
               {/* Loading */}
               {loading ? (
-                <div className="grid min-h-72 place-items-center">
-                  <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
+                <div className="min-h-72">
+                  <LoadingSkeleton />
                 </div>
               ) : (
                 <>

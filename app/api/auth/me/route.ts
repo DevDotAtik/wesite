@@ -55,11 +55,16 @@ export async function PATCH(request: NextRequest) {
   if (data.themePreference) user.themePreference = data.themePreference;
 
   if (data.newPassword) {
-    if (!data.currentPassword || !(await verifyPassword(data.currentPassword, user.passwordHash))) {
-      return apiError("Current password is incorrect", 400);
-    }
+    if (!user.passwordHash) {
+      // Google-only account setting its first password — no current password needed.
+      user.passwordHash = await hashPassword(data.newPassword);
+    } else {
+      if (!data.currentPassword || !(await verifyPassword(data.currentPassword, user.passwordHash))) {
+        return apiError("Current password is incorrect", 400);
+      }
 
-    user.passwordHash = await hashPassword(data.newPassword);
+      user.passwordHash = await hashPassword(data.newPassword);
+    }
   }
 
   await user.save();

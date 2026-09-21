@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, BellOff, CheckCircle2, Clock3, ExternalLink, Loader2, Plus, RefreshCcw, Trash2, X } from "lucide-react";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import Navbar from "@/components/navbar";
 
 type MonitorWebsite = {
@@ -104,7 +105,7 @@ export default function MonitoringPage() {
   const monitoredIds = new Set(monitors.map((m) => typeof m.websiteId === "string" ? m.websiteId : m.websiteId._id));
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
+    <div className="min-h-[100dvh]" style={{ background: "var(--nb-bg)" }}>
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
@@ -130,8 +131,8 @@ export default function MonitoringPage() {
 
           <div className="p-4 sm:p-6">
             {loading ? (
-              <div className="grid min-h-72 place-items-center">
-                <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
+              <div className="min-h-72">
+                <LoadingSkeleton />
               </div>
             ) : (
               <>

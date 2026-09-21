@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Clock3, Download, Loader2, Trash2, X } from "lucide-react";
+import { Clock3, Download, Trash2, X } from "lucide-react";
 import Navbar from "@/components/navbar";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 type Visit = {
   _id: string;
@@ -94,7 +95,7 @@ export default function HistoryPage() {
   const activeDays = entries.filter(([, visits]) => visits.length).length;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
+    <div className="min-h-[100dvh]" style={{ background: "var(--nb-bg)" }}>
       <Navbar search={query} onSearchChange={setQuery} />
       <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
@@ -167,8 +168,8 @@ export default function HistoryPage() {
 
             {/* Day Groups */}
             {loading ? (
-              <div className="grid min-h-72 place-items-center">
-                <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
+              <div className="min-h-72">
+                <LoadingSkeleton />
               </div>
             ) : (
               <div className="space-y-5">
