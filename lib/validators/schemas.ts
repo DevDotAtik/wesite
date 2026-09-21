@@ -40,6 +40,9 @@ export const folderPatchSchema = folderCreateSchema.partial().extend({
 export const websiteCreateSchema = z.object({
   url: z.string().min(1).max(2048),
   folderId: objectIdSchema.nullish(),
+  title: z.string().trim().min(1).max(240).optional(),
+  description: z.string().trim().max(1000).optional(),
+  customIconUrl: z.string().url().or(z.literal("")).optional(),
   tags: z.array(z.string().min(1).max(40)).max(30).optional(),
   isFavorite: z.boolean().optional(),
   notes: z.string().max(5000).optional(),
@@ -54,7 +57,9 @@ export const websitePatchSchema = z.object({
   notes: z.string().max(5000).optional(),
   customIconUrl: z.string().url().or(z.literal("")).optional(),
   isFavorite: z.boolean().optional(),
-  isTrashed: z.boolean().optional(),
+  // NOTE: isTrashed is intentionally absent — use the
+  // trash / restore / permanent-delete routes instead so
+  // trashedAt and duplicate checks stay consistent.
 });
 
 export const todoCreateSchema = z.object({

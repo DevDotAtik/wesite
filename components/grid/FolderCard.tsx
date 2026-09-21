@@ -34,13 +34,13 @@ export default function FolderCard({ id, name, color = "#3b82f6", icon, count = 
         isDropTarget ? "!border-[var(--nb-success)] !bg-[var(--nb-surface-alt)] ring-2 ring-[var(--nb-success)]/25" : ""
       }`}
     >
-      <button type="button" onClick={() => onOpen(id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <button type="button" aria-label={`Open ${name} folder`} onClick={() => onOpen(id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="nb-card-yellow grid size-11 shrink-0 place-items-center rounded-xl border-[3px]" style={{ borderColor: "var(--nb-border)", background: color, boxShadow: "2px 2px 0 0 var(--nb-shadow)" }}>
           <FolderIcon value={icon} className="size-5 text-white" color="#ffffff" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold" style={{ color: "var(--nb-fg)" }}>{name}</span>
-          <span className="text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>{count} items</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>{count} {count === 1 ? "item" : "items"}</span>
         </span>
       </button>
 

@@ -31,7 +31,12 @@ export async function POST(request: NextRequest) {
 
   const token = signAuthToken({ userId: user._id.toString(), email: user.email });
   const response = NextResponse.json({
-    user: serializeDocument({ ...user.toObject(), passwordHash: undefined }),
+    user: serializeDocument({
+      ...user.toObject(),
+      passwordHash: undefined,
+      resetTokenHash: undefined,
+      resetTokenExpiresAt: undefined,
+    }),
   });
 
   response.cookies.set(AUTH_COOKIE, token, authCookieOptions());

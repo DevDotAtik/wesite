@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, invalidIdResponse, isValidObjectId, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { folderPatchSchema } from "@/lib/validators/schemas";
 import Folder from "@/models/Folder";
@@ -17,6 +17,7 @@ export async function PATCH(request: NextRequest, context: Context) {
   if (error) return error;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return invalidIdResponse();
   await connectToDatabase();
   const currentFolder = await Folder.findOne({ _id: id, userId: auth.user._id }).lean();
 
@@ -29,18 +30,25 @@ export async function PATCH(request: NextRequest, context: Context) {
   }
 
   if (data.parentFolderId) {
+    // Verify the new parent exists and belongs to this user.
+    const parent = await Folder.findOne({ _id: data.parentFolderId, userId: auth.user._id }).select("_id").lean();
+    if (!parent) {
+      return apiError("Parent folder not found", 404);
+    }
+
     const folders = await Folder.find({ userId: auth.user._id }).select("_id parentFolderId").lean();
     const descendants = new Set<string>();
     const queue = [id];
 
     while (queue.length) {
-      const currentId = queue.shift();
+      const currentId = queue.pop();
       if (!currentId) continue;
 
       for (const folder of folders) {
-        if (String(folder.parentFolderId) === currentId && !descendants.has(String(folder._id))) {
-          descendants.add(String(folder._id));
-          queue.push(String(folder._id));
+        const folderId = String(folder._id);
+        if (String(folder.parentFolderId) === currentId && !descendants.has(folderId)) {
+          descendants.add(folderId);
+          queue.push(folderId);
         }
       }
     }
@@ -67,6 +75,7 @@ export async function DELETE(request: NextRequest, context: Context) {
   if (auth.response) return auth.response;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return invalidIdResponse();
   const cascade = request.nextUrl.searchParams.get("cascade") === "true";
 
   await connectToDatabase();

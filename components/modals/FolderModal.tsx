@@ -57,6 +57,15 @@ export default function FolderModal({
     return () => window.clearTimeout(timer);
   }, [defaultParentFolderId, initialFolder, open]);
 
+  useEffect(() => {
+    if (!open) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   async function submit(event: React.FormEvent) {
@@ -99,16 +108,24 @@ export default function FolderModal({
   }
 
   return (
-    <div className="nb-overlay" style={{ alignItems: "flex-end" }}>
+    <div
+      className="nb-overlay"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <form
         onSubmit={submit}
-        className="nb-modal min-h-[40vh] w-full rounded-b-none sm:rounded-b-2xl sm:max-w-lg"
-        style={{ alignSelf: "stretch" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isEdit ? "Edit folder" : "Create folder"}
+        className="nb-modal w-full sm:max-w-lg"
       >
         <div className="nb-modal-header">
           <div>
             <h2 className="text-lg font-extrabold" style={{ color: "var(--nb-fg)" }}>{isEdit ? "Customize Folder" : "Create Folder"}</h2>
-            {isEdit && initialFolder ? <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>{initialFolder._id}</p> : null}
+            {isEdit && initialFolder ? <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>Websites inside stay in the parent folder.</p> : null}
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
             <X className="size-4" />
@@ -137,6 +154,8 @@ export default function FolderModal({
                     key={option}
                     type="button"
                     onClick={() => setColor(option)}
+                    aria-label={`Use color ${option}`}
+                    aria-pressed={color === option}
                     className="relative h-10 rounded-xl border-[3px] shadow-sm transition hover:-translate-y-0.5"
                     style={{ backgroundColor: option, borderColor: color === option ? "var(--nb-border)" : "transparent" }}
                   >
@@ -156,6 +175,8 @@ export default function FolderModal({
                     key={option.value}
                     type="button"
                     onClick={() => setIcon(option.value)}
+                    aria-label={`Use ${option.label} icon`}
+                    aria-pressed={icon === option.value}
                     className={`nb-sidebar-item ${icon === option.value ? "nb-sidebar-item-active" : ""}`}
                   >
                     <FolderIcon value={option.value} className="size-4" color={color} />

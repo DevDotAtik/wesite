@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
 
   return json({
     token,
-    user: serializeDocument({ ...user.toObject(), passwordHash: undefined }),
+    user: serializeDocument({
+      ...user.toObject(),
+      passwordHash: undefined,
+      resetTokenHash: undefined,
+      resetTokenExpiresAt: undefined,
+    }),
   });
 }

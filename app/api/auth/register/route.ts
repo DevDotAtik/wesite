@@ -25,10 +25,24 @@ export async function POST(request: NextRequest) {
     name: data.name,
     email: data.email.toLowerCase(),
     passwordHash: await hashPassword(data.password),
+  }).catch((error: { code?: number }) => {
+    if (error?.code === 11000) return null;
+    throw error;
   });
+
+  if (!user) {
+    return apiError("An account with this email already exists", 409);
+  }
   const token = signAuthToken({ userId: user._id.toString(), email: user.email });
   const response = NextResponse.json(
-    { user: serializeDocument({ ...user.toObject(), passwordHash: undefined }) },
+    {
+      user: serializeDocument({
+        ...user.toObject(),
+        passwordHash: undefined,
+        resetTokenHash: undefined,
+        resetTokenExpiresAt: undefined,
+      }),
+    },
     { status: 201 },
   );
 

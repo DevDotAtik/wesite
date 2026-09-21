@@ -53,12 +53,17 @@ export async function POST(request: NextRequest) {
     return apiError("Google credential was issued for a different app", 401);
   }
 
+  if (payload.email_verified !== true) {
+    return apiError("Your Google email address is not verified", 401);
+  }
+
   await connectToDatabase();
 
   const email = payload.email.toLowerCase();
   const googleId = payload.sub;
   const name = payload.name || email.split("@")[0] || "Google User";
   const avatarUrl = payload.picture || "";
+  const emailVerified = payload.email_verified === true;
 
   // 1. Returning Google user → log them in.
   let user = await User.findOne({ googleId });
@@ -69,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       user.googleId = googleId;
-      user.emailVerified = payload.email_verified ?? true;
+      user.emailVerified = emailVerified;
       if (!user.avatarUrl && avatarUrl) {
         user.avatarUrl = avatarUrl;
       }
@@ -88,7 +93,7 @@ export async function POST(request: NextRequest) {
       passwordHash: null,
       googleId,
       authProvider: "google",
-      emailVerified: payload.email_verified ?? true,
+      emailVerified,
       avatarUrl,
     });
   }
@@ -98,6 +103,7 @@ export async function POST(request: NextRequest) {
     ...user.toObject(),
     passwordHash: undefined,
     resetTokenHash: undefined,
+    resetTokenExpiresAt: undefined,
   });
 
   const response = NextResponse.json({ user: safeUser });

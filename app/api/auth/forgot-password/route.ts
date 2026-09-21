@@ -2,7 +2,6 @@ import crypto from "crypto";
 import type { NextRequest } from "next/server";
 import { json, parseBody } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
-import { hashPassword } from "@/lib/auth";
 import { forgotPasswordSchema } from "@/lib/validators/schemas";
 import User from "@/models/User";
 
@@ -18,7 +17,10 @@ export async function POST(request: NextRequest) {
   const token = crypto.randomBytes(32).toString("hex");
 
   if (user) {
-    user.resetTokenHash = await hashPassword(token);
+    // SHA-256 (fast, indexed lookup) instead of bcrypt: the token has
+    // 256 bits of entropy, so a fast hash is sufficient and avoids an
+    // O(N) bcrypt scan on reset.
+    user.resetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
     user.resetTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 30);
     await user.save();
   }

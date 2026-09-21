@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { json, parseBody, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { folderCreateSchema } from "@/lib/validators/schemas";
 import Folder from "@/models/Folder";
@@ -67,6 +67,14 @@ export async function POST(request: NextRequest) {
   if (error) return error;
 
   await connectToDatabase();
+
+  if (data.parentFolderId) {
+    const parent = await Folder.findOne({ _id: data.parentFolderId, userId: auth.user._id }).select("_id").lean();
+    if (!parent) {
+      return apiError("Parent folder not found", 404);
+    }
+  }
+
   const folder = await Folder.create({
     userId: auth.user._id,
     name: data.name,

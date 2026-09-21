@@ -713,9 +713,17 @@ select.nb-input {
 
 .nb-bg3d-scene {
   position: absolute;
-  inset: 0;
+  inset: -3%;
   perspective: 1200px;
   perspective-origin: 50% 40%;
+  /* Mouse parallax offsets (unitless -1..1, set from JS). Falls back to 0. */
+  transform: translate3d(
+    calc(var(--nb-px, 0) * 18px),
+    calc(var(--nb-py, 0) * 12px),
+    0
+  );
+  transition: transform 0.35s ease-out;
+  will-change: transform;
 }
 
 .nb-bg3d-blur {
@@ -765,6 +773,16 @@ select.nb-input {
   right: -3%;
 }
 
+.nb-cube3d-md {
+  --nb-cube-half: 110px;
+  width: 220px;
+  height: 220px;
+  top: 44%;
+  left: 2%;
+  animation-duration: 32s;
+  animation-direction: reverse;
+}
+
 .nb-cube3d-sm {
   --nb-cube-half: 80px;
   width: 160px;
@@ -777,6 +795,7 @@ select.nb-input {
 
 .nb-cube3d-blue { color: var(--nb-bruto-blue); }
 .nb-cube3d-pink { color: var(--nb-bruto-pink); }
+.nb-cube3d-green { color: var(--nb-bruto-mint); }
 
 .nb-cube3d-face {
   position: absolute;
@@ -785,6 +804,14 @@ select.nb-input {
   background: currentColor;
   opacity: 0.14;
   box-shadow: 0 0 48px currentColor;
+}
+
+/* Wireframe variant: edges only, no fill — reads as blueprint lines. */
+.nb-cube3d-wire .nb-cube3d-face {
+  background: transparent;
+  border-color: currentColor;
+  opacity: 0.55;
+  box-shadow: none;
 }
 
 .nb-cube3d-face-front  { transform: translateZ(var(--nb-cube-half)); }
@@ -883,6 +910,7 @@ select.nb-input {
 
 @media (max-width: 768px) {
   .nb-cube3d-lg { --nb-cube-half: 90px; width: 180px; height: 180px; }
+  .nb-cube3d-md { display: none; }
   .nb-cube3d-sm { display: none; }
   .nb-ring { width: 260px; height: 260px; }
   .nb-shape-3 { display: none; }
@@ -894,6 +922,10 @@ select.nb-input {
   .nb-shape,
   .nb-bg3d-grid {
     animation: none;
+  }
+  .nb-bg3d-scene {
+    transform: none;
+    transition: none;
   }
 }
 

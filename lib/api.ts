@@ -39,6 +39,24 @@ export function isValidObjectId(id: string) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
+export function invalidIdResponse() {
+  return apiError("Invalid id", 400);
+}
+
+export function parsePagination(
+  searchParams: URLSearchParams,
+  defaultLimit = 60,
+  maxLimit = 100,
+) {
+  const rawLimit = Number(searchParams.get("limit") ?? defaultLimit);
+  const rawPage = Number(searchParams.get("page") ?? 1);
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(Math.max(Math.floor(rawLimit), 1), maxLimit)
+    : defaultLimit;
+  const page = Number.isFinite(rawPage) ? Math.max(Math.floor(rawPage), 1) : 1;
+  return { limit, page };
+}
+
 export function serializeDocument<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }

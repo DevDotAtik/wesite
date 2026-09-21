@@ -100,7 +100,6 @@ export default function MonitoringPage() {
     load();
   }
 
-  const websiteMap = new Map(websites.map((w) => [w._id, w]));
   const monitoredIds = new Set(monitors.map((m) => typeof m.websiteId === "string" ? m.websiteId : m.websiteId._id));
 
   return (

@@ -80,6 +80,15 @@ export default function AddWebsiteModal({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
@@ -154,7 +163,16 @@ export default function AddWebsiteModal({
               folderId: websiteFolderId || null,
               isFavorite,
             }
-          : { url: url.trim(), folderId: websiteFolderId || null },
+          : {
+              url: url.trim(),
+              title: title.trim() || undefined,
+              description: description.trim() || undefined,
+              tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+              notes: notes.trim() || undefined,
+              customIconUrl: customIconUrl.trim() || undefined,
+              folderId: websiteFolderId || null,
+              isFavorite,
+            },
       ),
     });
 
@@ -171,11 +189,19 @@ export default function AddWebsiteModal({
   }
 
   return (
-    <div className="nb-overlay" style={{ alignItems: "flex-end" }}>
+    <div
+      className="nb-overlay"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <form
         onSubmit={submit}
-        className="nb-modal min-h-[45vh] w-full rounded-b-none sm:rounded-b-2xl sm:max-w-2xl"
-        style={{ alignSelf: "stretch" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isEdit ? "Edit website" : "Add website"}
+        className="nb-modal w-full sm:max-w-2xl"
       >
         <div className="nb-modal-header">
           <div>
@@ -193,7 +219,7 @@ export default function AddWebsiteModal({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-xs font-bold sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
               URL
-              <input value={url} onChange={(event) => setUrl(event.target.value)} autoFocus placeholder="https://example.com" className="nb-input mt-2" />
+              <input value={url} onChange={(event) => setUrl(event.target.value)} autoFocus type="url" required placeholder="https://example.com" className="nb-input mt-2" />
             </label>
             <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
               Title

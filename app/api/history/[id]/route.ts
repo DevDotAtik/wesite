@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, requireUser } from "@/lib/api";
+import { apiError, invalidIdResponse, isValidObjectId, json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
 
@@ -11,6 +11,7 @@ export async function DELETE(request: NextRequest, context: Context) {
   if (auth.response) return auth.response;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return invalidIdResponse();
   await connectToDatabase();
   const deleted = await Visit.findOneAndDelete({ _id: id, userId: auth.user._id });
 

@@ -17,7 +17,6 @@ import {
   Newspaper,
   Plus,
   Search,
-  Sparkles,
 } from "lucide-react";
 
 type LandingPageProps = {

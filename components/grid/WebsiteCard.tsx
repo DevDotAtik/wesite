@@ -96,6 +96,8 @@ export default function WebsiteCard({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(website._id, !selected); }}
+          aria-label={selected ? `Deselect ${website.title || website.domain}` : `Select ${website.title || website.domain}`}
+          aria-pressed={selected}
           className="absolute right-2 top-2 z-10 nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
           style={{ color: selected ? "var(--nb-primary)" : "var(--nb-muted)" }}
         >
@@ -106,6 +108,7 @@ export default function WebsiteCard({
       <button
         type="button"
         onClick={mode === "trash" ? undefined : () => onOpen(website)}
+        aria-label={mode === "trash" ? (website.title || website.domain) : `Open ${website.title || website.domain}`}
         className={`min-w-0 flex-1 text-left ${view === "list" ? "flex items-center" : "flex w-full flex-col items-start"} ${mode === "trash" ? "cursor-default" : ""}`}
       >
         <div className={view === "list" ? "mr-3 shrink-0" : "mb-4 shrink-0"}>
@@ -169,6 +172,9 @@ export default function WebsiteCard({
                   {tag}
                 </span>
               ))}
+              {website.tags.length > 3 ? (
+                <span className="nb-tag text-[10px]">+{website.tags.length - 3}</span>
+              ) : null}
             </div>
           ) : null}
           <div className="mt-3 flex max-w-full items-center gap-2 overflow-hidden text-xs" style={{ color: "var(--nb-muted)" }}>
@@ -199,7 +205,7 @@ export default function WebsiteCard({
             <button type="button" aria-label="Edit website" onClick={() => onEdit(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <Pencil className="size-4" />
             </button>
-            <button type="button" aria-label="Favorite" onClick={() => onToggleFavorite(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
+            <button type="button" aria-label={website.isFavorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={Boolean(website.isFavorite)} onClick={() => onToggleFavorite(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
               <Star className={`size-4 ${website.isFavorite ? "fill-[var(--nb-warning)] text-[var(--nb-warning)]" : ""}`} />
             </button>
             <button type="button" aria-label="Copy website" onClick={() => onCopy(website)} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">

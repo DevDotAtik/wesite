@@ -1,7 +1,27 @@
 import type { NextRequest } from "next/server";
-import { json, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, json, parsePagination, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
+
+function dateRangeFilter(searchParams: URLSearchParams) {
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const range: Record<string, Date> = {};
+
+  if (from) {
+    const fromDate = new Date(from);
+    if (Number.isNaN(fromDate.getTime())) return { range, error: "Invalid from date" };
+    range.$gte = fromDate;
+  }
+
+  if (to) {
+    const toDate = new Date(to);
+    if (Number.isNaN(toDate.getTime())) return { range, error: "Invalid to date" };
+    range.$lte = toDate;
+  }
+
+  return { range, error: null as string | null };
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -9,15 +29,15 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 100), 200);
-  const from = request.nextUrl.searchParams.get("from");
-  const to = request.nextUrl.searchParams.get("to");
+  const { limit } = parsePagination(request.nextUrl.searchParams, 100, 200);
+  const { range, error } = dateRangeFilter(request.nextUrl.searchParams);
+
+  if (error) return apiError(error, 400);
+
   const query: Record<string, unknown> = { userId: auth.user._id };
 
-  if (from || to) {
-    query.visitedAt = {};
-    if (from) (query.visitedAt as Record<string, Date>).$gte = new Date(from);
-    if (to) (query.visitedAt as Record<string, Date>).$lte = new Date(to);
+  if (Object.keys(range).length) {
+    query.visitedAt = range;
   }
 
   const visits = await Visit.find(query)
@@ -40,14 +60,14 @@ export async function DELETE(request: NextRequest) {
 
   if (auth.response) return auth.response;
 
-  const from = request.nextUrl.searchParams.get("from");
-  const to = request.nextUrl.searchParams.get("to");
+  const { range: deleteRange, error: deleteError } = dateRangeFilter(request.nextUrl.searchParams);
+
+  if (deleteError) return apiError(deleteError, 400);
+
   const query: Record<string, unknown> = { userId: auth.user._id };
 
-  if (from || to) {
-    query.visitedAt = {};
-    if (from) (query.visitedAt as Record<string, Date>).$gte = new Date(from);
-    if (to) (query.visitedAt as Record<string, Date>).$lte = new Date(to);
+  if (Object.keys(deleteRange).length) {
+    query.visitedAt = deleteRange;
   }
 
   await connectToDatabase();

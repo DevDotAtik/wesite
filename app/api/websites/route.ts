@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, parseBody, requireUser, serializeDocument, escapeRegex } from "@/lib/api";
+import { apiError, invalidIdResponse, isValidObjectId, json, parseBody, parsePagination, requireUser, serializeDocument, escapeRegex } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { normalizeUrl, scrapeMetadata } from "@/lib/scrapeMetadata";
 import { websiteCreateSchema } from "@/lib/validators/schemas";
 import Website from "@/models/Website";
+import Folder from "@/models/Folder";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -15,8 +16,7 @@ export async function GET(request: NextRequest) {
   await connectToDatabase();
 
   const searchParams = request.nextUrl.searchParams;
-  const limit = Math.min(Number(searchParams.get("limit") ?? 60), 100);
-  const page = Math.max(Number(searchParams.get("page") ?? 1), 1);
+  const { limit, page } = parsePagination(searchParams);
   const search = searchParams.get("search");
   const folderId = searchParams.get("folderId");
   const tag = searchParams.get("tag");
@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
   const query: Record<string, unknown> = { userId: auth.user._id };
 
   if (folderId === "root" || folderId === "unsorted") query.folderId = null;
-  else if (folderId) query.folderId = folderId;
+  else if (folderId) {
+    if (!isValidObjectId(folderId)) return invalidIdResponse();
+    query.folderId = folderId;
+  }
   if (tag) query.tags = tag;
   if (favorite === "true") query.isFavorite = true;
   query.isTrashed = trashed === "true";
@@ -92,21 +95,40 @@ export async function POST(request: NextRequest) {
     return apiError("This website is already saved", 409, { website: serializeDocument(duplicate) });
   }
 
+  if (data.folderId) {
+    const folder = await Folder.findOne({ _id: data.folderId, userId: auth.user._id }).lean();
+    if (!folder) {
+      return apiError("Folder not found", 404);
+    }
+  }
+
   const metadata = await scrapeMetadata(data.url);
-  const website = await Website.create({
-    userId: auth.user._id,
-    folderId: data.folderId ?? null,
-    url: metadata.url,
-    normalizedUrl,
-    domain: metadata.domain,
-    title: metadata.title,
-    description: metadata.description,
-    faviconUrl: metadata.faviconUrl,
-    ogImageUrl: metadata.ogImageUrl,
-    tags: data.tags ?? [],
-    notes: data.notes ?? "",
-    isFavorite: data.isFavorite ?? false,
-  });
+
+  let website;
+
+  try {
+    website = await Website.create({
+      userId: auth.user._id,
+      folderId: data.folderId ?? null,
+      url: metadata.url,
+      normalizedUrl,
+      domain: metadata.domain,
+      // User-supplied values win over scraped metadata when provided.
+      title: data.title || metadata.title,
+      description: data.description ?? metadata.description,
+      faviconUrl: metadata.faviconUrl,
+      ogImageUrl: metadata.ogImageUrl,
+      customIconUrl: data.customIconUrl || "",
+      tags: data.tags ?? [],
+      notes: data.notes ?? "",
+      isFavorite: data.isFavorite ?? false,
+    });
+  } catch (error) {
+    if ((error as { code?: number })?.code === 11000) {
+      return apiError("This website is already saved", 409);
+    }
+    throw error;
+  }
 
   return json({ website: serializeDocument(website) }, 201);
 }

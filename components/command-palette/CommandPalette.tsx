@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, Bell, Clock, ExternalLink, Grid3X3, Search, Settings, SquareCheckBig, X } from "lucide-react";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 
@@ -12,7 +12,7 @@ type CommandPaletteProps = {
 };
 
 const navCommands = [
-  { id: "library", label: "Go to Library", icon: Grid3X3, href: "/" },
+  { id: "library", label: "Go to Library", icon: Grid3X3, href: "/dashboard" },
   { id: "analytics", label: "Go to Analytics", icon: BarChart3, href: "/analytics" },
   { id: "history", label: "Go to History", icon: Clock, href: "/history" },
   { id: "monitoring", label: "Go to Monitoring", icon: Bell, href: "/monitoring" },
@@ -40,31 +40,46 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
     return { nav: matchedNav, websites: matchedWebsites };
   }, [query, websites]);
 
+  const handleClose = useCallback(() => {
+    setQuery("");
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") handleClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, handleClose]);
+
   if (!open) return null;
 
   const hasResults = results.nav.length > 0 || results.websites.length > 0;
 
   return (
-    <div className="nb-overlay" onClick={onClose}>
-      <div className="nb-modal max-w-xl" style={{ alignSelf: "flex-start", marginTop: "5rem" }} onClick={(event) => event.stopPropagation()}>
+    <div className="nb-overlay" onClick={handleClose}>
+      <div role="dialog" aria-modal="true" aria-label="Command palette" className="nb-modal max-w-xl" style={{ alignSelf: "flex-start", marginTop: "5rem" }} onClick={(event) => event.stopPropagation()}>
         <div className="flex h-14 items-center gap-3 border-b-3 px-4" style={{ borderColor: "var(--nb-border)" }}>
           <Search className="size-4" style={{ color: "var(--nb-muted)" }} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             autoFocus
+            aria-label="Search websites, pages, and commands"
             placeholder="Search websites, pages, commands..."
             className="h-full flex-1 bg-transparent text-sm font-semibold outline-none"
             style={{ color: "var(--nb-fg)" }}
           />
-          <button type="button" aria-label="Close" onClick={onClose} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
+          <button type="button" aria-label="Close" onClick={handleClose} className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm">
             <X className="size-4" />
           </button>
         </div>
         <div className="max-h-80 overflow-auto p-2">
           {results.nav.length > 0 ? (
             <div className="mb-2">
-              <p className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>
+              <p className="nb-label px-3 py-1">
                 Pages
               </p>
               {results.nav.map((cmd) => {
@@ -73,7 +88,7 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
                   <a
                     key={cmd.id}
                     href={cmd.href}
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="nb-sidebar-item"
                   >
                     <Icon className="size-4 opacity-50" />
@@ -88,14 +103,14 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
 
           {results.websites.length > 0 ? (
             <div>
-              <p className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>
+              <p className="nb-label px-3 py-1">
                 Websites
               </p>
               {results.websites.map((website) => (
                 <button
                   key={website._id}
                   type="button"
-                  onClick={() => { onOpenWebsite(website); onClose(); }}
+                  onClick={() => { onOpenWebsite(website); handleClose(); }}
                   className="nb-sidebar-item"
                 >
                   <ExternalLink className="size-4 opacity-50" />

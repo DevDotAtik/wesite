@@ -28,12 +28,13 @@ export default function ThemeToggle() {
   }
 
   const Icon = theme === "dark" ? Moon : theme === "light" ? Sun : Laptop;
+  const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
 
   return (
     <button
       type="button"
-      aria-label="Toggle theme"
-      title={`Theme: ${theme}`}
+      aria-label={`Switch to ${nextTheme} theme (currently ${theme})`}
+      title={`Theme: ${theme} — switch to ${nextTheme}`}
       onClick={cycleTheme}
       className="nb-btn nb-btn-icon nb-btn-surface nb-btn-sm"
     >

@@ -22,6 +22,16 @@ export function normalizeUrl(input: string) {
   const parsed = new URL(withProtocol);
   parsed.hash = "";
 
+  // Canonical host: lowercase, strip www. so duplicates match.
+  parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+
+  // Drop tracking parameters that create false-distinct URLs.
+  for (const key of [...parsed.searchParams.keys()]) {
+    if (/^(utm_|fbclid|gclid|mc_|igshid|yclid|msclkid)/i.test(key)) {
+      parsed.searchParams.delete(key);
+    }
+  }
+
   if (parsed.pathname !== "/") {
     parsed.pathname = parsed.pathname.replace(/\/+$/, "");
   }
@@ -121,7 +131,18 @@ export async function scrapeMetadata(rawUrl: string): Promise<WebsiteMetadata> {
       };
     }
 
+    // Refuse huge pages before buffering them into memory.
+    const contentLength = Number(response.headers.get("content-length") ?? 0);
+    if (Number.isFinite(contentLength) && contentLength > 2_000_000) {
+      return { ...fallback, error: "Page is too large to read" };
+    }
+
     const html = await response.text();
+
+    if (html.length > 2_000_000) {
+      return { ...fallback, error: "Page is too large to read" };
+    }
+
     const $ = cheerio.load(html);
     const finalUrl = new URL(response.url || normalizedUrl);
     const title =

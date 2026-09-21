@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, invalidIdResponse, isValidObjectId, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Monitor from "@/models/Monitor";
 import { z } from "zod";
@@ -17,9 +17,14 @@ export async function PATCH(request: NextRequest, context: Context) {
   if (auth.response) return auth.response;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return invalidIdResponse();
   const { data, error } = await parseBody(request, patchMonitorSchema);
 
   if (error) return error;
+
+  if (Object.keys(data).length === 0) {
+    return apiError("Nothing to update", 400);
+  }
 
   await connectToDatabase();
   const monitor = await Monitor.findOneAndUpdate(
@@ -39,6 +44,7 @@ export async function DELETE(request: NextRequest, context: Context) {
   if (auth.response) return auth.response;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return invalidIdResponse();
   await connectToDatabase();
   const deleted = await Monitor.findOneAndDelete({ _id: id, userId: auth.user._id });
 

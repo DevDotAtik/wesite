@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import {
   BarChart3,
+  Bell,
   ChevronRight,
   Clock,
   FileText,
@@ -14,6 +16,8 @@ import {
   Newspaper,
   Pencil,
   Plus,
+  Settings,
+  SquareCheckBig,
   Tag,
   Trash2,
   X,
@@ -117,9 +121,27 @@ function FolderTreeItem({
 
   return (
     <div className="group relative">
+      {/* Expand/collapse is a sibling of the row button — a toggle nested
+          inside the row button would be invalid HTML and unreachable by keyboard. */}
+      {hasChildren ? (
+        <button
+          type="button"
+          aria-label={expanded ? `Collapse ${folder.name}` : `Expand ${folder.name}`}
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+          className="absolute z-10 grid size-6 -translate-y-1/2 place-items-center rounded-lg hover:bg-[var(--nb-surface-alt)]"
+          style={{ left: `${3 + depth * indentStep}px`, top: "50%" }}
+        >
+          <ChevronRight
+            className={`size-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+            style={{ color: isSelected ? "var(--nb-primary-fg)" : "var(--nb-muted)" }}
+          />
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={() => onSelectFolder(folder._id)}
+        aria-current={isSelected ? "true" : undefined}
         onDragEnter={(event) => { event.preventDefault(); setIsDropTarget(true); }}
         onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
         onDragLeave={() => setIsDropTarget(false)}
@@ -132,15 +154,7 @@ function FolderTreeItem({
         style={{ paddingLeft: `${8 + depth * indentStep}px` }}
         className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""} ${isDropTarget ? "nb-sidebar-item-active !border-[var(--nb-success)]" : ""}`}
       >
-        <span className="grid w-3.5 shrink-0 place-items-center">
-          {hasChildren ? (
-            <ChevronRight
-              className={`size-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
-              style={{ color: isSelected ? "var(--nb-primary-fg)" : "var(--nb-muted)" }}
-              onClick={(event) => { event.stopPropagation(); setExpanded((value) => !value); }}
-            />
-          ) : null}
-        </span>
+        <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden="true" />
         <span className="grid size-6 shrink-0 place-items-center rounded-lg border-[3px] bg-[var(--nb-surface-strong)] shadow-sm" style={{ borderColor: "var(--nb-border)" }}>
           <FolderIcon value={folder.icon} className="size-3.5" color={folder.color ?? "#3b82f6"} />
         </span>
@@ -196,6 +210,15 @@ export default function MacSidebar({
   mobileOpen = false,
   onCloseMobile,
 }: SidebarProps) {
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onCloseMobile?.();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileOpen, onCloseMobile]);
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -219,6 +242,9 @@ export default function MacSidebar({
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 backdrop-blur-sm lg:hidden" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onCloseMobile}>
           <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Bookmark collections"
             className="h-full w-72 max-w-[85vw] border-r-3 p-3 shadow-2xl"
             style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}
             onClick={(event) => event.stopPropagation()}
@@ -233,6 +259,27 @@ export default function MacSidebar({
                 <X className="size-4" />
               </button>
             </div>
+            {/* Pages — reachable only here on small screens */}
+            <nav aria-label="Pages" className="mb-4 grid gap-0.5">
+              {[
+                { href: "/dashboard", label: "Library", icon: Inbox },
+                { href: "/history", label: "History", icon: Clock },
+                { href: "/todo", label: "Todo", icon: SquareCheckBig },
+                { href: "/analytics", label: "Analytics", icon: BarChart3 },
+                { href: "/monitoring", label: "Monitoring", icon: Bell },
+                { href: "/settings", label: "Settings", icon: Settings },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onCloseMobile}
+                  className="nb-sidebar-item"
+                >
+                  <item.icon className="size-4 opacity-60" />
+                  <span className="min-w-0 flex-1">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
             <SidebarContent
               folders={folders}
               selectedFolder={selectedFolder}
@@ -256,7 +303,7 @@ export default function MacSidebar({
 function SectionHeader({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <div className="mb-1.5 flex min-h-6 items-center justify-between gap-2 px-3">
-      <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>
+      <p className="nb-label">
         {children}
       </p>
       {action}
@@ -289,7 +336,9 @@ function SidebarContent(props: SidebarProps) {
         </div>
       </section>
 
-      {/* Media Type Filters */}
+      {/* Media Type Filters — only shown when the parent wires a handler,
+          so the sidebar never shows filters that do nothing. */}
+      {props.onSelectMediaType ? (
       <section>
         <SectionHeader
           action={props.selectedMediaType !== "all" ? (
@@ -309,6 +358,7 @@ function SidebarContent(props: SidebarProps) {
                 key={item.id}
                 type="button"
                 onClick={() => props.onSelectMediaType?.(isSelected ? "all" : item.id)}
+                aria-pressed={isSelected}
                 className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""}`}
               >
                 <Icon className={`size-3.5 shrink-0 ${isSelected ? "" : "opacity-60"}`} />
@@ -318,6 +368,7 @@ function SidebarContent(props: SidebarProps) {
           })}
         </div>
       </section>
+      ) : null}
 
       {/* Collections / Folders Tree */}
       <section className="min-h-0 flex-1 overflow-y-auto">
