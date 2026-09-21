@@ -26,11 +26,9 @@ export default function Navbar({
   userName,
 }: NavbarProps) {
   return (
-    <header
-      className="sticky top-0 z-40 border-b backdrop-blur-xl"
-      style={{ borderColor: "var(--nb-border)", background: "color-mix(in srgb, var(--nb-surface) 82%, transparent)" }}
-    >
+    <header className="sticky top-0 z-40 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
       <div className="flex h-14 items-center gap-3 px-3 sm:px-5">
+        {/* Mobile sidebar toggle */}
         <button
           type="button"
           aria-label="Open sidebar"
@@ -40,17 +38,16 @@ export default function Navbar({
           <Menu className="size-4" />
         </button>
 
+        {/* Logo */}
         <Link href="/" className="flex min-w-fit items-center gap-2">
-          <span
-            className="grid size-8 place-items-center rounded-lg border text-sm font-bold"
-            style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", borderColor: "transparent" }}
-          >
+          <span className="nb-card-yellow grid size-8 place-items-center rounded-lg border-[3px] text-sm font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "2px 2px 0 0 var(--nb-shadow)" }}>
             W
           </span>
           <span className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
+        {/* Nav Links */}
+        <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
           {[
             { href: "/dashboard", label: "Library", icon: Grid3X3 },
             { href: "/history", label: "History", icon: Clock },
@@ -61,11 +58,8 @@ export default function Navbar({
           ].map((link) => (
             <Link
               key={link.href}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs transition-colors"
-              style={{ color: "var(--nb-muted)" }}
+              className="nb-btn nb-btn-ghost nb-btn-sm text-xs"
               href={link.href}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--nb-fg)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--nb-muted)"; }}
             >
               <link.icon className="size-3.5" />
               {link.label}
@@ -73,7 +67,9 @@ export default function Navbar({
           ))}
         </nav>
 
+        {/* Right Actions */}
         <div className="ml-auto flex flex-1 items-center justify-end gap-2">
+          {/* Search */}
           <label className="relative hidden w-full max-w-md sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" style={{ color: "var(--nb-muted)" }} />
             <input
@@ -86,17 +82,15 @@ export default function Navbar({
               type="button"
               aria-label="Open command palette"
               onClick={onOpenCommand}
-              className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors"
-              style={{ color: "var(--nb-muted)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--nb-fg)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--nb-muted)"; }}
+              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm absolute right-1 top-1/2 -translate-y-1/2"
             >
-              <Command className="size-3" />k
+              <Command className="size-3.5" />+ k
             </button>
           </label>
 
+          {/* View Toggle */}
           {onViewChange ? (
-            <div className="hidden items-center rounded-xl border p-0.5 sm:flex" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+            <div className="hidden sm:flex items-center rounded-xl border-3 p-0.5" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
               <button
                 type="button"
                 aria-label="Grid view"
@@ -118,6 +112,7 @@ export default function Navbar({
 
           <ThemeToggle />
 
+          {/* Add Button */}
           <button
             type="button"
             aria-label="Add website"
@@ -127,15 +122,13 @@ export default function Navbar({
             <Plus className="size-4" />
           </button>
 
+          {/* User */}
           <Link
             href={userName ? "/settings" : "/login"}
-            className="hidden items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors sm:flex"
-            style={{ color: "var(--nb-muted)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--nb-fg)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--nb-muted)"; }}
+            className="hidden items-center gap-2 nb-btn nb-btn-ghost nb-btn-sm sm:flex"
           >
             <UserCircle className="size-5" />
-            <span className="max-w-24 truncate">{userName ?? "Account"}</span>
+            <span className="max-w-24 truncate text-xs">{userName ?? "Account"}</span>
           </Link>
         </div>
       </div>

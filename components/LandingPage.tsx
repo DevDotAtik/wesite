@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import LandingBackground3D from "@/components/landing/LandingBackground3D";
 import {
@@ -8,6 +7,7 @@ import {
   CheckCircle2,
   Command,
   Compass,
+  FileText,
   Film,
   Fingerprint,
   FolderPlus,
@@ -17,224 +17,181 @@ import {
   Newspaper,
   Plus,
   Search,
+  Sparkles,
 } from "lucide-react";
 
 type LandingPageProps = {
   onLaunchDemo?: () => void;
 };
 
-const heroInlineImages = [
-  {
-    seed: "wesite-hero-desk",
-    alt: "A moodboard of saved design links",
-  },
-  {
-    seed: "wesite-hero-shelf",
-    alt: "A tidy shelf of organized resources",
-  },
-];
-
 export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
+
   return (
-    <div className="relative isolate min-h-[100dvh] overflow-hidden">
+    <div className="relative isolate min-h-screen overflow-hidden">
       <LandingBackground3D />
 
       {/* 1. Marketing Header */}
-      <header
-        className="sticky top-0 z-50 border-b backdrop-blur-xl"
-        style={{ borderColor: "var(--nb-border)", background: "color-mix(in srgb, var(--nb-bg) 80%, transparent)" }}
-      >
+      <header className="sticky top-0 z-50 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <span
-              className="grid size-9 place-items-center rounded-xl border font-extrabold"
-              style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", borderColor: "transparent" }}
-            >
+            <span className="nb-card-yellow grid size-10 place-items-center rounded-2xl border-3 text-lg font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}>
               W
             </span>
-            <span className="text-lg font-bold tracking-tight" style={{ color: "var(--nb-fg)" }}>Wesite</span>
+            <span className="text-xl font-bold tracking-tight" style={{ color: "var(--nb-fg)" }}>WeSite</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
-            {[
-              { href: "#features", label: "Features" },
-              { href: "#method", label: "Method" },
-              { href: "#pricing", label: "Pricing" },
-            ].map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-3 py-2 transition-colors"
-                style={{ color: "var(--nb-muted)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--nb-fg)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--nb-muted)"; }}
-              >
-                {item.label}
-              </a>
-            ))}
+          <nav className="hidden items-center gap-2 text-sm font-semibold md:flex">
+            <a href="#features" className="nb-btn nb-btn-ghost nb-btn-sm">Features</a>
+            <a href="#pricing" className="nb-btn nb-btn-ghost nb-btn-sm">Pricing</a>
+            <a href="#how-it-works" className="nb-btn nb-btn-ghost nb-btn-sm">How it Works</a>
           </nav>
 
           <div className="flex items-center gap-2">
+            <Link href="/dashboard" className="nb-btn nb-btn-surface nb-btn-sm hidden sm:inline-flex">
+              Demo Workspace
+            </Link>
             <Link href="/login" className="nb-btn nb-btn-ghost nb-btn-sm hidden sm:inline-flex">
-              Sign in
+              Sign In
             </Link>
             <Link href="/register" className="nb-btn nb-btn-primary nb-btn-sm">
-              Get started
+              Sign Up
               <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
       </header>
 
-      {/* 2. Hero Section — asymmetric split */}
+      {/* 2. Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-8">
-            {/* Left — copy */}
-            <div className="max-w-xl lg:col-span-6">
-              <div className="nb-animate-slide-up">
-                <span className="nb-tag">
-                  <span className="size-1.5 rounded-full" style={{ background: "var(--nb-success)" }} />
-                  Curation workspace
-                </span>
+        <div className="absolute inset-0 nb-dot-bg opacity-30" />
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          {/* Announcement pill */}
+    
+
+          <h1 className="mx-auto max-w-4xl text-balance text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl" style={{ color: "var(--nb-fg)" }}>
+            All your bookmarks{" "}
+            <span style={{ color: "var(--nb-primary)" }}>in one place.</span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl" style={{ color: "var(--nb-muted)" }}>
+            Wesite is the modern curation workspace to save articles, design inspirations, videos, and code tools. Organize them into visual collections.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/register" className="nb-btn nb-btn-primary">
+              Get Started for Free
+              <ArrowRight className="size-4" />
+            </Link>
+            <Link href="/dashboard" className="nb-btn nb-btn-surface">
+              View Demo Workspace
+            </Link>
+          </div>
+
+          {/* Product UI Mockup */}
+          <div className="nb-card-static mx-auto mt-16 max-w-5xl p-3" style={{ borderRadius: "20px" }}>
+            <div className="flex items-center gap-2 border-b-3 px-4 pb-3 pt-2" style={{ borderColor: "var(--nb-border)" }}>
+              <div className="flex gap-1.5">
+                <span className="size-3.5 rounded-full" style={{ background: "var(--nb-danger)" }} />
+                <span className="size-3.5 rounded-full" style={{ background: "var(--nb-warning)" }} />
+                <span className="size-3.5 rounded-full" style={{ background: "var(--nb-success)" }} />
               </div>
-
-              <h1
-                className="nb-animate-slide-up mt-6 text-balance text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl"
-                style={{ color: "var(--nb-fg)", animationDelay: "80ms" }}
-              >
-                All your{" "}
-                <span className="relative mx-1 hidden h-[0.95em] w-[1.45em] overflow-hidden rounded-lg align-[-0.12em] sm:inline-block">
-                  <Image
-                    src={`https://picsum.photos/seed/${heroInlineImages[0].seed}/800/600`}
-                    alt={heroInlineImages[0].alt}
-                    fill
-                    sizes="5rem"
-                    className="object-cover"
-                  />
-                </span>
-                bookmarks in one{" "}
-                <span className="relative mx-1 hidden h-[0.95em] w-[1.45em] overflow-hidden rounded-lg align-[-0.12em] sm:inline-block">
-                  <Image
-                    src={`https://picsum.photos/seed/${heroInlineImages[1].seed}/800/600`}
-                    alt={heroInlineImages[1].alt}
-                    fill
-                    sizes="5rem"
-                    className="object-cover"
-                  />
-                </span>
-                place.
-              </h1>
-
-              <p
-                className="nb-animate-slide-up mt-6 max-w-[65ch] text-lg leading-relaxed"
-                style={{ color: "var(--nb-muted)", animationDelay: "160ms" }}
-              >
-                Wesite is the modern curation workspace to save articles, design inspirations, videos, and code tools. Organize them into visual collections.
-              </p>
-
-              <div className="nb-animate-slide-up mt-10" style={{ animationDelay: "240ms" }}>
-                <Link href="/register" className="nb-btn nb-btn-primary px-7 py-3.5 text-base">
-                  Start curating free
-                  <ArrowRight className="size-5" />
-                </Link>
+              <div className="mx-auto flex h-8 max-w-md flex-1 items-center justify-center rounded-lg border-[3px] px-3 text-xs font-bold" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
+                https://wesite.app/workspace
               </div>
             </div>
 
-            {/* Right — product visual */}
-            <div className="lg:col-span-6 lg:pl-6">
-              <div className="nb-float">
-                <div className="nb-card-static p-3" style={{ borderRadius: "20px" }}>
-                  <div className="flex items-center gap-2 border-b px-4 pb-3 pt-2" style={{ borderColor: "var(--nb-border)" }}>
-                    <div className="flex gap-1.5">
-                      <span className="size-2.5 rounded-full" style={{ background: "var(--nb-danger)" }} />
-                      <span className="size-2.5 rounded-full" style={{ background: "var(--nb-warning)" }} />
-                      <span className="size-2.5 rounded-full" style={{ background: "var(--nb-success)" }} />
-                    </div>
-                    <div className="mx-auto flex h-8 max-w-md flex-1 items-center justify-center rounded-lg border px-3 text-xs font-mono" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
-                      wesite.app/workspace
-                    </div>
+            {/* Mockup Dashboard Preview */}
+            <div className="overflow-hidden rounded-2xl p-4 text-left sm:p-6" style={{ background: "var(--nb-bg)" }}>
+              <div className="mb-4 flex items-center justify-between border-b-3 pb-3" style={{ borderColor: "var(--nb-border)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="nb-card-yellow grid size-9 place-items-center rounded-xl border-[3px] text-sm font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
+                    W
                   </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Design & Dev Stack</h3>
+                    <p className="text-[11px]" style={{ color: "var(--nb-muted)" }}>128 bookmarks saved</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="nb-card-blue rounded-lg border-[3px] px-2.5 py-1 text-xs font-bold" style={{ borderColor: "var(--nb-border)" }}>
+                    + Add Link
+                  </span>
+                </div>
+              </div>
 
-                  <div className="rounded-xl p-4 text-left sm:p-5" style={{ background: "var(--nb-surface-alt)" }}>
-                    <div className="mb-4 flex items-center justify-between border-b pb-3" style={{ borderColor: "var(--nb-border)" }}>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="grid size-9 place-items-center rounded-xl border text-sm font-bold"
-                          style={{ background: "color-mix(in srgb, var(--nb-primary) 12%, var(--nb-surface))", color: "var(--nb-primary)", borderColor: "var(--nb-border)" }}
-                        >
-                          W
-                        </span>
-                        <div>
-                          <h3 className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Design & Dev Stack</h3>
-                          <p className="text-xs" style={{ color: "var(--nb-muted)" }}>128 bookmarks saved</p>
-                        </div>
-                      </div>
-                      <span className="nb-tag nb-tag-primary text-xs">+ Add link</span>
+              {/* Sample Cards inside mockup */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {[
+                  {
+                    title: "Figma: The Collaborative Interface Design Tool",
+                    domain: "figma.com",
+                    badge: "Design",
+                    colorClass: "nb-card-purple",
+                    desc: "Build better products as a team.",
+                    tags: ["#design", "#ui"],
+                  },
+                  {
+                    title: "Next.js 16 Documentation & App Router",
+                    domain: "nextjs.org",
+                    badge: "Code",
+                    colorClass: "nb-card-blue",
+                    desc: "The React Framework for the Web.",
+                    tags: ["#react", "#nextjs"],
+                  },
+                  {
+                    title: "Tailwind CSS — Utility-First Framework",
+                    domain: "tailwindcss.com",
+                    badge: "CSS",
+                    colorClass: "nb-card-mint",
+                    desc: "A utility-first CSS framework.",
+                    tags: ["#css", "#frontend"],
+                  },
+                ].map((card, i) => (
+                  <div
+                    key={i}
+                    className="nb-card-sm p-3.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold" style={{ color: "var(--nb-muted)" }}>{card.domain}</span>
+                      <span className={`nb-tag text-[10px] ${card.colorClass}`}>
+                        {card.badge}
+                      </span>
                     </div>
-
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      {[
-                        {
-                          title: "Figma — collaborative design",
-                          domain: "figma.com",
-                          badge: "Design",
-                          colorClass: "nb-card-purple",
-                          tags: ["#design", "#ui"],
-                        },
-                        {
-                          title: "Next.js 16 documentation",
-                          domain: "nextjs.org",
-                          badge: "Code",
-                          colorClass: "nb-card-blue",
-                          tags: ["#react", "#nextjs"],
-                        },
-                        {
-                          title: "Tailwind CSS utility framework",
-                          domain: "tailwindcss.com",
-                          badge: "CSS",
-                          colorClass: "nb-card-mint",
-                          tags: ["#css", "#frontend"],
-                        },
-                      ].map((card, i) => (
-                        <div key={i} className="nb-card-sm p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-semibold" style={{ color: "var(--nb-muted)" }}>{card.domain}</span>
-                            <span className={`nb-tag text-[10px] ${card.colorClass}`}>{card.badge}</span>
-                          </div>
-                          <h4 className="mt-2 line-clamp-1 text-xs font-bold" style={{ color: "var(--nb-fg)" }}>{card.title}</h4>
-                          <div className="mt-3 flex gap-1">
-                            {card.tags.map((tag) => (
-                              <span key={tag} className="nb-tag text-[10px]">{tag}</span>
-                            ))}
-                          </div>
-                        </div>
+                    <h4 className="mt-2 line-clamp-1 text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                      {card.title}
+                    </h4>
+                    <p className="mt-1 line-clamp-2 text-[11px]" style={{ color: "var(--nb-muted)" }}>{card.desc}</p>
+                    <div className="mt-3 flex gap-1">
+                      {card.tags.map((t) => (
+                        <span key={t} className="nb-tag text-[10px]">
+                          {t}
+                        </span>
                       ))}
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Platform Bar */}
-      <section className="border-y py-8" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--nb-muted)" }}>
-            Save content from your favorite platforms
+      {/* 3. Platform Badges Bar */}
+      <section className="border-y-3 py-8" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>
+            GREAT FOR CONTENT FROM YOUR FAVORITE PLATFORMS
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 text-sm font-semibold" style={{ color: "var(--nb-muted)" }}>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 text-sm font-bold" style={{ color: "var(--nb-fg)" }}>
             {[
-              { name: "Medium", icon: Newspaper },
-              { name: "YouTube", icon: Film },
-              { name: "GitHub", icon: Globe },
-              { name: "Pinterest", icon: ImageIcon },
-              { name: "Reddit", icon: Search },
+              { name: "Medium", icon: Newspaper, color: "var(--nb-success)" },
+              { name: "YouTube", icon: Film, color: "var(--nb-danger)" },
+              { name: "GitHub", icon: Globe, color: "var(--nb-primary)" },
+              { name: "Pinterest", icon: ImageIcon, color: "var(--nb-bruto-pink)" },
+              { name: "Reddit", icon: FileText, color: "var(--nb-warning)" },
             ].map((platform) => (
               <span key={platform.name} className="flex items-center gap-2 transition-colors hover:opacity-80">
-                <platform.icon className="size-4" />
+                <platform.icon className="size-4" style={{ color: platform.color }} />
                 {platform.name}
               </span>
             ))}
@@ -242,104 +199,99 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 4. Feature Bento */}
+      {/* 4. Feature Grid */}
       <section id="features" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--nb-primary)" }}>
-                Features
-              </p>
-              <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
-                Built for serious curators
-              </h2>
-              <p className="mt-4 max-w-[65ch] text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                Save fast, find faster. Organize research, inspiration, and references without the mess.
-              </p>
-            </div>
+          <div className="text-center">
+            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+              Built for serious curators
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
+              Save fast, find faster. Organize research, inspiration, and references without the mess.
+            </p>
           </div>
 
-          {/* Bento: Row 1 — 3 columns */}
-          <div className="mt-14 grid gap-5 lg:grid-cols-3">
-            <div className="nb-card-static p-6 transition-transform duration-300 hover:-translate-y-1">
-              <div className="nb-float grid size-12 place-items-center rounded-2xl border" style={{ background: "color-mix(in srgb, var(--nb-primary) 10%, var(--nb-surface))", color: "var(--nb-primary)" }}>
+          <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {/* Card 1: Visual Collections */}
+            <div className="nb-card-static p-6 lg:col-span-2" style={{ background: "var(--nb-surface-alt)" }}>
+              <div className="nb-card-blue grid size-12 place-items-center rounded-2xl border-[3px]" style={{ borderColor: "var(--nb-border)" }}>
                 <Layers className="size-6" />
               </div>
-              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Visual collections</h3>
-              <p className="mt-2 max-w-[60ch] text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                Group bookmarks into nested folders, assign custom icons, and switch between Grid, Cards, List, and Headlines.
+              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Visual Collections</h3>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
+                Group bookmarks into nested folders, assign custom icons, and toggle between 4 views: Grid, Cards, List, and Headlines.
               </p>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {["Grid View", "Masonry Cards", "List Rows", "Headlines"].map((mode) => (
+                  <div key={mode} className="nb-card-sm p-3 text-center text-xs font-bold">
+                    {mode}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="nb-card-static p-6 transition-transform duration-300 hover:-translate-y-1">
-              <div className="nb-float grid size-12 place-items-center rounded-2xl border" style={{ background: "color-mix(in srgb, var(--nb-secondary) 10%, var(--nb-surface))", color: "var(--nb-secondary)", animationDelay: "600ms" }}>
+            {/* Card 2: Smart Search */}
+            <div className="nb-card-static p-6" style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", borderColor: "var(--nb-border)" }}>
+              <div className="grid size-12 place-items-center rounded-2xl border-[3px] bg-white/20" style={{ borderColor: "rgba(255,255,255,0.3)" }}>
                 <Search className="size-6" />
               </div>
-              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Smart search, Cmd+K</h3>
-              <p className="mt-2 max-w-[60ch] text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                Instant search across titles, URLs, descriptions, and tags. Your full library in milliseconds.
+              <h3 className="mt-5 text-xl font-bold">Smart Search & Cmd+K</h3>
+              <p className="mt-2 text-sm leading-relaxed opacity-80">
+                Instant search across titles, URLs, descriptions, and tags. Access your full library in milliseconds.
               </p>
-              <div className="mt-5 flex items-center justify-between rounded-xl border px-3 py-2.5 text-xs font-mono" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
-                <span className="font-semibold">Press Cmd + K anytime</span>
-                <Command className="size-4" style={{ color: "var(--nb-muted)" }} />
+              <div className="mt-6 flex items-center justify-between rounded-xl border-[3px] bg-white/15 px-3 py-2.5 text-xs font-mono backdrop-blur-sm" style={{ borderColor: "rgba(255,255,255,0.2)" }}>
+                <span className="font-bold">Press Cmd + K anytime</span>
+                <Command className="size-4" />
               </div>
             </div>
 
-            <div className="nb-card-static p-6 transition-transform duration-300 hover:-translate-y-1">
-              <div className="nb-float grid size-12 place-items-center rounded-2xl border" style={{ background: "color-mix(in srgb, var(--nb-bruto-cyan) 14%, var(--nb-surface))", color: "var(--nb-bruto-cyan)", animationDelay: "1200ms" }}>
+            {/* Card 3: Batch Operations */}
+            <div className="nb-card-static p-6" style={{ background: "var(--nb-surface)" }}>
+              <div className="nb-card-purple grid size-12 place-items-center rounded-2xl border-[3px]" style={{ borderColor: "var(--nb-border)" }}>
+                <CheckCircle2 className="size-6" />
+              </div>
+              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Batch Operations</h3>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
+                Select multiple bookmarks at once to bulk move into collections, add tags, mark favorites, or clean up.
+              </p>
+            </div>
+
+            {/* Card 4: Media Filtering */}
+            <div className="nb-card-static p-6" style={{ background: "var(--nb-surface)" }}>
+              <div className="nb-card-coral grid size-12 place-items-center rounded-2xl border-[3px]" style={{ borderColor: "var(--nb-border)" }}>
                 <Film className="size-6" />
               </div>
-              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Media classification</h3>
-              <p className="mt-2 max-w-[60ch] text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                Automatic filtering by media type — Articles, Images, Videos, and Documents — so the right kind of content always surfaces.
+              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Media Type Classification</h3>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
+                Automatic filtering by media type: Articles, Images, Videos, and Documents.
               </p>
             </div>
-          </div>
 
-          {/* Bento: Row 2 — 70/30 split */}
-          <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            <div className="nb-card-static p-6 transition-transform duration-300 hover:-translate-y-1 lg:col-span-2" style={{ background: "var(--nb-surface)" }}>
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="max-w-md">
-                  <div className="nb-float grid size-12 place-items-center rounded-2xl border" style={{ background: "color-mix(in srgb, var(--nb-bruto-orange) 14%, var(--nb-surface))", color: "var(--nb-bruto-orange)" }}>
-                    <CheckCircle2 className="size-6" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Batch operations</h3>
-                  <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                    Select multiple bookmarks at once to bulk move into collections, add tags, mark favorites, or clean up.
-                  </p>
-                </div>
-                <div className="grid w-full max-w-xs grid-cols-2 gap-2">
-                  {["Move", "Tag", "Favorite", "Trash"].map((action) => (
-                    <div key={action} className="nb-card-sm px-3 py-3 text-center text-xs font-semibold">{action}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="nb-card-static p-6 transition-transform duration-300 hover:-translate-y-1" style={{ background: "color-mix(in srgb, var(--nb-primary) 8%, var(--nb-surface))" }}>
-              <div className="nb-float grid size-12 place-items-center rounded-2xl border" style={{ background: "color-mix(in srgb, var(--nb-bruto-mint) 16%, var(--nb-surface))", color: "var(--nb-bruto-mint)" }}>
+            {/* Card 5: Privacy */}
+            <div className="nb-card-static p-6" style={{ background: "var(--nb-surface)" }}>
+              <div className="nb-card-mint grid size-12 place-items-center rounded-2xl border-[3px]" style={{ borderColor: "var(--nb-border)" }}>
                 <Fingerprint className="size-6" />
               </div>
-              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Private & isolated</h3>
+              <h3 className="mt-5 text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Private & Isolated</h3>
               <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
-                Your bookmarks stay strictly private under your account, with trash recovery and export/import.
+                Your bookmarks remain strictly private under your account with trash recovery and export/import.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Method */}
-      <section id="method" className="py-20 lg:py-28" style={{ background: "var(--nb-surface)", borderTop: "1px solid var(--nb-border)", borderBottom: "1px solid var(--nb-border)" }}>
+      {/* 5. How it Works */}
+      <section id="how-it-works" className="py-20 lg:py-28" style={{ background: "var(--nb-surface)", borderTop: "3px solid var(--nb-border)", borderBottom: "3px solid var(--nb-border)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
+            {/* Sticky intro */}
             <div className="lg:col-span-5">
               <div className="lg:sticky lg:top-28">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--nb-primary)" }}>
-                  Method
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--nb-primary)" }}>
+                  How it works
                 </p>
-                <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+                <h2 className="mt-3 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
                   Curate in seconds
                 </h2>
                 <p className="mt-4 max-w-sm text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
@@ -353,22 +305,41 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               </div>
             </div>
 
+            {/* Vertical steps */}
             <div className="relative lg:col-span-7">
               <div
-                className="absolute bottom-4 left-8 top-4 hidden w-px sm:block"
-                style={{ background: "var(--nb-border)" }}
+                className="absolute bottom-4 left-8 top-4 hidden w-[3px] sm:block"
+                style={{ background: "var(--nb-border)", opacity: 0.18 }}
                 aria-hidden="true"
               />
               <div>
                 {[
-                  { step: "1", title: "Save", desc: "Collect articles, design inspirations, code repositories, and videos instantly.", icon: Plus },
-                  { step: "2", title: "Organize", desc: "Group bookmarks into nested collections, add custom tags, and set media types.", icon: FolderPlus },
-                  { step: "3", title: "Find", desc: "Locate any saved resource in milliseconds with search and command palette.", icon: Compass },
+                  {
+                    step: "1",
+                    title: "Save",
+                    desc: "Collect articles, design inspirations, code repositories, and videos instantly.",
+                    icon: Plus,
+                    colorClass: "nb-card-yellow",
+                  },
+                  {
+                    step: "2",
+                    title: "Organize",
+                    desc: "Group bookmarks into nested collections, add custom tags, and set media types.",
+                    icon: FolderPlus,
+                    colorClass: "nb-card-blue",
+                  },
+                  {
+                    step: "3",
+                    title: "Find",
+                    desc: "Locate any saved resource in milliseconds with search and command palette.",
+                    icon: Compass,
+                    colorClass: "nb-card-mint",
+                  },
                 ].map((item) => (
                   <div key={item.step} className="group flex gap-5 pb-12 last:pb-0">
                     <div
-                      className="relative z-10 grid size-16 shrink-0 place-items-center rounded-2xl border text-xl font-bold transition-transform duration-300 group-hover:-translate-y-1"
-                      style={{ background: "var(--nb-surface)", color: "var(--nb-primary)", borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-md)" }}
+                      className={`${item.colorClass} relative z-10 grid size-16 shrink-0 place-items-center rounded-2xl border-3 text-xl font-extrabold transition-transform duration-200 group-hover:-translate-y-1 group-hover:-rotate-2`}
+                      style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}
                     >
                       {item.step}
                     </div>
@@ -387,32 +358,33 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 6. Pricing */}
+      {/* 6. Pricing Section */}
       <section id="pricing" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-balance text-4xl font-extrabold tracking-tight sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
               Simple, transparent pricing
             </h2>
-            <p className="mx-auto mt-4 max-w-[65ch] text-sm" style={{ color: "var(--nb-muted)" }}>
-              Full access to all curation tools with a generous free tier.
+            <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
+              Get full access to all curation tools with our generous free tier.
             </p>
           </div>
 
-          <div className="mx-auto mt-14 grid max-w-4xl gap-8 md:grid-cols-2">
-            <div className="nb-card-static p-8">
+          <div className="mt-14 mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
+            {/* Free Plan */}
+            <div className="nb-card-static p-8" style={{ background: "var(--nb-surface)" }}>
               <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Free Starter</h3>
-              <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>For individual bookmarking</p>
+              <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>Perfect for individual bookmarking</p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold tabular-nums tracking-tight" style={{ color: "var(--nb-fg)" }}>$0</span>
+                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$0</span>
                 <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ forever</span>
               </div>
-              <ul className="mt-6 space-y-3 text-sm" style={{ color: "var(--nb-fg)" }}>
+              <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
                 {[
                   "Up to 500 bookmarks saved",
-                  "4 view modes — Grid, Masonry, List, Headlines",
+                  "4 View modes (Grid, Masonry, List, Headlines)",
                   "Nested collections & custom icons",
-                  "Command palette (Cmd+K)",
+                  "Command Palette (Cmd+K)",
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0" style={{ color: "var(--nb-success)" }} />
@@ -421,26 +393,26 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
                 ))}
               </ul>
               <Link href="/register" className="nb-btn nb-btn-surface mt-8 block w-full text-center">
-                Get started free
+                Get Started Free
               </Link>
             </div>
 
-            <div
-              className="relative rounded-3xl border p-8"
-              style={{ borderColor: "color-mix(in srgb, var(--nb-primary) 40%, var(--nb-border))", background: "color-mix(in srgb, var(--nb-primary) 6%, var(--nb-surface))", boxShadow: "var(--nb-shadow-lg)" }}
-            >
-              <span className="nb-tag nb-tag-primary absolute -top-3 right-8">Recommended</span>
+            {/* Pro Plan */}
+            <div className="nb-card-static p-8 relative" style={{ background: "var(--nb-card)", borderWidth: "4px" }}>
+              <div className="nb-tag nb-tag-primary absolute -top-4 right-6">
+                Most Popular
+              </div>
               <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Pro Workspace</h3>
               <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>For power users and researchers</p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold tabular-nums tracking-tight" style={{ color: "var(--nb-fg)" }}>$4.99</span>
+                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$4.99</span>
                 <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ month</span>
               </div>
-              <ul className="mt-6 space-y-3 text-sm" style={{ color: "var(--nb-fg)" }}>
+              <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
                 {[
                   "Unlimited bookmarks & collections",
                   "Automatic full-page metadata scraping",
-                  "Batch operations & tag management",
+                  "Batch Operations & tag management",
                   "Priority backup & JSON export",
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
@@ -450,7 +422,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
                 ))}
               </ul>
               <Link href="/register" className="nb-btn nb-btn-primary mt-8 block w-full text-center">
-                Start 14-day free trial
+                Start 14-Day Free Trial
               </Link>
             </div>
           </div>
@@ -460,24 +432,21 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       {/* 7. CTA Banner */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div
-            className="rounded-[2rem] px-6 py-14 text-center sm:px-14"
-            style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", boxShadow: "var(--nb-shadow-lg)" }}
-          >
-            <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to organize the web?</h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed opacity-85">
-              Join the researchers and power users who have upgraded their digital curation workspace.
+          <div className="nb-card-static px-6 py-14 text-center sm:px-14 sm:py-18" style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)" }}>
+            <h2 className="text-balance text-3xl font-extrabold sm:text-4xl">Ready to organize the web?</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed opacity-80">
+              Join thousands of creatives, researchers, and power users who have upgraded their digital curation workspace.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/register" className="nb-btn nb-btn-secondary px-7 py-3">
-                Start curating now
+              <Link href="/register" className="nb-btn nb-btn-accent">
+                Start Curating Now
               </Link>
               <button
                 type="button"
                 onClick={onLaunchDemo}
-                className="nb-btn nb-btn-surface px-7 py-3"
+                className="nb-btn nb-btn-surface"
               >
-                Launch demo
+                Launch Demo
               </button>
             </div>
           </div>
@@ -485,21 +454,20 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       </section>
 
       {/* 8. Footer */}
-      <footer className="border-t py-12" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+      <footer className="border-t-3 py-12" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2.5">
-              <span
-                className="grid size-8 place-items-center rounded-lg border font-bold"
-                style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)", borderColor: "transparent" }}
-              >
+              <span className="nb-card-yellow grid size-8 place-items-center rounded-xl border-[3px] text-xs font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
                 W
               </span>
               <span className="text-base font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
             </div>
-            <div className="flex flex-wrap gap-4 text-xs font-medium" style={{ color: "var(--nb-muted)" }}>
+            <div className="flex flex-wrap gap-4 text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>
               <a href="#features" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Features</a>
               <a href="#pricing" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Pricing</a>
+              <Link href="/login" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Sign In</Link>
+              <Link href="/register" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Register</Link>
               <Link href="/privacy" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Privacy</Link>
               <Link href="/terms" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Terms</Link>
             </div>
