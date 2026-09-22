@@ -383,8 +383,8 @@ export default function WesiteApp() {
                               <card.icon className="size-5" style={{ color: card.color }} />
                             </span>
                             <div className="min-w-0">
-                              <p className="truncate text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>{card.label}</p>
-                              <p className="mt-0.5 text-2xl font-extrabold leading-none" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
+                              <p className="nb-label truncate">{card.label}</p>
+                              <p className="mt-0.5 text-2xl font-extrabold tabular-nums leading-none" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
                               <p className="mt-1 truncate text-[10px] font-semibold" style={{ color: "var(--nb-muted)" }}>{card.note}</p>
                             </div>
                           </div>
@@ -409,7 +409,8 @@ export default function WesiteApp() {
                         <div key={lane.label} className="nb-card-sm p-3">
                           <div className="flex items-center gap-2 text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
                             <lane.icon className="size-3.5" style={{ color: "var(--nb-primary)" }} />
-                            {lane.label}
+                            <span className="flex-1">{lane.label}</span>
+                            <span className="nb-tag text-[9px]">{lane.items.length}</span>
                           </div>
                           <div className="mt-3 space-y-1.5">
                             {lane.items.map((website) => (

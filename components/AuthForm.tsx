@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import Logo from "@/components/Logo";
+import { ArrowRight, Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 type AuthFormProps = {
@@ -180,7 +181,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <div className="absolute inset-0 nb-dot-bg opacity-10" />
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <span className="grid size-11 place-items-center rounded-2xl border-3 bg-white/15 text-base font-extrabold backdrop-blur-sm" style={{ borderColor: "rgba(255,255,255,0.3)" }}>W</span>
+            <Logo tone="inverse" className="size-11" title="Wesite home" />
             <span className="text-xl font-bold tracking-tight">Wesite</span>
           </Link>
           <div className="mt-16 max-w-xl">
@@ -196,30 +197,28 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </p>
           </div>
         </div>
-        <div className="relative z-10 grid max-w-xl gap-3 sm:grid-cols-3">
-          {[
-            ["Private by default", "Your collection is locked to your account."],
-            ["Two calm views", "A dense grid and a quiet list. Nothing else."],
-            ["Batch operations", "Tag, move, or clean up in bulk."],
-          ].map(([title, description]) => (
-            <div key={title} className="rounded-2xl border-[3px] border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <ShieldCheck className="size-4 text-white/80" />
-                {title}
-              </div>
-              <p className="mt-2 text-xs text-white/60 leading-relaxed">{description}</p>
-            </div>
-          ))}
+        <div className="relative z-10 max-w-xl">
+          <div className="zine-sheet p-5">
+            <span className="zine-tape zine-tape-tl" aria-hidden="true" />
+            <ul className="zine-check text-sm font-semibold" style={{ color: "var(--zine-ink)" }}>
+              <li>Private by default — locked to your account</li>
+              <li>Two calm views — a dense grid and a quiet list</li>
+              <li>Batch operations — tag, move, or clean up in bulk</li>
+            </ul>
+            <p className="zine-note mt-3 text-sm">— everything has its shelf here.</p>
+          </div>
         </div>
       </section>
 
       {/* Right Panel — Form */}
       <section className="grid place-items-center px-4 py-10 sm:px-6" style={{ background: "var(--nb-bg)" }}>
-        <form onSubmit={submit} className="nb-card-static w-full max-w-md p-6 sm:p-8">
+        <form onSubmit={submit} className="nb-card-static relative w-full max-w-md p-6 sm:p-8">
+          <span className="zine-tape zine-tape-tl" aria-hidden="true" />
+          <span className="zine-tape zine-tape-tr" aria-hidden="true" />
           <div className="mb-6">
             <div className="mb-5 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
-                <span className="nb-card-yellow grid size-9 place-items-center rounded-xl border-[3px] font-extrabold text-sm" style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}>W</span>
+                <Logo className="size-9" />
                 <span className="font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
               </Link>
               <span className="nb-tag">

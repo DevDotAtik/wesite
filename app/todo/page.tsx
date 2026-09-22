@@ -90,7 +90,7 @@ export default function TodoPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar search={query} onSearchChange={setQuery} />
-      <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+      <main className="px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
           <div className="nb-section-header" style={{ flexWrap: "wrap" }}>
             <span className="nb-section-icon" style={{ background: "var(--nb-secondary)" }}>

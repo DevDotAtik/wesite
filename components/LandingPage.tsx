@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import LandingBackground3D from "@/components/landing/LandingBackground3D";
+import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import {
   ArrowRight,
   CheckCircle2,
@@ -33,9 +35,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       <header className="sticky top-0 z-50 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="nb-card-yellow grid size-10 place-items-center rounded-2xl border-3 text-lg font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "var(--nb-shadow-sm)" }}>
-              W
-            </span>
+            <Logo className="size-10" />
             <span className="text-xl font-bold tracking-tight" style={{ color: "var(--nb-fg)" }}>WeSite</span>
           </Link>
 
@@ -43,9 +43,11 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             <a href="#features" className="nb-btn nb-btn-ghost nb-btn-sm">Features</a>
             <a href="#pricing" className="nb-btn nb-btn-ghost nb-btn-sm">Pricing</a>
             <a href="#how-it-works" className="nb-btn nb-btn-ghost nb-btn-sm">How it Works</a>
+            <a href="#field-guide" className="nb-btn nb-btn-ghost nb-btn-sm">Field Guide</a>
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href="/dashboard" className="nb-btn nb-btn-surface nb-btn-sm hidden sm:inline-flex">
               Demo Workspace
             </Link>
@@ -85,9 +87,14 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               View Demo Workspace
             </Link>
           </div>
+          <div className="mt-7 flex justify-center">
+            <span className="zine-stamp">Free forever · No card needed</span>
+          </div>
 
           {/* Product UI Mockup */}
-          <div className="nb-card-static mx-auto mt-16 max-w-5xl p-3" style={{ borderRadius: "20px" }}>
+          <div className="nb-card-static relative mx-auto mt-16 max-w-5xl p-3" style={{ borderRadius: "20px" }}>
+            <span className="zine-tape zine-tape-tl" aria-hidden="true" />
+            <span className="zine-tape zine-tape-tr" aria-hidden="true" />
             <div className="flex items-center gap-2 border-b-3 px-4 pb-3 pt-2" style={{ borderColor: "var(--nb-border)" }}>
               <div className="flex gap-1.5">
                 <span className="size-3.5 rounded-full" style={{ background: "var(--nb-danger)" }} />
@@ -103,9 +110,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             <div className="overflow-hidden rounded-2xl p-4 text-left sm:p-6" style={{ background: "var(--nb-bg)" }}>
               <div className="mb-4 flex items-center justify-between border-b-3 pb-3" style={{ borderColor: "var(--nb-border)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="nb-card-yellow grid size-9 place-items-center rounded-xl border-[3px] text-sm font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
-                    W
-                  </div>
+                  <Logo className="size-9" />
                   <div>
                     <h3 className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Design & Dev Stack</h3>
                     <p className="text-[11px]" style={{ color: "var(--nb-muted)" }}>128 bookmarks saved</p>
@@ -202,7 +207,8 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       <section id="features" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+            <span className="zine-kicker">What&apos;s inside</span>
+            <h2 className="mt-4 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
               Built for serious curators
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
@@ -287,10 +293,8 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             {/* Sticky intro */}
             <div className="lg:col-span-5">
               <div className="lg:sticky lg:top-28">
-                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--nb-primary)" }}>
-                  How it works
-                </p>
-                <h2 className="mt-3 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+                <span className="zine-kicker">How it works</span>
+                <h2 className="mt-4 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
                   Curate in seconds
                 </h2>
                 <p className="mt-4 max-w-sm text-sm leading-relaxed" style={{ color: "var(--nb-muted)" }}>
@@ -357,11 +361,73 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 6. Pricing Section */}
+      {/* 6. Field Guide — harm-reduction-zine revival: a pinned-up
+          pocket zine. Peer-care tone, real steps, real links. */}
+      <section id="field-guide" className="py-20 lg:py-28">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="zine-sheet p-6 sm:p-10">
+            <span className="zine-tape zine-tape-tl" aria-hidden="true" />
+            <span className="zine-tape zine-tape-tr" aria-hidden="true" />
+            <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+              {/* Cover */}
+              <div>
+                <span className="zine-kicker">A pocket zine · Issue No. 01</span>
+                <h2 className="zine-title mt-5 text-balance text-4xl font-extrabold tracking-tight sm:text-5xl">
+                  The link-hoarder&apos;s field guide
+                </h2>
+                <p className="zine-note mt-5 max-w-sm text-base leading-relaxed">
+                  — passed hand to hand by people with 47 open tabs who decided to change their ways.
+                </p>
+                <div className="mt-7">
+                  <span className="zine-stamp">Save it · Shelve it · Find it</span>
+                </div>
+                <div className="zine-strip mt-8">
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--zine-muted)" }}>Start here:</span>
+                  <Link href="/register">Start free</Link>
+                  <Link href="/login">Sign in</Link>
+                  <Link href="/dashboard">Open your library</Link>
+                </div>
+              </div>
+              {/* Steps */}
+              <div>
+                <details className="zine-step" open>
+                  <summary><span className="zine-step-num">1</span>Save it raw</summary>
+                  <p className="zine-step-body">
+                    Paste any URL. The title, description, and favicon are captured
+                    automatically — fix anything by hand if the site is stingy with metadata.
+                  </p>
+                </details>
+                <details className="zine-step">
+                  <summary><span className="zine-step-num">2</span>Shelve it, then close the tab</summary>
+                  <p className="zine-step-body">
+                    Give it one folder and a few tags. Then close the tab with
+                    confidence — the shelf remembers so your browser doesn&apos;t have to.
+                  </p>
+                </details>
+                <details className="zine-step">
+                  <summary><span className="zine-step-num">3</span>Find it in seconds</summary>
+                  <p className="zine-step-body">
+                    Search across titles, URLs, and tags, or press Cmd+K anywhere.
+                    Nothing you saved stays lost.
+                  </p>
+                </details>
+                <ul className="zine-check mt-6 text-sm font-semibold" style={{ color: "var(--zine-ink)" }}>
+                  <li>No more bookmark graveyards</li>
+                  <li>No more “which tab was that in?”</li>
+                  <li>Trash with restore, in case of accidents</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Pricing Section */}
       <section id="pricing" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
+            <span className="zine-kicker">Pricing</span>
+            <h2 className="mt-4 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
               Simple, transparent pricing
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
@@ -457,9 +523,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2.5">
-              <span className="nb-card-yellow grid size-8 place-items-center rounded-xl border-[3px] text-xs font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
-                W
-              </span>
+              <Logo className="size-8" />
               <span className="text-base font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
             </div>
             <div className="flex flex-wrap gap-4 text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>

@@ -4,11 +4,9 @@ Quick-save bookmarks to your Wesite library from any webpage.
 
 ## Install (Development)
 
-1. Generate icons (requires Node.js with `canvas` package):
+1. Generate icons (requires the workspace `node_modules` with `sharp`):
    ```bash
-   cd extension
-   npm install canvas
-   node generate-icons.js
+   node extension/generate-icons.js
    ```
 
    Or manually place PNG icons at `icons/icon-16.png`, `icons/icon-48.png`, `icons/icon-128.png`.
@@ -19,7 +17,9 @@ Quick-save bookmarks to your Wesite library from any webpage.
 
 4. Click **Load unpacked** and select the `extension/` folder
 
-5. Click the Wesite icon in your toolbar and sign in
+5. Click the Wesite icon in your toolbar and sign in — with email + password,
+   or with **Continue with Google** (signs in on the Wesite website, then the
+   extension adopts the session cookie — no password typing needed)
 
 ## Features
 
@@ -37,7 +37,9 @@ On the login screen, set your **Wesite URL** (e.g., `https://wesite.app` or `htt
 
 The extension stores your auth token in `chrome.storage.local` and never sends it to third parties.
 
-The manifest includes `host_permissions` for all `http://`/`https://` hosts so the popup and background
+To support Google sign-in, the manifest also requests the `cookies` permission so the
+extension can read the Wesite session cookie (`wesite_token`) after you sign in on the
+website. `host_permissions` cover all `http://`/`https://` hosts so the popup and background
 worker can call whichever Wesite URL you configure. After changing any file in this folder, reload the
 extension from `chrome://extensions/` (click the refresh icon) for changes to take effect.
 
@@ -46,7 +48,8 @@ extension from `chrome://extensions/` (click the refresh icon) for changes to ta
 The extension communicates with the Wesite API using Bearer token authentication. The token is obtained during login and stored securely in the browser's extension storage.
 
 ### Endpoints used:
-- `POST /api/auth/login` — Sign in
+- `POST /api/auth/token` — Sign in with email + password
+- `POST /api/auth/google` — Verify a Google credential (website flow)
 - `GET /api/auth/me` — Verify session
 - `POST /api/websites` — Save a bookmark
 - `GET /api/folders` — List folders for the folder picker

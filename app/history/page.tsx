@@ -96,7 +96,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar search={query} onSearchChange={setQuery} />
-      <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
+      <main className="px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
           <div className="nb-section-header">
             <span className="nb-section-icon" style={{ background: "var(--nb-warning)", color: "var(--nb-accent-fg)" }}>

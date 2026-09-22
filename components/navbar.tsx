@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
@@ -40,9 +41,7 @@ export default function Navbar({
 
         {/* Logo */}
         <Link href="/" className="flex min-w-fit items-center gap-2">
-          <span className="nb-card-yellow grid size-8 place-items-center rounded-lg border-[3px] text-sm font-extrabold" style={{ borderColor: "var(--nb-border)", boxShadow: "2px 2px 0 0 var(--nb-shadow)" }}>
-            W
-          </span>
+          <Logo className="size-8" />
           <span className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Wesite</span>
         </Link>
 

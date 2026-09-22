@@ -65,7 +65,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar userName={user?.name} />
-      <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
+      <main className="px-4 py-5 sm:px-6 sm:py-8">
         <div className="nb-card-static">
           <div className="nb-section-header">
             <span className="nb-section-icon" style={{ background: "var(--nb-accent)", color: "var(--nb-accent-fg)" }}>

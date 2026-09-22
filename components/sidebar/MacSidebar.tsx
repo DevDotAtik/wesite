@@ -312,6 +312,8 @@ function SectionHeader({ children, action }: { children: ReactNode; action?: Rea
 }
 
 function SidebarContent(props: SidebarProps) {
+  const totalSaved = props.folders.reduce((sum, folder) => sum + (folder.count ?? 0), 0);
+
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto">
       {/* Global Navigation Views */}
@@ -373,16 +375,24 @@ function SidebarContent(props: SidebarProps) {
       {/* Collections / Folders Tree */}
       <section className="min-h-0 flex-1 overflow-y-auto">
         <SectionHeader
-          action={props.onCreateFolder ? (
-            <button
-              type="button"
-              onClick={props.onCreateFolder}
-              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
-              title="Create Collection"
-            >
-              <Plus className="size-3.5" />
-            </button>
-          ) : undefined}
+          action={
+            <span className="flex items-center gap-2">
+              {totalSaved > 0 ? (
+                <span className="nb-tag text-[9px]">{totalSaved} saved</span>
+              ) : null}
+              {props.onCreateFolder ? (
+                <button
+                  type="button"
+                  onClick={props.onCreateFolder}
+                  aria-label="Create collection"
+                  className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
+                  title="Create Collection"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              ) : undefined}
+            </span>
+          }
         >
           Collections
         </SectionHeader>

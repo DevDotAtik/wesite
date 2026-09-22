@@ -3,7 +3,7 @@
   "name": "Wesite — Quick Save Bookmarks",
   "description": "Save bookmarks to your Wesite library instantly from any webpage.",
   "version": "1.0.1",
-  "permissions": ["activeTab", "storage", "tabs", "notifications"],
+  "permissions": ["activeTab", "storage", "tabs", "notifications", "cookies"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "action": {
     "default_popup": "popup.html",

@@ -1,6 +1,8 @@
 const API_STORAGE_KEY = "wesite_api_url";
 const TOKEN_STORAGE_KEY = "wesite_token";
 const RECENT_KEY = "wesite_recent";
+const FOLDERS_CACHE_KEY = "wesite_folders_cache";
+const FOLDERS_CACHE_TTL = 10 * 60 * 1000;
 
 function getApiBase() {
   return new Promise((resolve) => {
@@ -54,6 +56,23 @@ function clearRecent() {
   });
 }
 
+function getFoldersCache() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(FOLDERS_CACHE_KEY, (result) => {
+      resolve(result[FOLDERS_CACHE_KEY] || null);
+    });
+  });
+}
+
+function setFoldersCache(folders) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set(
+      { [FOLDERS_CACHE_KEY]: { at: Date.now(), folders } },
+      resolve,
+    );
+  });
+}
+
 async function apiFetch(path, options = {}) {
   const baseUrl = await getApiBase();
   const token = await getToken();
@@ -90,9 +109,41 @@ async function login(email, password) {
 async function fetchFolders() {
   const result = await apiFetch("/api/folders");
   if (result.ok) {
-    return result.data?.flatFolders || [];
+    const folders = result.data?.flatFolders || [];
+    void setFoldersCache(folders);
+    return folders;
   }
   return [];
+}
+
+/**
+ * Google sign-in for the extension.
+ *
+ * Extensions cannot render Google's button (it requires a real web origin),
+ * so we sign in on the Wesite website and adopt its httpOnly session cookie
+ * (readable here via the "cookies" permission) as our Bearer token.
+ */
+async function adoptGoogleSession() {
+  const baseUrl = (await getApiBase()).replace(/\/+$/, "");
+
+  let cookie = null;
+  try {
+    cookie = await chrome.cookies.get({ url: baseUrl, name: "wesite_token" });
+  } catch {
+    return { ok: false, error: "Cookie access was denied by the browser." };
+  }
+
+  if (!cookie?.value) {
+    return { ok: false, error: "No Wesite session found yet." };
+  }
+
+  await setToken(cookie.value);
+  const me = await apiFetch("/api/auth/me");
+  if (!me.ok) {
+    await clearToken();
+    return { ok: false, error: "That session is no longer valid." };
+  }
+  return { ok: true, user: me.data?.user };
 }
 
 async function saveWebsite({ url, folderId, tags, notes, isFavorite }) {
@@ -114,13 +165,6 @@ async function saveWebsite({ url, folderId, tags, notes, isFavorite }) {
   return { ok: false, error: result.data?.error || "Save failed" };
 }
 
-async function checkAuth() {
-  const token = await getToken();
-  if (!token) return false;
-  const result = await apiFetch("/api/auth/me");
-  return result.ok;
-}
-
 async function logout() {
   await clearToken();
   await clearRecent();
@@ -135,34 +179,41 @@ function setText(el, text) { el.textContent = text; }
 
 let currentTags = [];
 let currentFolders = [];
+let listenersBound = false;
+let loginBound = false;
 
-// Initialize
+// Initialize — optimized for instant paint:
+// 1. If a token exists, show the main shell immediately (folders from cache).
+// 2. Revalidate auth + folders in parallel in the background.
+// 3. Only fall back to login when the session is actually rejected.
 document.addEventListener("DOMContentLoaded", async () => {
-  // Check if first time - show login
   const token = await getToken();
   if (!token) {
+    // Maybe signed in on the website but never connected the extension.
+    const adopted = await adoptGoogleSession().catch(() => ({ ok: false }));
+    if (adopted.ok) {
+      showMain(adopted.user);
+      return;
+    }
     showLogin();
     return;
   }
 
-  // Verify token still valid
-  const valid = await checkAuth();
-  if (!valid) {
-    showLogin();
-    return;
-  }
-
-  showMain();
+  // Optimistic shell: instant UI, network fills in behind it.
+  showMain(null);
 });
 
 function showLogin() {
   show($("#login-view"));
   hide($("#main-view"));
 
-  const savedUrl = chrome.storage.local.get(API_STORAGE_KEY, (r) => {
+  chrome.storage.local.get(API_STORAGE_KEY, (r) => {
     const url = r[API_STORAGE_KEY] || "http://localhost:3000";
     $("#api-url").value = url;
   });
+
+  if (loginBound) return;
+  loginBound = true;
 
   $("#open-register").addEventListener("click", () => {
     getApiBase().then((base) => chrome.tabs.create({ url: `${base}/register` }));
@@ -171,6 +222,30 @@ function showLogin() {
   $("#login-btn").addEventListener("click", doLogin);
   $("#login-password").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
   $("#login-email").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+  $("#google-btn").addEventListener("click", doGoogleLogin);
+}
+
+async function doGoogleLogin() {
+  const btn = $("#google-btn");
+  const hint = $("#google-hint");
+  hide($("#login-error"));
+
+  // Second press (or an existing website session): try adopting the cookie.
+  setText(btn, "Checking for session...");
+  btn.disabled = true;
+  const adopted = await adoptGoogleSession().catch(() => ({ ok: false }));
+
+  if (adopted.ok) {
+    showMain(adopted.user);
+    return;
+  }
+
+  // No session yet — open the website login and wait for the user.
+  const baseUrl = (await getApiBase()).replace(/\/+$/, "");
+  chrome.tabs.create({ url: `${baseUrl}/login` });
+  setText(btn, "I've signed in — connect");
+  btn.disabled = false;
+  show(hint);
 }
 
 async function doLogin() {
@@ -198,67 +273,84 @@ async function doLogin() {
   $("#login-btn").disabled = false;
 
   if (result.ok) {
-    showMain();
+    showMain(result.user || null);
   } else {
     show($("#login-error"));
     setText($("#login-error"), result.error);
   }
 }
 
-async function showMain() {
+async function showMain(initialUser) {
   hide($("#login-view"));
   show($("#main-view"));
 
-  const user = await apiFetch("/api/auth/me");
-  if (user.ok) {
-    setText($("#header-user"), `Signed in as ${user.data?.user?.name || "User"}`);
-  }
-
-  loadFolders();
+  // Instant, network-free paint: current tab + recent saves + cached folders.
   loadCurrentPage();
   renderRecent();
+  paintCachedFolders();
 
-  // Tab switching
-  $$(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      $$(".tab").forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
-      $$(".tab-content").forEach((c) => c.classList.add("hidden"));
-      $(`#tab-${tab.dataset.tab}`).classList.remove("hidden");
-    });
-  });
+  // Single parallel round-trip: verify session AND refresh folders together.
+  const [me, folders] = await Promise.all([
+    initialUser ? { ok: true, user: initialUser } : apiFetch("/api/auth/me"),
+    fetchFolders().catch(() => []),
+  ]);
 
-  // Tag input
-  const tagInput = $("#tag-input");
-  tagInput.addEventListener("keydown", (e) => {
-    if ((e.key === "Enter" || e.key === ",") && tagInput.value.trim()) {
-      e.preventDefault();
-      addTag(tagInput.value.trim().replace(/,/g, ""));
-      tagInput.value = "";
-    }
-    if (e.key === "Backspace" && !tagInput.value && currentTags.length) {
-      removeTag(currentTags.length - 1);
-    }
-  });
-
-  // Save
-  $("#save-btn").addEventListener("click", doSave);
-
-  // Logout
-  $("#logout-btn").addEventListener("click", async () => {
-    await logout();
+  if (!me.ok) {
     showLogin();
-  });
+    return;
+  }
 
-  // Refresh
-  $("#refresh-btn").addEventListener("click", async () => {
-    await loadFolders();
-    await loadCurrentPage();
-  });
+  const user = me.data?.user || me.user;
+  if (user) {
+    setText($("#header-user"), `Signed in as ${user.name || "User"}`);
+  }
+  currentFolders = folders;
+  paintFolderOptions();
+
+  if (!listenersBound) {
+    listenersBound = true;
+
+    // Tab switching
+    $$(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        $$(".tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        $$(".tab-content").forEach((c) => c.classList.add("hidden"));
+        $(`#tab-${tab.dataset.tab}`).classList.remove("hidden");
+      });
+    });
+
+    // Tag input
+    const tagInput = $("#tag-input");
+    tagInput.addEventListener("keydown", (e) => {
+      if ((e.key === "Enter" || e.key === ",") && tagInput.value.trim()) {
+        e.preventDefault();
+        addTag(tagInput.value.trim().replace(/,/g, ""));
+        tagInput.value = "";
+      }
+      if (e.key === "Backspace" && !tagInput.value && currentTags.length) {
+        removeTag(currentTags.length - 1);
+      }
+    });
+
+    // Save
+    $("#save-btn").addEventListener("click", doSave);
+
+    // Logout
+    $("#logout-btn").addEventListener("click", async () => {
+      await logout();
+      showLogin();
+    });
+
+    // Refresh
+    $("#refresh-btn").addEventListener("click", async () => {
+      await loadFolders();
+      await loadCurrentPage();
+    });
+  }
 }
 
-async function loadFolders() {
-  currentFolders = await fetchFolders();
+function paintFolderOptions() {
   const select = $("#folder-select");
   select.innerHTML = '<option value="">Unsorted</option>';
   currentFolders.forEach((folder) => {
@@ -267,6 +359,19 @@ async function loadFolders() {
     opt.textContent = folder.name;
     select.appendChild(opt);
   });
+}
+
+async function paintCachedFolders() {
+  const cached = await getFoldersCache();
+  if (cached && Array.isArray(cached.folders)) {
+    currentFolders = cached.folders;
+    paintFolderOptions();
+  }
+}
+
+async function loadFolders() {
+  currentFolders = await fetchFolders();
+  paintFolderOptions();
 }
 
 async function loadCurrentPage() {

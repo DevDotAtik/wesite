@@ -1,0 +1,216 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e6]:
+        - link "W WeSite" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: W
+          - generic [ref=e9]: WeSite
+        - navigation [ref=e10]:
+          - link "Features" [ref=e11] [cursor=pointer]:
+            - /url: "#features"
+          - link "Pricing" [ref=e12] [cursor=pointer]:
+            - /url: "#pricing"
+          - link "How it Works" [ref=e13] [cursor=pointer]:
+            - /url: "#how-it-works"
+          - link "Field Guide" [ref=e14] [cursor=pointer]:
+            - /url: "#field-guide"
+        - generic [ref=e15]:
+          - button "Switch to light theme (currently system)" [ref=e16] [cursor=pointer]
+          - link "Demo Workspace" [ref=e19] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Sign In" [ref=e20] [cursor=pointer]:
+            - /url: /login
+          - link "Sign Up" [ref=e21] [cursor=pointer]:
+            - /url: /register
+      - generic [ref=e26]:
+        - heading "All your bookmarks in one place." [level=1] [ref=e27]
+        - paragraph [ref=e28]: Wesite is the modern curation workspace to save articles, design inspirations, videos, and code tools. Organize them into visual collections.
+        - generic [ref=e29]:
+          - link "Get Started for Free" [ref=e30] [cursor=pointer]:
+            - /url: /register
+          - link "View Demo Workspace" [ref=e33] [cursor=pointer]:
+            - /url: /dashboard
+        - generic [ref=e34]:
+          - generic [ref=e35]: https://wesite.app/workspace
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]:
+                - generic [ref=e44]: W
+                - generic [ref=e45]:
+                  - heading "Design & Dev Stack" [level=3] [ref=e46]
+                  - paragraph [ref=e47]: 128 bookmarks saved
+              - generic [ref=e48]: + Add Link
+            - generic [ref=e50]:
+              - generic [ref=e51]:
+                - generic [ref=e52]:
+                  - generic [ref=e53]: figma.com
+                  - generic [ref=e54]: Design
+                - 'heading "Figma: The Collaborative Interface Design Tool" [level=4] [ref=e55]'
+                - paragraph [ref=e56]: Build better products as a team.
+                - generic [ref=e57]:
+                  - generic [ref=e58]: "#design"
+                  - generic [ref=e59]: "#ui"
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - generic [ref=e62]: nextjs.org
+                  - generic [ref=e63]: Code
+                - heading "Next.js 16 Documentation & App Router" [level=4] [ref=e64]
+                - paragraph [ref=e65]: The React Framework for the Web.
+                - generic [ref=e66]:
+                  - generic [ref=e67]: "#react"
+                  - generic [ref=e68]: "#nextjs"
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]: tailwindcss.com
+                  - generic [ref=e72]: CSS
+                - heading "Tailwind CSS — Utility-First Framework" [level=4] [ref=e73]
+                - paragraph [ref=e74]: A utility-first CSS framework.
+                - generic [ref=e75]:
+                  - generic [ref=e76]: "#css"
+                  - generic [ref=e77]: "#frontend"
+      - generic [ref=e79]:
+        - paragraph [ref=e80]: GREAT FOR CONTENT FROM YOUR FAVORITE PLATFORMS
+        - generic [ref=e81]:
+          - generic [ref=e82]: Medium
+          - generic [ref=e86]: YouTube
+          - generic [ref=e89]: GitHub
+          - generic [ref=e93]: Pinterest
+          - generic [ref=e98]: Reddit
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading "Built for serious curators" [level=2] [ref=e105]
+          - paragraph [ref=e106]: Save fast, find faster. Organize research, inspiration, and references without the mess.
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - heading "Visual Collections" [level=3] [ref=e114]
+            - paragraph [ref=e115]: "Group bookmarks into nested folders, assign custom icons, and toggle between 4 views: Grid, Cards, List, and Headlines."
+            - generic [ref=e116]:
+              - generic [ref=e117]: Grid View
+              - generic [ref=e118]: Masonry Cards
+              - generic [ref=e119]: List Rows
+              - generic [ref=e120]: Headlines
+          - generic [ref=e121]:
+            - heading "Smart Search & Cmd+K" [level=3] [ref=e126]
+            - paragraph [ref=e127]: Instant search across titles, URLs, descriptions, and tags. Access your full library in milliseconds.
+            - generic [ref=e128]: Press Cmd + K anytime
+          - generic [ref=e132]:
+            - heading "Batch Operations" [level=3] [ref=e137]
+            - paragraph [ref=e138]: Select multiple bookmarks at once to bulk move into collections, add tags, mark favorites, or clean up.
+          - generic [ref=e139]:
+            - heading "Media Type Classification" [level=3] [ref=e143]
+            - paragraph [ref=e144]: "Automatic filtering by media type: Articles, Images, Videos, and Documents."
+          - generic [ref=e145]:
+            - heading "Private & Isolated" [level=3] [ref=e156]
+            - paragraph [ref=e157]: Your bookmarks remain strictly private under your account with trash recovery and export/import.
+      - generic [ref=e160]:
+        - generic [ref=e162]:
+          - paragraph [ref=e163]: How it works
+          - heading "Curate in seconds" [level=2] [ref=e164]
+          - paragraph [ref=e165]: From a raw web link to an organized visual collection in three simple steps.
+          - generic [ref=e166]:
+            - generic [ref=e167]: Save
+            - generic [ref=e168]: Organize
+            - generic [ref=e169]: Find
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - generic [ref=e174]: "1"
+            - generic [ref=e175]:
+              - heading "Save" [level=3] [ref=e178]
+              - paragraph [ref=e179]: Collect articles, design inspirations, code repositories, and videos instantly.
+          - generic [ref=e180]:
+            - generic [ref=e181]: "2"
+            - generic [ref=e182]:
+              - heading "Organize" [level=3] [ref=e186]
+              - paragraph [ref=e187]: Group bookmarks into nested collections, add custom tags, and set media types.
+          - generic [ref=e188]:
+            - generic [ref=e189]: "3"
+            - generic [ref=e190]:
+              - heading "Find" [level=3] [ref=e195]
+              - paragraph [ref=e196]: Locate any saved resource in milliseconds with search and command palette.
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - text: A pocket zine · Issue No. 01
+          - heading "The link-hoarder's field guide" [level=2] [ref=e202]
+          - paragraph [ref=e203]: — passed hand to hand by people with 47 open tabs who decided to change their ways.
+          - generic [ref=e204]: Save it · Shelve it · Find it
+          - generic [ref=e205]:
+            - text: "Start here:"
+            - link "Start free" [ref=e206] [cursor=pointer]:
+              - /url: /register
+            - link "Sign in" [ref=e207] [cursor=pointer]:
+              - /url: /login
+            - link "Open your library" [ref=e208] [cursor=pointer]:
+              - /url: /dashboard
+        - generic [ref=e209]:
+          - group [ref=e210]:
+            - generic "1Save it raw" [ref=e211]
+            - paragraph [ref=e212]: Paste any URL. The title, description, and favicon are captured automatically — fix anything by hand if the site is stingy with metadata.
+          - group [ref=e213]:
+            - generic "2Shelve it, then close the tab" [ref=e214]
+          - group [ref=e215]:
+            - generic "3Find it in seconds" [ref=e216]
+          - list [ref=e217]:
+            - listitem [ref=e218]: No more bookmark graveyards
+            - listitem [ref=e219]: No more “which tab was that in?”
+            - listitem [ref=e220]: Trash with restore, in case of accidents
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - heading "Simple, transparent pricing" [level=2] [ref=e224]
+          - paragraph [ref=e225]: Get full access to all curation tools with our generous free tier.
+        - generic [ref=e226]:
+          - generic [ref=e227]:
+            - heading "Free Starter" [level=3] [ref=e228]
+            - paragraph [ref=e229]: Perfect for individual bookmarking
+            - generic [ref=e230]:
+              - generic [ref=e231]: $0
+              - generic [ref=e232]: / forever
+            - list [ref=e233]:
+              - listitem [ref=e234]: Up to 500 bookmarks saved
+              - listitem [ref=e238]: 4 View modes (Grid, Masonry, List, Headlines)
+              - listitem [ref=e242]: Nested collections & custom icons
+              - listitem [ref=e246]: Command Palette (Cmd+K)
+            - link "Get Started Free" [ref=e250] [cursor=pointer]:
+              - /url: /register
+          - generic [ref=e251]:
+            - generic [ref=e252]: Most Popular
+            - heading "Pro Workspace" [level=3] [ref=e253]
+            - paragraph [ref=e254]: For power users and researchers
+            - generic [ref=e255]:
+              - generic [ref=e256]: $4.99
+              - generic [ref=e257]: / month
+            - list [ref=e258]:
+              - listitem [ref=e259]: Unlimited bookmarks & collections
+              - listitem [ref=e263]: Automatic full-page metadata scraping
+              - listitem [ref=e267]: Batch Operations & tag management
+              - listitem [ref=e271]: Priority backup & JSON export
+            - link "Start 14-Day Free Trial" [ref=e275] [cursor=pointer]:
+              - /url: /register
+      - generic [ref=e278]:
+        - heading "Ready to organize the web?" [level=2] [ref=e279]
+        - paragraph [ref=e280]: Join thousands of creatives, researchers, and power users who have upgraded their digital curation workspace.
+        - generic [ref=e281]:
+          - link "Start Curating Now" [ref=e282] [cursor=pointer]:
+            - /url: /register
+          - button "Launch Demo" [ref=e283] [cursor=pointer]
+      - generic [ref=e286]:
+        - generic [ref=e287]:
+          - generic [ref=e288]: W
+          - generic [ref=e289]: Wesite
+        - generic [ref=e290]:
+          - link "Features" [ref=e291] [cursor=pointer]:
+            - /url: "#features"
+          - link "Pricing" [ref=e292] [cursor=pointer]:
+            - /url: "#pricing"
+          - link "Sign In" [ref=e293] [cursor=pointer]:
+            - /url: /login
+          - link "Register" [ref=e294] [cursor=pointer]:
+            - /url: /register
+          - link "Privacy" [ref=e295] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e296] [cursor=pointer]:
+            - /url: /terms
+        - paragraph [ref=e297]: © 2026 Wesite. All rights reserved.
+  - region "Notifications alt+T"

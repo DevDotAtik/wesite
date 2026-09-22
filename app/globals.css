@@ -44,7 +44,7 @@
 
   --nb-primary: #2563eb;
   --nb-primary-fg: #ffffff;
-  --nb-secondary: #7c3aed;
+  --nb-secondary: #15803d;
   --nb-secondary-fg: #ffffff;
   --nb-accent: #f59e0b;
   --nb-accent-fg: #1a1a2e;
@@ -90,8 +90,8 @@
 
   --nb-primary: #3b82f6;
   --nb-primary-fg: #ffffff;
-  --nb-secondary: #a855f7;
-  --nb-secondary-fg: #ffffff;
+  --nb-secondary: #4ade80;
+  --nb-secondary-fg: #0b0b0d;
   --nb-accent: #fbbf24;
   --nb-accent-fg: #0a0a0a;
 
@@ -218,7 +218,11 @@ body {
 
 .nb-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: var(--nb-shadow-lg);
+  border-color: color-mix(in srgb, var(--nb-primary) 65%, var(--nb-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nb-primary) 55%, transparent),
+    0 0 22px -4px color-mix(in srgb, var(--nb-primary) 65%, transparent),
+    var(--nb-shadow-lg);
 }
 
 .nb-card-static {
@@ -233,6 +237,42 @@ body {
   border: 3px solid var(--nb-border);
   box-shadow: var(--nb-shadow-sm);
   border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nb-card-sm:hover {
+  border-color: color-mix(in srgb, var(--nb-primary) 65%, var(--nb-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nb-primary) 55%, transparent),
+    0 0 18px -4px color-mix(in srgb, var(--nb-primary) 60%, transparent),
+    var(--nb-shadow-sm);
+}
+
+/* Neon edge for buttons and inputs on hover/focus */
+.nb-btn-primary:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nb-primary-fg) 40%, transparent),
+    0 0 20px -2px color-mix(in srgb, var(--nb-primary) 80%, transparent);
+}
+
+.nb-input:hover {
+  border-color: color-mix(in srgb, var(--nb-primary) 55%, var(--nb-border));
+}
+
+.nb-input:focus {
+  border-color: var(--nb-primary);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nb-primary) 60%, transparent),
+    0 0 16px -4px color-mix(in srgb, var(--nb-primary) 65%, transparent);
+  outline: none;
+}
+
+/* Sidebar rows pick up the same neon edge */
+.nb-sidebar-item:hover {
+  border-color: color-mix(in srgb, var(--nb-primary) 50%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--nb-primary) 35%, transparent),
+    0 0 14px -6px color-mix(in srgb, var(--nb-primary) 55%, transparent);
 }
 
 /* ============================================
@@ -428,6 +468,55 @@ select.nb-input {
 .nb-tag-secondary {
   background: var(--nb-secondary);
   color: var(--nb-secondary-fg);
+}
+
+/* Quiet label for stats and eyebrows: same voice as body copy,
+   not the tracked-out uppercase badge voice. */
+.nb-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--nb-muted);
+}
+
+/* Top navigation links — hover and keyboard focus share one style. */
+.nb-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--nb-muted);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.nb-nav-link:hover {
+  color: var(--nb-fg);
+  background: var(--nb-surface-alt);
+}
+
+/* Visible keyboard focus beyond buttons */
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.nb-sidebar-item:focus-visible,
+.nb-input:focus-visible {
+  outline: 2px solid var(--nb-primary);
+  outline-offset: 2px;
+}
+
+/* Hover-revealed actions must also appear for keyboard and touch users */
+.group:focus-within .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-card:hover {
+    transform: none;
+  }
 }
 
 /* ============================================
@@ -1104,3 +1193,216 @@ select.nb-input {
 .brutalist-card-o { background: var(--nb-bruto-orange); }
 .brutalist-card-p { background: var(--nb-secondary); color: #fff; }
 .brutalist-card-c { background: var(--nb-bruto-cyan); }
+
+/* ============================================
+   ZINE — harm-reduction-zine revival, scoped to
+   the landing field-guide section. Paper tones are
+   fixed (a pinned sheet) in both themes on purpose.
+   ============================================ */
+
+:root {
+  --zine-paper: #f6f1e3;
+  --zine-ink: #1c1917;
+  --zine-muted: #57534e;
+  --zine-red: #b91c1c;
+  --zine-blue: #1d4ed8;
+  --zine-tape: rgba(233, 213, 140, 0.8);
+  --zine-fold: #e3d9bd;
+}
+
+.zine-sheet {
+  position: relative;
+  background: var(--zine-paper);
+  color: var(--zine-ink);
+  border: 2px solid var(--zine-ink);
+  border-radius: 6px;
+  box-shadow: 8px 8px 0 0 var(--zine-ink);
+}
+
+/* Photocopy grain over the sheet, never over text legibility */
+.zine-sheet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+}
+
+/* Tape strips pinning the sheet corners */
+.zine-tape {
+  position: absolute;
+  width: 92px;
+  height: 26px;
+  background: var(--zine-tape);
+  border-left: 1px dashed rgba(28, 25, 23, 0.25);
+  border-right: 1px dashed rgba(28, 25, 23, 0.25);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.2);
+  z-index: 1;
+}
+
+.zine-tape-tl { top: -13px; left: 24px; transform: rotate(-6deg); }
+.zine-tape-tr { top: -13px; right: 24px; transform: rotate(5deg); }
+
+/* Misregistered headline: red offset plate behind ink type */
+.zine-title {
+  color: var(--zine-ink);
+  text-shadow: 2.5px 2.5px 0 rgba(185, 28, 28, 0.55);
+}
+
+.zine-kicker {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nb-bg);
+  background: var(--nb-fg);
+  padding: 0.3rem 0.7rem;
+  transform: rotate(-1.5deg);
+}
+
+/* Rubber-stamp badge */
+.zine-stamp {
+  display: inline-block;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--zine-red);
+  border: 2.5px solid var(--zine-red);
+  border-radius: 4px;
+  padding: 0.35rem 0.8rem;
+  transform: rotate(3deg);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+  mask-size: 120px;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+  -webkit-mask-size: 120px;
+}
+
+/* Handwritten margin note (system serif italic — no font download) */
+.zine-note {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  color: var(--zine-muted);
+}
+
+/* Checklist steps */
+.zine-check {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.zine-check > li {
+  position: relative;
+  padding: 0.85rem 0 0.85rem 2.5rem;
+  border-bottom: 2px solid var(--zine-fold);
+}
+
+.zine-check > li:last-child {
+  border-bottom: 0;
+}
+
+.zine-check > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.95rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2.5px solid var(--zine-ink);
+  border-radius: 3px;
+  background: var(--zine-paper);
+}
+
+.zine-check > li::after {
+  content: "";
+  position: absolute;
+  left: 0.32rem;
+  top: 1.02rem;
+  width: 0.55rem;
+  height: 0.95rem;
+  border: solid var(--zine-red);
+  border-width: 0 3px 3px 0;
+  transform: rotate(42deg);
+}
+
+/* Accordion steps: immediate expand/collapse, motion answers the tap */
+details.zine-step {
+  border: 2px solid var(--zine-ink);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+details.zine-step + details.zine-step {
+  margin-top: 0.65rem;
+}
+
+details.zine-step > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.8rem 1rem;
+  font-weight: 800;
+  color: var(--zine-ink);
+}
+
+details.zine-step > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.zine-step > summary:focus-visible {
+  outline: 2px solid var(--zine-blue);
+  outline-offset: 2px;
+}
+
+details.zine-step > summary .zine-step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-right: 0.7rem;
+  background: var(--zine-ink);
+  color: var(--zine-paper);
+  font-size: 0.85rem;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+details.zine-step .zine-step-body {
+  padding: 0 1rem 1rem 3.1rem;
+  color: var(--zine-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Resource strip along the sheet bottom */
+.zine-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: 2px dashed var(--zine-ink);
+  padding-top: 1rem;
+}
+
+.zine-strip a {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--zine-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+}
+
+.zine-strip a:hover {
+  color: var(--zine-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details.zine-step > summary {
+    transition: none;
+  }
+}
