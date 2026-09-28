@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { BarChart3, CheckSquare, Copy, ExternalLink, Pencil, RotateCcw, Square, Star, Trash2 } from "lucide-react";
 
@@ -79,6 +80,11 @@ export default function WebsiteCard({
         ? "var(--nb-bruto-yellow)"
         : "var(--nb-surface-alt)";
 
+  // While dragging, the card collapses to its logo tile only —
+  // the cursor ghost is the same tile via setDragImage.
+  const [dragging, setDragging] = useState(false);
+  const logoRef = useRef<HTMLDivElement>(null);
+
   return (
     <article
       draggable={!selected}
@@ -86,13 +92,20 @@ export default function WebsiteCard({
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("application/x-wesite-website-id", website._id);
         event.dataTransfer.setData("text/plain", website._id);
+        if (logoRef.current) {
+          event.dataTransfer.setDragImage(logoRef.current, 21, 21);
+        }
+        setDragging(true);
       }}
+      onDragEnd={() => setDragging(false)}
       className={`nb-card group relative min-w-0 overflow-hidden ${selected ? "ring-2 ring-[var(--nb-primary)]" : ""} ${
+        dragging ? "opacity-70" : ""
+      } ${
         view === "list" ? "flex items-center gap-3 p-3" : "flex min-h-44 flex-col p-4"
       }`}
     >
       {/* Selection checkbox */}
-      {onSelect && mode !== "trash" ? (
+      {onSelect && mode !== "trash" && !dragging ? (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(website._id, !selected); }}
@@ -113,7 +126,7 @@ export default function WebsiteCard({
       >
         <div className={view === "list" ? "mr-3 shrink-0" : "mb-4 shrink-0"}>
           {website.customIconUrl || website.faviconUrl ? (
-            <div className="relative">
+            <div ref={logoRef} className="relative">
               <Image
                 src={website.customIconUrl || website.faviconUrl || ""}
                 alt=""
@@ -122,6 +135,7 @@ export default function WebsiteCard({
                 className="size-10 rounded-xl border-[3px] bg-[var(--nb-surface-strong)] object-cover"
                 style={{ borderColor: "var(--nb-border)" }}
                 unoptimized
+                draggable={false}
               />
               {mode !== "trash" && visitCount > 0 ? (
                 <span
@@ -133,7 +147,7 @@ export default function WebsiteCard({
               ) : null}
             </div>
           ) : (
-            <div className="relative">
+            <div ref={logoRef} className="relative">
               <span
                 className="grid size-10 place-items-center rounded-xl border-[3px] font-extrabold text-sm"
                 style={{ background: accent, borderColor: "var(--nb-border)", color: "var(--nb-fg)" }}
@@ -151,6 +165,7 @@ export default function WebsiteCard({
             </div>
           )}
         </div>
+        {!dragging ? (
         <div className="min-w-0 max-w-full flex-1 overflow-hidden">
           <div className="flex min-w-0 max-w-full items-center gap-2">
             <h3 className="min-w-0 max-w-full flex-1 truncate text-sm font-bold" style={{ color: "var(--nb-fg)" }} title={website.title || website.domain}>
@@ -188,8 +203,10 @@ export default function WebsiteCard({
             {createdOn ? <span className="truncate">Added {createdOn}</span> : null}
           </div>
         </div>
+        ) : null}
       </button>
 
+      {!dragging ? (
       <div className={`flex shrink-0 ${view === "list" ? "items-center" : "mt-4 justify-end"} gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100`}>
         {mode === "trash" ? (
           <>
@@ -220,6 +237,7 @@ export default function WebsiteCard({
           </>
         )}
       </div>
+      ) : null}
     </article>
   );
 }

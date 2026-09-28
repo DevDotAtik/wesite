@@ -6,6 +6,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Wesite — Bold Bookmark Manager",
   description: "A smart bookmark and website organizer with neo-brutalist design.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 const themeScript = `

@@ -17,10 +17,50 @@ declare global {
         id?: {
           initialize: (options: Record<string, unknown>) => void;
           renderButton: (element: HTMLElement, options: Record<string, unknown>) => void;
+          prompt: () => void;
         };
       };
     };
   }
+}
+
+type GisError = {
+  type?: string;
+  detail?: string;
+};
+
+function describeGisError(err: GisError, origin: string): string {
+  const detail = `${err.type ?? ""} ${err.detail ?? ""}`.toLowerCase();
+  // The exact Google popup text "doesn't comply with Google's OAuth 2.0
+  // policy" almost always means the current origin is not allowlisted for
+  // this Client ID (or the Client ID is the wrong application type).
+  if (
+    detail.includes("valid origin") ||
+    detail.includes("origin_mismatch") ||
+    detail.includes("idpiframe_initialization_failed") ||
+    detail.includes("redirect_uri_mismatch")
+  ) {
+    return (
+      `Google blocked sign-in: this origin (${origin}) is not an Authorized JavaScript origin ` +
+      `for this Client ID. In Google Cloud Console → APIs & Services → Credentials, open the ` +
+      `Web-application OAuth client and add "${origin}" (exact scheme + host + port, no trailing slash) ` +
+      `to Authorized JavaScript origins, then reload.`
+    );
+  }
+  if (detail.includes("popup") && (detail.includes("closed") || detail.includes("failed"))) {
+    return "The Google sign-in popup was closed before finishing. Allow popups for this site and try again.";
+  }
+  if (detail.includes("cookie") || detail.includes("fedcm") || detail.includes("third-party")) {
+    return "Google sign-in was blocked by the browser (third-party cookies / FedCM). Allow third-party cookies for accounts.google.com, turn off Incognito blocking, and try again.";
+  }
+  if (detail.includes("access_denied") || detail.includes("cancel")) {
+    return "Google sign-in was cancelled. Please try again.";
+  }
+  return (
+    `Google blocked sign-in (${err.type || "unknown error"}). This usually means the OAuth client ` +
+    `is misconfigured: Client ID must be a "Web application" type, "${origin}" must be in its ` +
+    `Authorized JavaScript origins, and your account must be a test user while the consent screen is in Testing mode.`
+  );
 }
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
@@ -88,6 +128,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
             void handleGoogleCredential(response.credential);
           }
         },
+        // Surfaces Google-side blocks (e.g. origin not allowlisted → the
+        // "doesn't comply with Google's OAuth 2.0 policy" popup) as readable
+        // in-app errors instead of a silent dead button.
+        error_callback: (err: GisError) => {
+          if (cancelled) return;
+          const message = describeGisError(err, window.location.origin);
+          setError(message);
+          toast.error(message);
+        },
+        ux_mode: "popup",
+        auto_select: false,
+        itp_support: true,
       });
 
       googleButtonRef.current.innerHTML = "";
