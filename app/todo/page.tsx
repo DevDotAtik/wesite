@@ -90,10 +90,10 @@ export default function TodoPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar search={query} onSearchChange={setQuery} />
-      <main className="px-4 py-5 sm:px-6 sm:py-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-8 lg:px-8 nb-page-enter">
         <div className="nb-card-static">
           <div className="nb-section-header" style={{ flexWrap: "wrap" }}>
-            <span className="nb-section-icon" style={{ background: "var(--nb-secondary)" }}>
+            <span className="nb-section-icon" style={{ background: "var(--nb-primary)" }}>
               <Clock3 className="size-5" />
             </span>
             <div>
@@ -118,7 +118,7 @@ export default function TodoPage() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 lg:p-8">
             {/* Create Form */}
             <form onSubmit={createTodo} className="nb-card-static mb-6 grid gap-3 p-4 lg:grid-cols-[1.2fr_0.9fr_0.8fr_auto]" style={{ background: "var(--nb-surface-alt)" }}>
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Write a task" className="nb-input" />
@@ -145,23 +145,23 @@ export default function TodoPage() {
               ) : (
                 <>
                   {(["open", "completed"] as const).map((section) => (
-                    <section key={section} className="nb-card-static p-4" style={{ background: "var(--nb-surface)" }}>
+                    <section key={section} className="nb-card-static nb-card-enter p-4" style={{ background: "var(--nb-surface)" }}>
                       <div className="flex items-center justify-between gap-2">
                         <h2 className="text-sm font-extrabold capitalize" style={{ color: "var(--nb-fg)" }}>{section} tasks</h2>
                         <span className="nb-tag">{groupedTodos[section].length}</span>
                       </div>
                       <div className="mt-4 space-y-3">
                         {groupedTodos[section].map((todo) => (
-                          <article key={todo._id} className="nb-card-sm p-4">
+                          <article key={todo._id} className="nb-card-sm nb-card-enter p-4 transition-transform hover:-translate-x-0.5">
                             <div className="flex items-start gap-3">
                               <button
                                 type="button"
                                 onClick={() => updateTodo(todo._id, { completed: !todo.completedAt })}
-                                className="mt-0.5"
+                                className="mt-0.5 transition-transform active:scale-90"
                                 style={{ color: "var(--nb-primary)" }}
                                 aria-label={todo.completedAt ? "Mark incomplete" : "Mark complete"}
                               >
-                                {todo.completedAt ? <CheckCircle2 className="size-5 fill-[var(--nb-primary)] text-white" /> : <Circle className="size-5" />}
+                                {todo.completedAt ? <CheckCircle2 className="size-5 fill-[var(--nb-primary)] text-white nb-pop-in" /> : <Circle className="size-5 hover:scale-110 transition-transform" />}
                               </button>
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">

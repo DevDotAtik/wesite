@@ -62,10 +62,10 @@ export default function ActivityHeatmap({ data }: { data: { date: string; count:
                   day.count === 0
                     ? "var(--nb-surface-alt)"
                     : day.count < 3
-                      ? "var(--nb-bruto-blue)"
+                      ? "#a5b4fc"
                       : day.count < 7
                         ? "var(--nb-primary)"
-                        : "var(--nb-secondary)",
+                        : "#4338ca",
               }}
             />
           ))}
@@ -75,7 +75,7 @@ export default function ActivityHeatmap({ data }: { data: { date: string; count:
       {/* Legend */}
       <div className="mt-3 flex items-center gap-2 text-[9px] font-bold" style={{ color: "var(--nb-muted)" }}>
         <span>Less</span>
-        {["var(--nb-surface-alt)", "var(--nb-bruto-blue)", "var(--nb-primary)", "var(--nb-secondary)"].map((color) => (
+        {["var(--nb-surface-alt)", "#a5b4fc", "var(--nb-primary)", "#4338ca"].map((color) => (
           <span
             key={color}
             className="inline-block h-2.5 w-2.5 rounded-sm border"

@@ -2,7 +2,7 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-const colors = ["var(--nb-primary)", "var(--nb-secondary)", "var(--nb-bruto-coral)", "var(--nb-bruto-orange)", "var(--nb-bruto-mint)", "var(--nb-bruto-purple)"];
+const colors = ["#6366f1", "#f59e0b", "#10b981", "#818cf8", "#fbbf24", "#34d399"];
 
 export default function FolderDistributionPieChart({ data }: { data: { name: string; value: number }[] }) {
   return (

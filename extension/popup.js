@@ -1,13 +1,51 @@
 const API_STORAGE_KEY = "wesite_api_url";
 const TOKEN_STORAGE_KEY = "wesite_token";
 const RECENT_KEY = "wesite_recent";
-const FOLDERS_CACHE_KEY = "wesite_folders_cache";
-const FOLDERS_CACHE_TTL = 10 * 60 * 1000;
+const THEME_STORAGE_KEY = "wesite_theme";
+const DEFAULT_API_BASE = "http://localhost:3000";
+const LIBRARY_DEBOUNCE_MS = 220;
 
 function getApiBase() {
   return new Promise((resolve) => {
     chrome.storage.local.get(API_STORAGE_KEY, (result) => {
-      resolve(result[API_STORAGE_KEY] || "http://localhost:3000");
+      resolve((result[API_STORAGE_KEY] || DEFAULT_API_BASE).replace(/\/+$/, ""));
+    });
+  });
+}
+
+/* ---------- Theme ---------- */
+
+function systemPrefersDark() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function applyTheme(preference) {
+  const resolved = preference === "system" ? (systemPrefersDark() ? "dark" : "light") : preference;
+  document.documentElement.dataset.theme = resolved;
+  $("#theme-icon-light")?.classList.toggle("hidden", resolved === "dark");
+  $("#theme-icon-dark")?.classList.toggle("hidden", resolved !== "dark");
+}
+
+async function initTheme() {
+  const stored = await chrome.storage.local.get(THEME_STORAGE_KEY);
+  const preference = ["light", "dark", "system"].includes(stored[THEME_STORAGE_KEY])
+    ? stored[THEME_STORAGE_KEY]
+    : "system";
+  applyTheme(preference);
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    chrome.storage.local.get(THEME_STORAGE_KEY, (result) => {
+      if (!result[THEME_STORAGE_KEY] || result[THEME_STORAGE_KEY] === "system") {
+        applyTheme("system");
+      }
+    });
+  });
+
+  $("#theme-btn")?.addEventListener("click", () => {
+    chrome.storage.local.get(THEME_STORAGE_KEY, (result) => {
+      const current = result[THEME_STORAGE_KEY] || "system";
+      const next = current === "dark" ? "light" : "dark";
+      chrome.storage.local.set({ [THEME_STORAGE_KEY]: next }, () => applyTheme(next));
     });
   });
 }
@@ -101,8 +139,8 @@ async function login(email, password) {
       return { ok: true, user: data.user };
     }
     return { ok: false, error: data?.error || "Login failed" };
-  } catch (err) {
-    return { ok: false, error: "Cannot reach server. Check the Wesite URL." };
+  } catch {
+    return { ok: false, error: "Cannot reach the Wesite server. Is it running?" };
   }
 }
 
@@ -114,6 +152,229 @@ async function fetchFolders() {
     return folders;
   }
   return [];
+}
+
+/* ---------- Library (folders + website shortcuts) ---------- */
+
+let libraryFolders = [];
+let libraryFolderId = "";
+let librarySearch = "";
+let libraryTimer = null;
+let libraryBound = false;
+
+function folderLabel(folder) {
+  return folder?.name || "Untitled";
+}
+
+function folderDepth(folder, folders) {
+  let depth = 0;
+  let parentId = folder?.parentFolderId;
+  const seen = new Set();
+
+  while (parentId && !seen.has(parentId) && depth < 8) {
+    seen.add(parentId);
+    const parent = folders.find((item) => item._id === parentId);
+    if (!parent) break;
+    depth += 1;
+    parentId = parent.parentFolderId;
+  }
+
+  return depth;
+}
+
+function renderLibraryFolders() {
+  const wrap = $("#library-folders");
+  wrap.innerHTML = "";
+
+  const chips = [
+    { id: "", name: "All sites", count: null, depth: 0 },
+    { id: "unsorted", name: "Unsorted", count: null, depth: 0 },
+  ];
+
+  for (const folder of libraryFolders) {
+    chips.push({
+      id: folder._id,
+      name: folderLabel(folder),
+      count: folder.count,
+      depth: folderDepth(folder, libraryFolders),
+    });
+  }
+
+  for (const chip of chips) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = chip.id === libraryFolderId ? "chip active" : "chip";
+    button.style.paddingLeft = `${8 + chip.depth * 10}px`;
+    if (chip.id && chip.id !== "unsorted") {
+      // Folder chips keep their own color swatch for quick recognition.
+      const folder = libraryFolders.find((item) => item._id === chip.id);
+      const dot = document.createElement("span");
+      dot.className = "chip-count";
+      dot.style.cssText = `width:8px;height:8px;border-radius:2px;flex-shrink:0;background:${folder?.color || "var(--muted)"}`;
+      button.appendChild(dot);
+    }
+    button.appendChild(document.createTextNode(chip.name));
+    if (typeof chip.count === "number") {
+      const count = document.createElement("span");
+      count.className = "chip-count";
+      count.textContent = String(chip.count);
+      button.appendChild(count);
+    }
+    button.addEventListener("click", () => {
+      libraryFolderId = chip.id;
+      renderLibraryFolders();
+      void loadLibrarySites();
+    });
+    wrap.appendChild(button);
+  }
+}
+
+function siteRow(website) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "site-item";
+  item.title = website.url || website.title || "";
+
+  const favicon = document.createElement("img");
+  favicon.className = "favicon";
+  favicon.alt = "";
+  favicon.loading = "lazy";
+  const domain = website.domain || "example.com";
+  favicon.src = website.customIconUrl || website.faviconUrl || `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  favicon.addEventListener("error", () => {
+    favicon.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  });
+  item.appendChild(favicon);
+
+  const info = document.createElement("div");
+  info.className = "site-info";
+
+  const title = document.createElement("div");
+  title.className = "site-title";
+  title.textContent = website.title || website.url || domain;
+  info.appendChild(title);
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "site-domain";
+  const tags = Array.isArray(website.tags) && website.tags.length ? ` · ${website.tags.join(", ")}` : "";
+  subtitle.textContent = `${domain}${tags}`;
+  info.appendChild(subtitle);
+
+  item.appendChild(info);
+
+  if (website.isFavorite) {
+    const star = document.createElement("span");
+    star.className = "star";
+    star.textContent = "★";
+    star.setAttribute("aria-label", "Favorite");
+    item.appendChild(star);
+  }
+
+  item.addEventListener("click", () => openWebsite(website));
+  return item;
+}
+
+function renderLibrarySites(websites, total) {
+  const list = $("#library-list");
+  list.innerHTML = "";
+
+  const count = $("#library-count");
+  count.textContent = total > websites.length ? `Sites (${websites.length} of ${total})` : `Sites (${websites.length})`;
+
+  if (!websites.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = librarySearch
+      ? `No sites match "${librarySearch}".`
+      : "Nothing saved here yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  for (const website of websites) {
+    list.appendChild(siteRow(website));
+  }
+}
+
+async function loadLibrarySites() {
+  const params = new URLSearchParams({ limit: "50", sort: "recent" });
+  if (libraryFolderId) params.set("folderId", libraryFolderId);
+  if (librarySearch) params.set("search", librarySearch);
+
+  const result = await apiFetch(`/api/websites?${params.toString()}`);
+  const errorBox = $("#library-error");
+  hide(errorBox);
+
+  if (!result.ok) {
+    if (result.status === 401) {
+      showLogin();
+      return;
+    }
+    errorBox.textContent = result.data?.error || "Could not load your library.";
+    show(errorBox);
+    return;
+  }
+
+  renderLibrarySites(result.data?.websites || [], result.data?.pagination?.total || 0);
+}
+
+function scheduleLibraryLoad() {
+  if (libraryTimer) clearTimeout(libraryTimer);
+  libraryTimer = setTimeout(() => {
+    void loadLibrarySites();
+  }, LIBRARY_DEBOUNCE_MS);
+}
+
+async function loadLibrary() {
+  libraryFolders = await fetchFolders();
+  renderLibraryFolders();
+  await loadLibrarySites();
+}
+
+function bindLibrary() {
+  if (libraryBound) return;
+  libraryBound = true;
+
+  const search = $("#library-search");
+  search.addEventListener("input", () => {
+    librarySearch = search.value.trim();
+    scheduleLibraryLoad();
+  });
+  // Enter should feel instant rather than waiting out the debounce.
+  search.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    librarySearch = search.value.trim();
+    if (libraryTimer) clearTimeout(libraryTimer);
+    void loadLibrarySites();
+  });
+}
+
+async function openWebsite(website) {
+  const url = website.url;
+  if (!url) return;
+
+  if (website._id) {
+    void apiFetch(`/api/websites/${website._id}/visit`, { method: "POST" });
+  }
+
+  await addRecent({
+    title: website.title || url,
+    domain: website.domain || "",
+    url,
+    faviconUrl: website.faviconUrl || "",
+    savedAt: new Date().toISOString(),
+  });
+
+  await chrome.tabs.create({ url });
+  window.close();
+}
+
+function openWesiteSite() {
+  getApiBase().then((base) => {
+    chrome.tabs.create({ url: base });
+    window.close();
+  });
 }
 
 /**
@@ -187,6 +448,9 @@ let loginBound = false;
 // 2. Revalidate auth + folders in parallel in the background.
 // 3. Only fall back to login when the session is actually rejected.
 document.addEventListener("DOMContentLoaded", async () => {
+  await initTheme();
+  $$("#logo-link").forEach((logo) => logo.addEventListener("click", openWesiteSite));
+
   const token = await getToken();
   if (!token) {
     // Maybe signed in on the website but never connected the extension.
@@ -207,11 +471,6 @@ function showLogin() {
   show($("#login-view"));
   hide($("#main-view"));
 
-  chrome.storage.local.get(API_STORAGE_KEY, (r) => {
-    const url = r[API_STORAGE_KEY] || "http://localhost:3000";
-    $("#api-url").value = url;
-  });
-
   if (loginBound) return;
   loginBound = true;
 
@@ -223,6 +482,7 @@ function showLogin() {
   $("#login-password").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
   $("#login-email").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
   $("#google-btn").addEventListener("click", doGoogleLogin);
+  bindLibrary();
 }
 
 async function doGoogleLogin() {
@@ -251,17 +511,12 @@ async function doGoogleLogin() {
 async function doLogin() {
   const email = $("#login-email").value.trim();
   const password = $("#login-password").value;
-  const apiUrl = $("#api-url").value.trim().replace(/\/+$/, "");
 
   if (!email || !password) {
     hide($("#login-error"));
     show($("#login-error"));
     setText($("#login-error"), "Email and password are required");
     return;
-  }
-
-  if (apiUrl) {
-    await new Promise((resolve) => chrome.storage.local.set({ [API_STORAGE_KEY]: apiUrl }, resolve));
   }
 
   setText($("#login-btn"), "Signing in...");
@@ -317,6 +572,13 @@ async function showMain(initialUser) {
         tab.classList.add("active");
         $$(".tab-content").forEach((c) => c.classList.add("hidden"));
         $(`#tab-${tab.dataset.tab}`).classList.remove("hidden");
+
+        // Library loads on first visit, then refetches so a just-saved
+        // bookmark shows up without reopening the popup.
+        if (tab.dataset.tab === "library") {
+          bindLibrary();
+          void loadLibrary();
+        }
       });
     });
 

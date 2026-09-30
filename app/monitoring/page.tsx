@@ -105,10 +105,10 @@ export default function MonitoringPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar />
-      <main className="px-4 py-5 sm:px-6 sm:py-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-8 lg:px-8 nb-page-enter">
         <div className="nb-card-static">
           <div className="nb-section-header">
-            <span className="nb-section-icon" style={{ background: "var(--nb-secondary)" }}>
+            <span className="nb-section-icon" style={{ background: "var(--nb-primary)" }}>
               <Bell className="size-5" />
             </span>
             <div>
@@ -127,7 +127,7 @@ export default function MonitoringPage() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 lg:p-8">
             {loading ? (
               <div className="grid min-h-72 place-items-center">
                 <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
@@ -137,13 +137,16 @@ export default function MonitoringPage() {
                 {/* Stats */}
                 <div className="mb-6 grid gap-3 sm:grid-cols-3">
                   {[
-                    ["Monitoring", monitors.length, "var(--nb-bruto-blue)"],
-                    ["Active", monitors.filter((m) => m.enabled).length, "var(--nb-bruto-mint)"],
-                    ["Changes detected", monitors.reduce((sum, m) => sum + m.changeCount, 0), "var(--nb-bruto-orange)"],
-                  ].map(([label, value, color]) => (
-                    <div key={String(label)} className="nb-card-static p-4" style={{ background: String(color) }}>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>{String(label)}</p>
-                      <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{value}</p>
+                    { label: "Monitoring", value: monitors.length, accent: "var(--nb-primary)" },
+                    { label: "Active", value: monitors.filter((m) => m.enabled).length, accent: "var(--nb-success)" },
+                    { label: "Changes detected", value: monitors.reduce((sum, m) => sum + m.changeCount, 0), accent: "var(--nb-warning)" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="nb-card-static nb-card-enter p-4 transition-transform hover:-translate-y-0.5" style={{ background: "var(--nb-surface-alt)" }}>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>{stat.label}</p>
+                        <span className="size-2 rounded-full" style={{ background: stat.accent }} />
+                      </div>
+                      <p className="mt-2 text-2xl font-black" style={{ color: "var(--nb-fg)" }}>{stat.value}</p>
                     </div>
                   ))}
                 </div>
@@ -187,12 +190,12 @@ export default function MonitoringPage() {
                       const site = typeof monitor.websiteId === "object" ? monitor.websiteId : null;
                       const isExpanded = expandedId === monitor._id;
                       return (
-                        <div key={monitor._id} className="nb-card-static overflow-hidden">
+                        <div key={monitor._id} className="nb-card-static nb-card-enter overflow-hidden transition-all hover:shadow-[5px_5px_0_0_var(--nb-shadow)]">
                           <div className="flex items-center gap-3 p-4" style={{ background: "var(--nb-surface)" }}>
                             <button
                               type="button"
                               onClick={() => toggleMonitor(monitor._id, !monitor.enabled)}
-                              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm shrink-0"
+                              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm shrink-0 transition-transform active:scale-90"
                               style={{ color: monitor.enabled ? "var(--nb-success)" : "var(--nb-muted)" }}
                               title={monitor.enabled ? "Disable" : "Enable"}
                             >
@@ -202,7 +205,7 @@ export default function MonitoringPage() {
                               <div className="flex items-center gap-2">
                                 <span className="truncate text-sm font-bold" style={{ color: "var(--nb-fg)" }}>{monitor.title || site?.title || monitor.url}</span>
                                 {monitor.changeCount > 0 ? (
-                                  <span className="nb-tag text-[9px]" style={{ background: "var(--nb-bruto-orange)", color: "var(--nb-fg)" }}>
+                                  <span className="nb-tag text-[9px] font-extrabold" style={{ background: "var(--nb-warning)", color: "#000" }}>
                                     {monitor.changeCount} change{monitor.changeCount !== 1 ? "s" : ""}
                                   </span>
                                 ) : null}

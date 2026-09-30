@@ -77,18 +77,18 @@ export default function AnalyticsPage() {
   }, [range]);
 
   const summaryCards = [
-    { label: "Websites", value: summary?.totalWebsites ?? 0, color: "var(--nb-bruto-yellow)" },
-    { label: "Folders", value: summary?.totalFolders ?? 0, color: "var(--nb-bruto-blue)" },
-    { label: "Visits", value: summary?.totalVisits ?? 0, color: "var(--nb-bruto-mint)" },
-    { label: "Today", value: summary?.visitsToday ?? 0, color: "var(--nb-bruto-orange)" },
-    { label: "Avg/day", value: summary?.averageVisitsPerDay ?? 0, color: "var(--nb-bruto-purple)" },
-    { label: "Favorites", value: summary?.favoriteWebsites ?? 0, color: "var(--nb-bruto-coral)" },
+    { label: "Websites", value: summary?.totalWebsites ?? 0, accent: "var(--nb-primary)" },
+    { label: "Folders", value: summary?.totalFolders ?? 0, accent: "var(--nb-accent)" },
+    { label: "Visits", value: summary?.totalVisits ?? 0, accent: "var(--nb-primary)" },
+    { label: "Today", value: summary?.visitsToday ?? 0, accent: "var(--nb-warning)" },
+    { label: "Avg/day", value: summary?.averageVisitsPerDay ?? 0, accent: "var(--nb-primary)" },
+    { label: "Favorites", value: summary?.favoriteWebsites ?? 0, accent: "var(--nb-warning)" },
   ];
 
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar />
-      <main className="px-4 py-5 sm:px-6 sm:py-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-8 lg:px-8 nb-page-enter">
         <div className="nb-card-static">
           <div className="nb-section-header">
             <span className="nb-section-icon" style={{ background: "var(--nb-primary)" }}>
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 lg:p-8">
             {loading ? (
               <div className="grid min-h-72 place-items-center">
                 <Loader2 className="size-8 animate-spin" style={{ color: "var(--nb-primary)" }} />
@@ -122,9 +122,12 @@ export default function AnalyticsPage() {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
                   {summaryCards.map((card) => (
-                    <div key={card.label} className="nb-card-static p-4" style={{ background: card.color }}>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>{card.label}</p>
-                      <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
+                    <div key={card.label} className="nb-card-static nb-card-enter p-4 transition-transform hover:-translate-y-0.5" style={{ background: "var(--nb-surface-alt)" }}>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>{card.label}</p>
+                        <span className="size-2 rounded-full" style={{ background: card.accent }} />
+                      </div>
+                      <p className="mt-2 text-2xl font-black" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
                     </div>
                   ))}
                 </div>
@@ -133,31 +136,43 @@ export default function AnalyticsPage() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {streak ? (
                     <>
-                      <div className="nb-card-static p-4" style={{ background: "var(--nb-bruto-orange)" }}>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>Current Streak</p>
+                      <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>Current Streak</p>
+                          <span className="size-2 rounded-full bg-[var(--nb-warning)]" />
+                        </div>
                         <div className="mt-2 flex items-baseline gap-2">
-                          <p className="text-3xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{streak.currentStreak}</p>
-                          <p className="text-xs font-bold" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>days</p>
+                          <p className="text-3xl font-black" style={{ color: "var(--nb-fg)" }}>{streak.currentStreak}</p>
+                          <p className="text-xs font-bold" style={{ color: "var(--nb-muted)" }}>days</p>
                         </div>
                       </div>
-                      <div className="nb-card-static p-4" style={{ background: "var(--nb-bruto-mint)" }}>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>Longest Streak</p>
+                      <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>Longest Streak</p>
+                          <span className="size-2 rounded-full bg-[var(--nb-success)]" />
+                        </div>
                         <div className="mt-2 flex items-baseline gap-2">
-                          <p className="text-3xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{streak.longestStreak}</p>
-                          <p className="text-xs font-bold" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>days</p>
+                          <p className="text-3xl font-black" style={{ color: "var(--nb-fg)" }}>{streak.longestStreak}</p>
+                          <p className="text-xs font-bold" style={{ color: "var(--nb-muted)" }}>days</p>
                         </div>
                       </div>
                     </>
                   ) : null}
                   {peakStats ? (
                     <>
-                      <div className="nb-card-static p-4" style={{ background: "var(--nb-bruto-purple)" }}>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>Most Active Hour</p>
-                        <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{peakStats.mostActiveHour}</p>
+                      <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>Most Active Hour</p>
+                          <span className="size-2 rounded-full bg-[var(--nb-primary)]" />
+                        </div>
+                        <p className="mt-2 text-2xl font-black" style={{ color: "var(--nb-fg)" }}>{peakStats.mostActiveHour}</p>
                       </div>
-                      <div className="nb-card-static p-4" style={{ background: "var(--nb-bruto-cyan)" }}>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>Best Weekday</p>
-                        <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{peakStats.mostActiveWeekday}</p>
+                      <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>Best Weekday</p>
+                          <span className="size-2 rounded-full bg-[var(--nb-accent)]" />
+                        </div>
+                        <p className="mt-2 text-2xl font-black" style={{ color: "var(--nb-fg)" }}>{peakStats.mostActiveWeekday}</p>
                       </div>
                     </>
                   ) : null}
@@ -178,35 +193,38 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="mt-4 grid gap-3 md:grid-cols-3">
                       {[
-                        { label: "Todos open", value: summary?.activeTodos ?? 0, icon: FolderOpen, color: "var(--nb-bruto-blue)" },
-                        { label: "Archived trash", value: summary?.trashedWebsites ?? 0, icon: Trash2, color: "var(--nb-bruto-coral)" },
-                        { label: "Completed tasks", value: summary?.completedTodos ?? 0, icon: Flame, color: "var(--nb-bruto-mint)" },
+                        { label: "Todos open", value: summary?.activeTodos ?? 0, icon: FolderOpen, accent: "var(--nb-primary)" },
+                        { label: "Archived trash", value: summary?.trashedWebsites ?? 0, icon: Trash2, accent: "var(--nb-muted)" },
+                        { label: "Completed tasks", value: summary?.completedTodos ?? 0, icon: Flame, accent: "var(--nb-success)" },
                       ].map((item) => (
-                        <div key={item.label} className="nb-card-sm p-4" style={{ background: item.color }}>
-                          <div className="flex items-center gap-2 text-sm font-bold" style={{ color: "var(--nb-fg)", opacity: 0.7 }}>
-                            <item.icon className="size-4" />
-                            {item.label}
+                        <div key={item.label} className="nb-card-sm p-4" style={{ background: "var(--nb-card)" }}>
+                          <div className="flex items-center justify-between gap-2 text-sm font-bold" style={{ color: "var(--nb-fg)" }}>
+                            <span className="flex items-center gap-2">
+                              <item.icon className="size-4" style={{ color: item.accent }} />
+                              {item.label}
+                            </span>
+                            <span className="size-2 rounded-full" style={{ background: item.accent }} />
                           </div>
-                          <p className="mt-3 text-3xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{item.value}</p>
+                          <p className="mt-3 text-3xl font-black" style={{ color: "var(--nb-fg)" }}>{item.value}</p>
                         </div>
                       ))}
                     </div>
                   </section>
 
                   {/* Charts */}
-                  <section className="nb-card-static p-5">
+                  <section className="nb-card-static nb-card-enter p-5">
                     <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Visits Over Time</h2>
                     <VisitsLineChart data={visits} />
                   </section>
-                  <section className="nb-card-static p-5">
+                  <section className="nb-card-static nb-card-enter p-5">
                     <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Most Visited</h2>
                     <TopWebsitesBarChart data={top} />
                   </section>
-                  <section className="nb-card-static p-5">
+                  <section className="nb-card-static nb-card-enter p-5">
                     <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Folder Distribution</h2>
                     <FolderDistributionPieChart data={folders} />
                   </section>
-                  <section className="nb-card-static p-5">
+                  <section className="nb-card-static nb-card-enter p-5">
                     <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Activity Heatmap</h2>
                     <div className="mt-5">
                       <ActivityHeatmap data={heatmap} />

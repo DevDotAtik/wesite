@@ -3,7 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { ArrowRight, Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Bookmark,
+  Command,
+  Eye,
+  EyeOff,
+  Layers,
+  Loader2,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type AuthFormProps = {
@@ -228,43 +241,128 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-      {/* Left Panel — Hero */}
-      <section className="relative hidden overflow-hidden p-8 text-white lg:flex lg:flex-col lg:justify-between" style={{ background: "var(--nb-primary)" }}>
-        <div className="absolute inset-0 nb-dot-bg opacity-10" />
-        <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <Logo tone="inverse" className="size-11" title="Wesite home" />
-            <span className="text-xl font-bold tracking-tight">Wesite</span>
-          </Link>
-          <div className="mt-16 max-w-xl">
-            <div className="nb-tag inline-flex border-white/25 bg-white/10 text-white/90 backdrop-blur-sm" style={{ borderColor: "rgba(255,255,255,0.25)" }}>
-              <Sparkles className="size-3.5" />
-              Your personal library of the web
+      {/* Left Panel — Hero with animated developer showcase */}
+      <section className="relative hidden overflow-hidden p-8 lg:flex lg:flex-col lg:justify-between bg-[#0b0f19] border-r-3" style={{ borderColor: "var(--nb-border)" }}>
+        {/* Animated glowing mesh orbs */}
+        <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl nb-pulse-glow" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-amber-500/15 blur-3xl nb-pulse-glow [animation-delay:2.5s]" />
+
+        {/* Grid and dot patterns */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#33415518_1px,transparent_1px),linear-gradient(to_bottom,#33415518_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_60%,transparent_100%)]" />
+        <div className="pointer-events-none absolute inset-0 nb-dot-bg opacity-15" />
+
+        {/* Top Header */}
+        <div className="relative z-10 flex items-center justify-between">
+          <Link href="/" className="inline-flex items-center gap-2.5 group">
+            <Logo tone="inverse" className="size-11 transition-transform group-hover:scale-105" title="Wesite home" />
+            <div>
+              <span className="text-xl font-bold tracking-tight text-white block">Wesite</span>
+              <span className="text-[10px] font-mono text-slate-400">Developer Library & Wire</span>
             </div>
-            <h1 className="mt-7 text-4xl font-extrabold leading-tight tracking-tight">
-              Every link you keep, shelved and searchable.
-            </h1>
-            <p className="mt-5 max-w-lg text-sm leading-6 text-white/75">
-              Save links in seconds, find them in milliseconds. Your library lives in nested collections with tags, trash recovery, and instant search.
-            </p>
+          </Link>
+
+          {/* Live system status pill */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-300">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            Live Indexing
           </div>
         </div>
-        <div className="relative z-10 max-w-xl">
-          <div className="zine-sheet p-5">
-            <span className="zine-tape zine-tape-tl" aria-hidden="true" />
-            <ul className="zine-check text-sm font-semibold" style={{ color: "var(--zine-ink)" }}>
-              <li>Private by default — locked to your account</li>
-              <li>Two calm views — a dense grid and a quiet list</li>
-              <li>Batch operations — tag, move, or clean up in bulk</li>
-            </ul>
-            <p className="zine-note mt-3 text-sm">— everything has its shelf here.</p>
+
+        {/* Center: Hero Copy + Animated Floating Showcase Cards */}
+        <div className="relative z-10 my-auto py-6">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-xs font-mono font-medium text-indigo-300 backdrop-blur-sm">
+              <Sparkles className="size-3.5 text-amber-400" />
+              Your personal library of the web
+            </div>
+            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-white xl:text-4xl">
+              Every link you keep, shelved and searchable.
+            </h1>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-300">
+              Save links in seconds, track breaking dev news, and query thousands of resources with sub-millisecond keyboard search.
+            </p>
+          </div>
+
+          {/* Animated Floating Preview Cards Stack */}
+          <div className="mt-8 space-y-3.5 max-w-lg">
+            {/* Card 1: Fast Command Palette Simulation (Floats slowly) */}
+            <div className="nb-float-slow rounded-xl border border-slate-700/80 bg-slate-900/90 p-4 shadow-2xl backdrop-blur-md transition-transform hover:scale-[1.01]">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                  <Search className="size-3.5 text-indigo-400" />
+                  <span className="font-mono text-slate-300">⌘K search</span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-[11px] text-slate-400">Next.js, Tailwind, System Design…</span>
+                </div>
+                <span className="rounded bg-indigo-500/20 border border-indigo-500/30 px-1.5 py-0.5 text-[10px] font-mono font-bold text-indigo-300">
+                  0.3ms
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/20 text-indigo-300 font-bold text-xs">
+                    N
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">Next.js 16 Documentation</div>
+                    <div className="text-[10px] font-mono text-slate-400">nextjs.org/docs • App Router</div>
+                  </div>
+                </div>
+                <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300">
+                  ★ SAVED
+                </span>
+              </div>
+            </div>
+
+            {/* Card 2: Live Dev Wire Simulation (Floats reverse with slight angle) */}
+            <div className="nb-float-reverse rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-xl backdrop-blur-md transition-transform hover:scale-[1.01] -rotate-1 hover:rotate-0">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 rounded border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300">
+                  <Zap className="size-3 text-amber-400" />
+                  DEV WIRE
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">2h ago</span>
+              </div>
+              <div className="mt-2 text-xs font-semibold text-slate-200">
+                Tailwind CSS v4 & React 19: Architecture teardown and benchmarks
+              </div>
+              <div className="mt-2.5 flex items-center gap-3 text-[11px] text-slate-400">
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="size-3 text-indigo-400" /> 680 upvotes
+                </span>
+                <span className="flex items-center gap-1">
+                  <Bookmark className="size-3 text-amber-400" /> 245 saves
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Feature Strip */}
+        <div className="relative z-10 border-t border-slate-800/80 pt-5">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 shrink-0 text-emerald-400" />
+              <span className="text-xs font-medium text-slate-300">Private by default</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Command className="size-4 shrink-0 text-amber-400" />
+              <span className="text-xs font-medium text-slate-300">Keyboard first</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Layers className="size-4 shrink-0 text-indigo-400" />
+              <span className="text-xs font-medium text-slate-300">Curated feeds</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Right Panel — Form */}
       <section className="grid place-items-center px-4 py-10 sm:px-6" style={{ background: "var(--nb-bg)" }}>
-        <form onSubmit={submit} className="nb-card-static relative w-full max-w-md p-6 sm:p-8">
+        <form onSubmit={submit} className="nb-card-static nb-card-enter relative w-full max-w-md p-6 sm:p-8">
           <span className="zine-tape zine-tape-tl" aria-hidden="true" />
           <span className="zine-tape zine-tape-tr" aria-hidden="true" />
           <div className="mb-6">

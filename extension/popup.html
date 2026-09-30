@@ -22,6 +22,32 @@
       --bruto-blue: #dbeafe;
       --bruto-mint: #d1fae5;
       --bruto-orange: #ffedd5;
+      --chip: #eef2ff;
+      --hover: rgba(24, 24, 27, 0.05);
+      color-scheme: light;
+    }
+
+    /* Mirrors the website's [data-theme="dark"] tokens in app/globals.css */
+    [data-theme="dark"] {
+      --bg: #0b0b0d;
+      --fg: #ededed;
+      --surface: #0a0a0a;
+      --surface-alt: #131313;
+      --border: #262626;
+      --primary: #3b82f6;
+      --primary-fg: #ffffff;
+      --accent: #fbbf24;
+      --muted: #8a8a8a;
+      --danger: #f43f5e;
+      --success: #22c55e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      --bruto-yellow: #a17c1a;
+      --bruto-blue: #1e2a44;
+      --bruto-mint: #14342a;
+      --bruto-orange: #3a2415;
+      --chip: #17213a;
+      --hover: rgba(255, 255, 255, 0.06);
+      color-scheme: dark;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,7 +77,15 @@
       width: 32px;
       height: 32px;
       flex-shrink: 0;
+      border: none;
+      padding: 0;
+      background: none;
+      cursor: pointer;
+      border-radius: 8px;
     }
+
+    .logo:hover { background: var(--hover); }
+    .logo img { display: block; }
 
     .header-text h1 {
       font-size: 15px;
@@ -100,7 +134,7 @@
     }
 
     .btn-primary { background: var(--primary); color: var(--primary-fg); }
-    .btn-ghost { background: transparent; box-shadow: none; border-color: transparent; }
+    .btn-ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--muted); }
     .btn-ghost:hover { background: var(--surface-alt); transform: none; box-shadow: none; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 8px; }
@@ -324,6 +358,8 @@
 
     .recent-item:hover { background: var(--surface-alt); }
 
+    .recent-item .star { flex-shrink: 0; color: var(--accent); }
+
     .recent-item .favicon {
       width: 20px;
       height: 20px;
@@ -398,6 +434,107 @@
       background: var(--surface);
     }
 
+    /* Library tab */
+    .search-wrap { position: relative; }
+    .search-wrap .input { padding-left: 30px; }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 100%;
+      padding: 3px 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--fg);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.1s ease;
+    }
+
+    .chip:hover { background: var(--hover); }
+    .chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--primary-fg);
+    }
+    .chip .chip-count {
+      font-size: 10px;
+      opacity: 0.7;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .site-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .site-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg);
+      transition: all 0.1s ease;
+    }
+
+    .site-item:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .site-item .favicon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .site-item .site-info { min-width: 0; flex: 1; }
+
+    .site-item .site-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .site-item .site-domain {
+      font-size: 10px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .site-item .star { flex-shrink: 0; color: var(--accent); }
+
     .hidden { display: none !important; }
 
     .link {
@@ -409,17 +546,13 @@
 
     .link:hover { text-decoration: underline; }
 
-    .api-url-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .api-url-row .input { flex: 1; }
-
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--surface); }
     ::-webkit-scrollbar-thumb { background: var(--muted); }
+
+    body, .header, .input, .chip, .site-item, .btn {
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
   </style>
 </head>
 <body>
@@ -427,19 +560,18 @@
   <!-- Login View -->
   <div id="login-view" class="hidden">
     <div class="header">
-      <div class="logo"><img src="icons/icon-48.png" width="32" height="32" alt="Wesite" /></div>
+      <button id="logo-link" class="logo" type="button" title="Open Wesite">
+        <img src="icons/icon-48.png" width="32" height="32" alt="Wesite" />
+      </button>
       <div class="header-text">
         <h1>Wesite</h1>
-        <p>Quick Save Bookmarks</p>
+        <p>Connect to your Wesite account</p>
       </div>
     </div>
     <div class="login-wrap">
       <h2>Sign in</h2>
       <p>Connect to your Wesite account</p>
       <div id="login-error" class="error-msg hidden"></div>
-      <div class="api-url-row">
-        <input id="api-url" class="input" placeholder="Wesite URL (e.g. https://wesite.app)" />
-      </div>
       <input id="login-email" class="input" type="email" placeholder="Email" />
       <input id="login-password" class="input" type="password" placeholder="Password" />
       <button id="login-btn" class="btn btn-primary">Sign In</button>
@@ -462,12 +594,18 @@
   <!-- Main View -->
   <div id="main-view" class="hidden">
     <div class="header">
-      <div class="logo"><img src="icons/icon-48.png" width="32" height="32" alt="Wesite" /></div>
+      <button id="logo-link" class="logo" type="button" title="Open Wesite">
+        <img src="icons/icon-48.png" width="32" height="32" alt="Wesite" />
+      </button>
       <div class="header-text">
         <h1>Wesite</h1>
         <p id="header-user"></p>
       </div>
       <div class="header-actions">
+        <button id="theme-btn" class="btn btn-ghost btn-icon btn-sm" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <svg id="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg id="theme-icon-dark" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6.36 6.36 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
         <button id="refresh-btn" class="btn btn-ghost btn-icon btn-sm" title="Refresh folders">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
         </button>
@@ -480,6 +618,7 @@
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" data-tab="save">Save Page</button>
+      <button class="tab" data-tab="library">Library</button>
       <button class="tab" data-tab="recent">Recent</button>
     </div>
 
@@ -526,6 +665,27 @@
 
       <div class="save-actions">
         <button id="save-btn" class="btn btn-primary">Save to Wesite</button>
+      </div>
+    </div>
+
+    <!-- Library Tab -->
+    <div id="tab-library" class="tab-content hidden">
+      <div class="section">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="library-search" class="input" type="search" placeholder="Search saved sites and tags..." autocomplete="off" />
+        </div>
+        <div id="library-error" class="error-msg hidden" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Folders</div>
+        <div id="library-folders" class="chip-row"></div>
+      </div>
+
+      <div class="section" style="border-bottom:none;">
+        <div class="section-label" id="library-count">Sites</div>
+        <div id="library-list" class="site-list"></div>
       </div>
     </div>
 

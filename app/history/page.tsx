@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Clock3, Download, Loader2, Trash2, X } from "lucide-react";
+import { Check, Clock3, Copy, Download, ExternalLink, Loader2, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 
 type Visit = {
@@ -16,6 +17,32 @@ type Visit = {
     faviconUrl?: string;
   };
 };
+
+function CopyVisitButton({ url }: { url?: string }) {
+  const [copied, setCopied] = useState(false);
+  if (!url) return null;
+
+  return (
+    <button
+      type="button"
+      aria-label="Copy URL"
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(url);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1800);
+          toast.success("URL copied to clipboard");
+        } catch {}
+      }}
+      className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm shrink-0"
+      title={copied ? "Copied!" : "Copy link"}
+    >
+      {copied ? <Check className="size-3.5 text-emerald-500 nb-pop-in" /> : <Copy className="size-3.5" />}
+    </button>
+  );
+}
 
 export default function HistoryPage() {
   const [groups, setGroups] = useState<Record<string, Visit[]>>({});
@@ -96,7 +123,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar search={query} onSearchChange={setQuery} />
-      <main className="px-4 py-5 sm:px-6 sm:py-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-8 lg:px-8 nb-page-enter">
         <div className="nb-card-static">
           <div className="nb-section-header">
             <span className="nb-section-icon" style={{ background: "var(--nb-warning)", color: "var(--nb-accent-fg)" }}>
@@ -118,7 +145,7 @@ export default function HistoryPage() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 lg:p-8">
             {/* Date Range Filter */}
             <div className="mb-5 flex flex-wrap items-end gap-3">
               <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
@@ -151,16 +178,19 @@ export default function HistoryPage() {
               ) : null}
             </div>
 
-            {/* Stats */}
+            {/* Stats (Clean 3-Color Developer Theme) */}
             <div className="mb-6 grid gap-3 sm:grid-cols-3">
               {[
-                ["Visits shown", visibleVisits.length, "var(--nb-bruto-yellow)"],
-                ["Days active", activeDays, "var(--nb-bruto-blue)"],
-                ["Search matches", query ? visibleVisits.length : Object.values(groups).flat().length, "var(--nb-bruto-mint)"],
-              ].map(([label, value, color]) => (
-                <div key={String(label)} className="nb-card-static p-4" style={{ background: String(color) }}>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-fg)", opacity: 0.6 }}>{String(label)}</p>
-                  <p className="mt-2 text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{value}</p>
+                { label: "Visits shown", value: visibleVisits.length, accent: "var(--nb-warning)" },
+                { label: "Days active", value: activeDays, accent: "var(--nb-primary)" },
+                { label: "Search matches", value: query ? visibleVisits.length : Object.values(groups).flat().length, accent: "var(--nb-success)" },
+              ].map((stat) => (
+                <div key={stat.label} className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--nb-muted)" }}>{stat.label}</p>
+                    <span className="size-2 rounded-full" style={{ background: stat.accent }} />
+                  </div>
+                  <p className="mt-2 text-2xl font-black" style={{ color: "var(--nb-fg)" }}>{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -174,7 +204,7 @@ export default function HistoryPage() {
               <div className="space-y-5">
                 {entries.map(([day, visits]) =>
                   visits.length ? (
-                    <section key={day} className="nb-card-static p-4" style={{ background: "var(--nb-surface)" }}>
+                    <section key={day} className="nb-card-static nb-card-enter p-4" style={{ background: "var(--nb-surface)" }}>
                       <div className="mb-3 flex items-center justify-between">
                         <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-muted)" }}>{day}</h2>
                         <span className="nb-tag">{visits.length} visits</span>
@@ -205,16 +235,31 @@ export default function HistoryPage() {
                                 {new Date(visit.visitedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                               </time>
                             </a>
-                            <button
-                              type="button"
-                              aria-label="Delete visit"
-                              onClick={() => deleteVisit(visit._id)}
-                              disabled={deletingId === visit._id}
-                              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm shrink-0 disabled:opacity-50"
-                              style={{ color: "var(--nb-danger)" }}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <CopyVisitButton url={visit.websiteId?.url} />
+                              {visit.websiteId?.url ? (
+                                <a
+                                  href={visit.websiteId.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
+                                  title="Open website"
+                                >
+                                  <ExternalLink className="size-3.5" />
+                                </a>
+                              ) : null}
+                              <button
+                                type="button"
+                                aria-label="Delete visit"
+                                onClick={() => deleteVisit(visit._id)}
+                                disabled={deletingId === visit._id}
+                                className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm disabled:opacity-50"
+                                style={{ color: "var(--nb-danger)" }}
+                                title="Delete visit"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

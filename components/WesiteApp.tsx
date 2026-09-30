@@ -90,9 +90,9 @@ export default function WesiteApp() {
   const showInsights = selectedFolder === "home" || selectedFolder === "all";
   const smartStats = useMemo(
     () => [
-      { label: "Saved", value: activeWebsites.length, note: "Active bookmarks", icon: Bookmark, color: "var(--nb-bruto-yellow)" },
-      { label: "Folders", value: flatFolders.length, note: "Organized spaces", icon: FolderOpen, color: "var(--nb-bruto-blue)" },
-      { label: "Loved", value: activeWebsites.filter((website) => website.isFavorite).length, note: "Pinned by you", icon: Heart, color: "var(--nb-bruto-coral)" },
+      { label: "Saved", value: activeWebsites.length, note: "Active bookmarks", icon: Bookmark, color: "var(--nb-warning)" },
+      { label: "Folders", value: flatFolders.length, note: "Organized spaces", icon: FolderOpen, color: "var(--nb-primary)" },
+      { label: "Loved", value: activeWebsites.filter((website) => website.isFavorite).length, note: "Pinned by you", icon: Heart, color: "var(--nb-accent)" },
     ],
     [activeWebsites, flatFolders.length],
   );
@@ -266,7 +266,7 @@ export default function WesiteApp() {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="w-full p-4 sm:p-6 lg:p-8 nb-page-enter">
               {/* Page Header */}
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -467,7 +467,7 @@ export default function WesiteApp() {
 
                   {/* Website Cards */}
                   {websites.length ? (
-                    <div className={view === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" : "space-y-2"}>
+                    <div className={view === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" : "space-y-2.5"}>
                       {websites.map((website) => (
                         <WebsiteCard
                           key={website._id}

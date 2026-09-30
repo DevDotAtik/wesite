@@ -65,7 +65,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--nb-bg)" }}>
       <Navbar userName={user?.name} />
-      <main className="px-4 py-5 sm:px-6 sm:py-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-8 lg:px-8 nb-page-enter">
         <div className="nb-card-static">
           <div className="nb-section-header">
             <span className="nb-section-icon" style={{ background: "var(--nb-accent)", color: "var(--nb-accent-fg)" }}>
@@ -82,9 +82,9 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-5 p-4 sm:p-6 lg:p-8 lg:grid-cols-[1.08fr_0.92fr]">
             {/* Profile Form */}
-            <form onSubmit={saveProfile} className="nb-card-static p-5" style={{ background: "var(--nb-surface)" }}>
+            <form onSubmit={saveProfile} className="nb-card-static nb-card-enter p-5" style={{ background: "var(--nb-surface)" }}>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4" style={{ color: "var(--nb-primary)" }} />
                 <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Profile & Theme</h2>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Trash */}
-              <div className="nb-card-static p-5" style={{ background: "var(--nb-surface)" }}>
+              <div className="nb-card-static nb-card-enter p-5" style={{ background: "var(--nb-surface)" }}>
                 <div className="flex items-center gap-2">
                   <Trash2 className="size-4" style={{ color: "var(--nb-danger)" }} />
                   <h2 className="text-sm font-extrabold" style={{ color: "var(--nb-fg)" }}>Trash</h2>

@@ -222,7 +222,10 @@ export default function MacSidebar({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="nb-sidebar hidden w-64 shrink-0 p-3 lg:block" style={{ borderRight: "3px solid var(--nb-border)" }}>
+      <aside
+        className="nb-sidebar sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 flex-col overflow-y-auto overflow-x-hidden p-3 scrollbar-thin lg:flex"
+        style={{ borderRight: "3px solid var(--nb-border)" }}
+      >
         <SidebarContent
           folders={folders}
           selectedFolder={selectedFolder}
@@ -245,7 +248,7 @@ export default function MacSidebar({
             role="dialog"
             aria-modal="true"
             aria-label="Bookmark collections"
-            className="h-full w-72 max-w-[85vw] border-r-3 p-3 shadow-2xl"
+            className="flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overflow-x-hidden border-r-3 p-3 shadow-2xl scrollbar-thin"
             style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
@@ -263,6 +266,7 @@ export default function MacSidebar({
             <nav aria-label="Pages" className="mb-4 grid gap-0.5">
               {[
                 { href: "/dashboard", label: "Library", icon: Inbox },
+                { href: "/news", label: "News Feed", icon: Newspaper },
                 { href: "/history", label: "History", icon: Clock },
                 { href: "/todo", label: "Todo", icon: SquareCheckBig },
                 { href: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -315,7 +319,7 @@ function SidebarContent(props: SidebarProps) {
   const totalSaved = props.folders.reduce((sum, folder) => sum + (folder.count ?? 0), 0);
 
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto">
+    <div className="flex flex-col gap-5 pb-6">
       {/* Global Navigation Views */}
       <section>
         <SectionHeader>Organizer</SectionHeader>
@@ -373,7 +377,7 @@ function SidebarContent(props: SidebarProps) {
       ) : null}
 
       {/* Collections / Folders Tree */}
-      <section className="min-h-0 flex-1 overflow-y-auto">
+      <section className="flex flex-col">
         <SectionHeader
           action={
             <span className="flex items-center gap-2">

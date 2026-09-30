@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
-import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
+import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Newspaper, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type NavbarProps = {
@@ -26,9 +27,11 @@ export default function Navbar({
   onViewChange,
   userName,
 }: NavbarProps) {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-40 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
-      <div className="flex h-14 items-center gap-3 px-3 sm:px-5">
+      <div className="flex h-14 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
         {/* Mobile sidebar toggle */}
         <button
           type="button"
@@ -49,43 +52,52 @@ export default function Navbar({
         <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
           {[
             { href: "/dashboard", label: "Library", icon: Grid3X3 },
+            { href: "/news", label: "News", icon: Newspaper },
             { href: "/history", label: "History", icon: Clock },
             { href: "/todo", label: "Todo", icon: SquareCheckBig },
             { href: "/analytics", label: "Analytics", icon: BarChart3 },
             { href: "/monitoring", label: "Monitor", icon: Bell },
             { href: "/settings", label: "Settings", icon: Settings },
-          ].map((link) => (
-            <Link
-              key={link.href}
-              className="nb-btn nb-btn-ghost nb-btn-sm text-xs"
-              href={link.href}
-            >
-              <link.icon className="size-3.5" />
-              {link.label}
-            </Link>
-          ))}
+          ].map((link) => {
+            const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname?.startsWith(link.href));
+            return (
+              <Link
+                key={link.href}
+                className={`nb-btn nb-btn-sm text-xs ${isActive ? "nb-btn-primary" : "nb-btn-ghost"}`}
+                href={link.href}
+              >
+                <link.icon className="size-3.5" />
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Right Actions */}
         <div className="ml-auto flex flex-1 items-center justify-end gap-2">
           {/* Search */}
-          <label className="relative hidden w-full max-w-md sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" style={{ color: "var(--nb-muted)" }} />
+          <div className="relative hidden w-full max-w-md sm:flex sm:items-center">
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <Search className="size-4 shrink-0 text-[var(--nb-muted)]" />
+            </div>
             <input
               value={search}
               onChange={(event) => onSearchChange?.(event.target.value)}
-              placeholder="Search websites, tags, folders"
-              className="nb-input h-9 pl-9 pr-10 text-xs"
+              placeholder="Search websites, tags, folders…"
+              className="nb-input !h-9 w-full !pl-10 !pr-16 text-xs"
             />
-            <button
-              type="button"
-              aria-label="Open command palette"
-              onClick={onOpenCommand}
-              className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm absolute right-1 top-1/2 -translate-y-1/2"
-            >
-              <Command className="size-3.5" />+ k
-            </button>
-          </label>
+            <div className="absolute inset-y-0 right-1.5 flex items-center">
+              <button
+                type="button"
+                aria-label="Open command palette"
+                onClick={onOpenCommand}
+                className="nb-btn nb-btn-ghost nb-btn-sm !h-6 px-1.5 text-[10px] gap-1 font-mono text-[var(--nb-muted)] hover:text-[var(--nb-fg)]"
+              >
+                <Command className="size-3" />
+                <span>K</span>
+              </button>
+            </div>
+          </div>
 
           {/* View Toggle */}
           {onViewChange ? (

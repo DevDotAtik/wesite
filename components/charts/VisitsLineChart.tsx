@@ -19,7 +19,7 @@ export default function VisitsLineChart({ data }: { data: { date: string; visits
             color: "var(--nb-fg)",
           }}
         />
-        <Area type="monotone" dataKey="visits" stroke="var(--nb-primary)" fill="var(--nb-bruto-blue)" strokeWidth={3} />
+        <Area type="monotone" dataKey="visits" stroke="var(--nb-primary)" fill="var(--nb-primary)" fillOpacity={0.18} strokeWidth={3} />
       </AreaChart>
     </ResponsiveContainer>
   );

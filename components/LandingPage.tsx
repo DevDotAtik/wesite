@@ -65,7 +65,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
       {/* 2. Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
         <div className="absolute inset-0 nb-dot-bg opacity-30" />
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8 nb-page-enter">
           {/* Announcement pill */}
     
 
