@@ -259,11 +259,11 @@ async function fetchGoogleNews(
 }
 
 /** External News API 1: DEV.to Articles API (Public, provides rich verified cover & social images) */
-async function fetchDevToArticles(tag?: string, limit: number = 10): Promise<NewsItem[]> {
+async function fetchDevToArticles(tag?: string, limit: number = 10, page: number = 1): Promise<NewsItem[]> {
   try {
     const url = tag
-      ? `https://dev.to/api/articles?tag=${encodeURIComponent(tag)}&per_page=${limit}`
-      : `https://dev.to/api/articles?per_page=${limit}&top=7`;
+      ? `https://dev.to/api/articles?tag=${encodeURIComponent(tag)}&per_page=${limit}&page=${page}`
+      : `https://dev.to/api/articles?per_page=${limit}&page=${page}`;
 
     const res = await fetch(url, {
       signal: AbortSignal.timeout(3500),
@@ -359,16 +359,162 @@ async function fetchMediumFeed(tag: string = "programming", limit: number = 8): 
   }
 }
 
+/** External News API 3: Generic RSS Feed Reader for TechCrunch, Hacker News, The Verge, etc. */
+async function fetchGenericRssFeed(
+  feedUrl: string,
+  domain: string,
+  websiteTitle: string,
+  faviconUrl: string,
+  limit: number = 8,
+): Promise<NewsItem[]> {
+  try {
+    const res = await fetch(feedUrl, {
+      signal: AbortSignal.timeout(3500),
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/rss+xml, text/xml, application/xml, */*",
+      },
+    });
+    if (!res.ok) return [];
+    const text = await res.text();
+    const items: NewsItem[] = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    let match;
+    while ((match = itemRegex.exec(text)) !== null && items.length < limit) {
+      const itemXml = match[1];
+      const title = cleanHtml(extractTag(itemXml, "title"));
+      const link = extractTag(itemXml, "link");
+      const summary = cleanHtml(extractTag(itemXml, "description") || extractTag(itemXml, "summary"));
+      const published = extractTag(itemXml, "pubDate") || extractTag(itemXml, "dc:date");
+      const itemImg = extractImageFromXml(itemXml);
+      if (title && link) {
+        items.push({
+          title,
+          link,
+          summary: summary.slice(0, 180),
+          published,
+          source: websiteTitle,
+          domain,
+          websiteTitle,
+          faviconUrl,
+          imageUrl: itemImg || "",
+        });
+      }
+    }
+    return items;
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
 
-  await connectToDatabase();
-
   const searchParams = request.nextUrl.searchParams;
   const forceRefresh = searchParams.get("refresh") === "true";
+  const page = parseInt(searchParams.get("page") || "1", 10) || 1;
 
-  // Fetch all non-trashed websites for this user
+  if (page > 1) {
+    // Return next batch of developer articles and tech stories for infinite scroll
+    const pageFeeds: WebsiteNewsFeed[] = [];
+    const mediumTopics = [
+      "programming",
+      "technology",
+      "artificial-intelligence",
+      "software-engineering",
+      "cybersecurity",
+      "web-development",
+      "cloud-computing",
+      "data-science",
+      "design",
+      "devops",
+    ];
+    const mediumTopic = mediumTopics[(page - 1) % mediumTopics.length];
+
+    const additionalSources = [
+      {
+        url: "https://techcrunch.com/feed/",
+        domain: "techcrunch.com",
+        title: "TechCrunch",
+        icon: "https://techcrunch.com/favicon.ico",
+      },
+      {
+        url: "https://hnrss.org/frontpage",
+        domain: "news.ycombinator.com",
+        title: "Hacker News",
+        icon: "https://news.ycombinator.com/favicon.ico",
+      },
+      {
+        url: "https://www.theverge.com/rss/index.xml",
+        domain: "theverge.com",
+        title: "The Verge",
+        icon: "https://www.theverge.com/favicon.ico",
+      },
+      {
+        url: "https://www.smashingmagazine.com/feed/",
+        domain: "smashingmagazine.com",
+        title: "Smashing Magazine",
+        icon: "https://www.smashingmagazine.com/favicon.ico",
+      },
+    ];
+
+    const source = additionalSources[(page - 2) % additionalSources.length];
+
+    const [devToRes, mediumRes, sourceRes] = await Promise.allSettled([
+      fetchDevToArticles(undefined, 10, page),
+      fetchMediumFeed(mediumTopic, 8),
+      source ? fetchGenericRssFeed(source.url, source.domain, source.title, source.icon, 8) : Promise.resolve([]),
+    ]);
+
+    if (devToRes.status === "fulfilled" && devToRes.value.length > 0) {
+      pageFeeds.push({
+        websiteId: `ext-dev-to-p${page}`,
+        domain: "dev.to",
+        title: "DEV Community",
+        faviconUrl: "https://dev.to/favicon.ico",
+        feedType: "external_api",
+        feedUrl: `https://dev.to/api/articles?page=${page}`,
+        items: devToRes.value,
+      });
+    }
+
+    if (mediumRes.status === "fulfilled" && mediumRes.value.length > 0) {
+      pageFeeds.push({
+        websiteId: `ext-medium-${mediumTopic}`,
+        domain: "medium.com",
+        title: `Medium ${mediumTopic.replace(/-/g, " ").toUpperCase()}`,
+        faviconUrl: "https://medium.com/favicon.ico",
+        feedType: "external_api",
+        feedUrl: `https://medium.com/feed/tag/${mediumTopic}`,
+        items: mediumRes.value,
+      });
+    }
+
+    if (sourceRes.status === "fulfilled" && sourceRes.value.length > 0 && source) {
+      pageFeeds.push({
+        websiteId: `ext-${source.domain}`,
+        domain: source.domain,
+        title: source.title,
+        faviconUrl: source.icon,
+        feedType: "direct",
+        feedUrl: source.url,
+        items: sourceRes.value,
+      });
+    }
+
+    const allArticles: NewsItem[] = pageFeeds
+      .flatMap((f) => f.items)
+      .sort((a, b) => {
+        const timeA = a.published ? new Date(a.published).getTime() : 0;
+        const timeB = b.published ? new Date(b.published).getTime() : 0;
+        return timeB - timeA;
+      });
+
+    return json({ feeds: pageFeeds, emptyFeeds: [], allArticles, page, hasMore: page < 15 });
+  }
+
+  await connectToDatabase();
   const websites = await Website.find({ userId: auth.user._id, isTrashed: false })
     .select("_id url domain title faviconUrl ogImageUrl createdAt tags")
     .sort({ createdAt: -1 })
@@ -546,5 +692,5 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return json({ feeds, emptyFeeds, allArticles });
+  return json({ feeds, emptyFeeds, allArticles, page: 1, hasMore: true });
 }

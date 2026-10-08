@@ -32,6 +32,11 @@ export async function connectToDatabase() {
     });
   }
 
-  cache.conn = await cache.promise;
+  try {
+    cache.conn = await cache.promise;
+  } catch (error) {
+    cache.promise = null;
+    throw error;
+  }
   return cache.conn;
 }

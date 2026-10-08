@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -117,78 +117,168 @@ function FolderTreeItem({
 
   const hasChildren = Boolean(folder.children?.length);
   const isSelected = selectedFolder === folder._id;
-  const indentStep = 14;
+
+  const isChildSelected = useMemo(() => {
+    function checkDescendant(node: FolderNode): boolean {
+      if (node._id === selectedFolder) return true;
+      return node.children?.some(checkDescendant) ?? false;
+    }
+    return folder.children?.some(checkDescendant) ?? false;
+  }, [folder.children, selectedFolder]);
+
+  // Adjust expanded state during render when a child becomes selected
+  const [prevChildSelected, setPrevChildSelected] = useState(isChildSelected);
+  if (isChildSelected !== prevChildSelected) {
+    setPrevChildSelected(isChildSelected);
+    if (isChildSelected) {
+      setExpanded(true);
+    }
+  }
 
   return (
-    <div className="group relative">
-      {/* Expand/collapse is a sibling of the row button — a toggle nested
-          inside the row button would be invalid HTML and unreachable by keyboard. */}
-      {hasChildren ? (
-        <button
-          type="button"
-          aria-label={expanded ? `Collapse ${folder.name}` : `Expand ${folder.name}`}
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
-          className="absolute z-10 grid size-6 -translate-y-1/2 place-items-center rounded-lg hover:bg-[var(--nb-surface-alt)]"
-          style={{ left: `${3 + depth * indentStep}px`, top: "50%" }}
-        >
-          <ChevronRight
-            className={`size-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
-            style={{ color: isSelected ? "var(--nb-primary-fg)" : "var(--nb-muted)" }}
-          />
-        </button>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => onSelectFolder(folder._id)}
-        aria-current={isSelected ? "true" : undefined}
-        onDragEnter={(event) => { event.preventDefault(); setIsDropTarget(true); }}
-        onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
+    <div className="relative">
+      {/* Folder Row Item */}
+      <div
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setIsDropTarget(true);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+        }}
         onDragLeave={() => setIsDropTarget(false)}
         onDrop={(event) => {
           event.preventDefault();
           event.stopPropagation();
           setIsDropTarget(false);
-          onDropWebsite?.(folder._id, event.dataTransfer.getData("application/x-wesite-website-id") || event.dataTransfer.getData("text/plain"));
+          onDropWebsite?.(
+            folder._id,
+            event.dataTransfer.getData("application/x-wesite-website-id") ||
+              event.dataTransfer.getData("text/plain"),
+          );
         }}
-        style={{ paddingLeft: `${8 + depth * indentStep}px` }}
-        className={`nb-sidebar-item ${isSelected ? "nb-sidebar-item-active" : ""} ${isDropTarget ? "nb-sidebar-item-active !border-[var(--nb-success)]" : ""}`}
+        className={`group relative flex items-center justify-between rounded-xl px-2 py-1.5 transition-all ${
+          isSelected
+            ? "nb-sidebar-item-active"
+            : "hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+        } ${
+          isDropTarget
+            ? "nb-sidebar-item-active !border-[var(--nb-success)] ring-2 ring-[var(--nb-success)]/40"
+            : ""
+        }`}
       >
-        <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden="true" />
-        <span className="grid size-6 shrink-0 place-items-center rounded-lg border-[3px] bg-[var(--nb-surface-strong)] shadow-sm" style={{ borderColor: "var(--nb-border)" }}>
-          <FolderIcon value={folder.icon} className="size-3.5" color={folder.color ?? "#3b82f6"} />
-        </span>
-        <span className="min-w-0 flex-1 truncate">{folder.name}</span>
-        {folder.count !== undefined && folder.count > 0 ? (
-          <span className="nb-tag text-[9px]">
-            {folder.count}
-          </span>
-        ) : null}
-      </button>
-      {onEditFolder ? (
+        {/* Main Folder Selection Button */}
         <button
           type="button"
-          aria-label={`Edit ${folder.name}`}
-          onClick={() => onEditFolder(folder)}
-          className="absolute right-1 top-1 grid size-6 place-items-center rounded-lg opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[var(--nb-surface-alt)]"
+          onClick={() => {
+            onSelectFolder(folder._id);
+            if (hasChildren && !expanded) {
+              setExpanded(true);
+            }
+          }}
+          aria-current={isSelected ? "true" : undefined}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
-          <Pencil className="size-3" />
-        </button>
-      ) : null}
-      {hasChildren && expanded ? (
-        <div className="relative">
           <span
-            className="absolute bottom-3 top-0 w-px"
-            style={{ left: `${15 + depth * indentStep}px`, background: "var(--nb-border)", opacity: 0.6 }}
-          />
-          <FolderTree
-            folders={folder.children ?? []}
-            depth={depth + 1}
-            selectedFolder={selectedFolder}
-            onSelectFolder={onSelectFolder}
-            onEditFolder={onEditFolder}
-            onDropWebsite={onDropWebsite}
-          />
+            className={`grid ${
+              depth === 0 ? "size-6" : "size-5"
+            } shrink-0 place-items-center rounded-md border-2 bg-[var(--nb-surface-strong)] shadow-xs`}
+            style={{ borderColor: "var(--nb-border)" }}
+          >
+            <FolderIcon
+              value={folder.icon}
+              className={depth === 0 ? "size-3.5" : "size-3"}
+              color={folder.color ?? "#6366f1"}
+            />
+          </span>
+          <span
+            className={`min-w-0 flex-1 truncate text-xs ${
+              depth === 0 ? "font-semibold" : "font-medium"
+            }`}
+          >
+            {folder.name}
+          </span>
+        </button>
+
+        {/* Right side controls: Count, Edit Pencil, Expand Chevron */}
+        <div className="flex items-center gap-1 shrink-0 pl-1.5">
+          {folder.count !== undefined && folder.count > 0 ? (
+            <span
+              className={`nb-tag text-[9px] px-1.5 py-0.2 shrink-0 ${
+                isSelected ? "bg-white/20 text-white border-white/30" : ""
+              }`}
+            >
+              {folder.count}
+            </span>
+          ) : null}
+
+          {onEditFolder ? (
+            <button
+              type="button"
+              aria-label={`Edit ${folder.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditFolder(folder);
+              }}
+              className={`grid size-6 place-items-center rounded-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[var(--nb-surface-alt)] ${
+                isSelected
+                  ? "text-white hover:bg-white/20"
+                  : "text-[var(--nb-muted)] hover:text-[var(--nb-fg)]"
+              }`}
+              title="Edit folder"
+            >
+              <Pencil className="size-3" />
+            </button>
+          ) : null}
+
+          {/* Reference Image Style Chevron on Right */}
+          {hasChildren ? (
+            <button
+              type="button"
+              aria-label={expanded ? `Collapse ${folder.name}` : `Expand ${folder.name}`}
+              aria-expanded={expanded}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((prev) => !prev);
+              }}
+              className={`grid size-6 place-items-center rounded-md transition-colors hover:bg-[var(--nb-surface-alt)] ${
+                isSelected
+                  ? "text-white hover:bg-white/20"
+                  : "text-[var(--nb-muted)] hover:text-[var(--nb-fg)]"
+              }`}
+              title={expanded ? "Collapse" : "Expand"}
+            >
+              <ChevronRight
+                className={`size-3.5 transition-transform duration-200 ${
+                  expanded ? "rotate-90" : ""
+                }`}
+              />
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Nested Children Tree (Matches reference image with connector branch lines) */}
+      {hasChildren && expanded ? (
+        <div className="relative ml-3.5 pl-3 my-0.5 space-y-0.5 border-l-2 border-[var(--nb-border)]/20 dark:border-white/15">
+          {folder.children?.map((child) => (
+            <div key={child._id} className="relative">
+              {/* Horizontal branch line connecting to the vertical border line */}
+              <span
+                className="absolute -left-3 top-4 w-2.5 h-px bg-[var(--nb-border)]/25 dark:bg-white/15"
+                aria-hidden="true"
+              />
+              <FolderTreeItem
+                folder={child}
+                depth={depth + 1}
+                selectedFolder={selectedFolder}
+                onSelectFolder={onSelectFolder}
+                onEditFolder={onEditFolder}
+                onDropWebsite={onDropWebsite}
+              />
+            </div>
+          ))}
         </div>
       ) : null}
     </div>
@@ -389,10 +479,10 @@ function SidebarContent(props: SidebarProps) {
                   type="button"
                   onClick={props.onCreateFolder}
                   aria-label="Create collection"
-                  className="nb-btn nb-btn-ghost nb-btn-icon nb-btn-sm"
-                  title="Create Collection"
+                  className="grid size-6 place-items-center rounded-md text-[var(--nb-muted)] transition-all hover:bg-[var(--nb-surface-alt)] hover:text-[var(--nb-fg)] active:scale-90"
+                  title="New collection"
                 >
-                  <Plus className="size-3.5" />
+                  <Plus className="size-4 stroke-[2.2]" />
                 </button>
               ) : undefined}
             </span>

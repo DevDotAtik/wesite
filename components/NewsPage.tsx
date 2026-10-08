@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -639,6 +639,13 @@ export default function NewsPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "grouped" | "compact">("cards");
 
+  // Infinite scroll pagination state
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [displayCount, setDisplayCount] = useState(15);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   // Saved news stories map (stored in localStorage & synced with Wesite library)
   const [savedArticles, setSavedArticles] = useState<Map<string, NewsItem>>(new Map());
 
@@ -731,6 +738,9 @@ export default function NewsPage() {
       setFeeds(data.feeds ?? []);
       setEmptyFeeds(data.emptyFeeds ?? []);
       setAllArticles(data.allArticles ?? []);
+      setPage(1);
+      setDisplayCount(15);
+      setHasMore(true);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "TimeoutError") {
         setError("News feed request timed out. Please click Refresh to try again.");
@@ -746,6 +756,11 @@ export default function NewsPage() {
   useEffect(() => {
     loadNews();
   }, [loadNews]);
+
+  // Reset display count on search or filter change
+  useEffect(() => {
+    setDisplayCount(15);
+  }, [filter, search]);
 
   // Unique domains across all loaded feeds
   const allDomains = useMemo(() => {
@@ -776,8 +791,87 @@ export default function NewsPage() {
     );
   }, [allArticles, filter, search, savedArticles]);
 
+  // Auto load next stories when reaching end of page
+  const loadMoreNews = useCallback(async () => {
+    if (loadingMore || loading || !hasMore) return;
+
+    // 1. If more local articles are available, display next batch immediately
+    if (displayCount < filteredArticles.length) {
+      setDisplayCount((prev) => Math.min(prev + 12, filteredArticles.length));
+      return;
+    }
+
+    // 2. If all local articles are shown, request next page from server
+    if (filter === "saved" || search.trim()) return;
+
+    setLoadingMore(true);
+    const nextPage = page + 1;
+
+    try {
+      const res = await fetch(`/api/news?page=${nextPage}`, {
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const newArticles: NewsItem[] = data.allArticles ?? [];
+        const newFeeds: WebsiteNewsFeed[] = data.feeds ?? [];
+
+        if (newArticles.length === 0) {
+          setHasMore(false);
+        } else {
+          setAllArticles((prev) => {
+            const existingLinks = new Set(prev.map((a) => a.link));
+            const uniqueNew = newArticles.filter((a) => !existingLinks.has(a.link));
+            return [...prev, ...uniqueNew];
+          });
+
+          setFeeds((prev) => {
+            const existingIds = new Set(prev.map((f) => f.websiteId));
+            const uniqueNewFeeds = newFeeds.filter((f) => !existingIds.has(f.websiteId));
+            return [...prev, ...uniqueNewFeeds];
+          });
+
+          setPage(nextPage);
+          setDisplayCount((prev) => prev + 12);
+          setHasMore(Boolean(data.hasMore));
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, loading, hasMore, displayCount, filteredArticles.length, filter, search, page]);
+
+  // IntersectionObserver for auto-loading when user reaches end of page
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreNews();
+        }
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMoreNews]);
+
+  const visibleArticles = useMemo(
+    () => filteredArticles.slice(0, displayCount),
+    [filteredArticles, displayCount],
+  );
   const spotlightStory = filteredArticles.length > 0 ? filteredArticles[0] : null;
-  const remainingArticles = filteredArticles.length > 1 ? filteredArticles.slice(1) : [];
+  const remainingArticles = visibleArticles.length > 1 ? visibleArticles.slice(1) : [];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -985,7 +1079,7 @@ export default function NewsPage() {
         ) : viewMode === "compact" ? (
           /* Compact List View */
           <div className="space-y-2">
-            {filteredArticles.map((item, idx) => (
+            {visibleArticles.map((item, idx) => (
               <CompactNewsRow
                 key={`${item.link}-${idx}`}
                 item={item}
@@ -1053,7 +1147,7 @@ export default function NewsPage() {
 
             {/* Grid of Daily.dev cards */}
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {(search ? filteredArticles : remainingArticles).map((item, idx) => (
+              {(search ? visibleArticles : remainingArticles).map((item, idx) => (
                 <DailyDevCard
                   key={`${item.link}-${idx}`}
                   item={item}
@@ -1062,6 +1156,30 @@ export default function NewsPage() {
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Infinite Scroll Sentinel & Auto-loader */}
+        {!loading && !error && filteredArticles.length > 0 && (
+          <div ref={sentinelRef} className="mt-8 flex flex-col items-center justify-center py-6">
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--nb-muted)] nb-card-sm px-4 py-2">
+                <RefreshCw className="size-4 animate-spin text-[var(--nb-primary)]" />
+                <span>Loading more stories...</span>
+              </div>
+            ) : displayCount < filteredArticles.length || (hasMore && filter !== "saved" && !search) ? (
+              <button
+                type="button"
+                onClick={loadMoreNews}
+                className="nb-btn nb-btn-surface nb-btn-sm text-xs font-bold"
+              >
+                Load more stories
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--nb-muted)]">
+                <span>You&apos;re all caught up! ✨</span>
+              </div>
+            )}
           </div>
         )}
 

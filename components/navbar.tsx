@@ -101,7 +101,7 @@ export default function Navbar({
 
           {/* View Toggle */}
           {onViewChange ? (
-            <div className="hidden sm:flex items-center rounded-xl border-3 p-0.5" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+            <div className="flex items-center rounded-xl border-3 p-0.5" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
               <button
                 type="button"
                 aria-label="Grid view"

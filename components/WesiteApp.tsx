@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Bookmark, CheckSquare, Clock3, ClipboardPaste, FolderOpen, FolderPlus, Heart, Loader2, Move, Sparkles, Square, SquareCheckBig, Star, Tag, Trash2, X } from "lucide-react";
+import { CheckSquare, ClipboardPaste, FolderPlus, Loader2, Move, Sparkles, Square, Star, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -53,7 +53,7 @@ export default function WesiteApp() {
   const [bulkTags, setBulkTags] = useState("");
   const flatFolders = useMemo(() => flattenFolders(folders), [folders]);
   const selectedFolderNode = flatFolders.find((folder) => folder._id === selectedFolder);
-  const visibleChildFolders = selectedFolderNode?.children ?? (selectedFolder === "home" ? folders : []);
+  const visibleChildFolders = selectedFolderNode?.children ?? [];
   const canPasteHere = copiedWebsite && !["trash", "recent", "visited", "favorite"].includes(selectedFolder);
   const pasteTargetLabel = selectedFolderNode?.name ?? (selectedFolder === "home" || selectedFolder === "all" ? "All Websites" : "");
   const addWebsiteFolderId = systemFolders.has(selectedFolder) ? null : selectedFolder;
@@ -68,34 +68,7 @@ export default function WesiteApp() {
     return folderOptionsForSelected.filter((folder) => !invalidIds.has(folder._id));
   }, [editingFolder, folderOptionsForSelected, flatFolders]);
   const activeWebsites = useMemo(() => websites.filter((website) => !website.isTrashed), [websites]);
-  const mostLoved = useMemo(
-    () =>
-      [...activeWebsites]
-        .sort((a, b) => {
-          const favoriteDiff = Number(Boolean(b.isFavorite)) - Number(Boolean(a.isFavorite));
-          if (favoriteDiff !== 0) return favoriteDiff;
-          return (b.visitCount ?? 0) - (a.visitCount ?? 0) || new Date(b.lastVisitedAt ?? b.createdAt ?? 0).getTime() - new Date(a.lastVisitedAt ?? a.createdAt ?? 0).getTime();
-        })
-        .slice(0, 3),
-    [activeWebsites],
-  );
-  const recentlyAdded = useMemo(
-    () => [...activeWebsites].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()).slice(0, 3),
-    [activeWebsites],
-  );
-  const recentlyVisited = useMemo(
-    () => [...activeWebsites].sort((a, b) => new Date(b.lastVisitedAt ?? 0).getTime() - new Date(a.lastVisitedAt ?? 0).getTime()).slice(0, 3),
-    [activeWebsites],
-  );
-  const showInsights = selectedFolder === "home" || selectedFolder === "all";
-  const smartStats = useMemo(
-    () => [
-      { label: "Saved", value: activeWebsites.length, note: "Active bookmarks", icon: Bookmark, color: "var(--nb-warning)" },
-      { label: "Folders", value: flatFolders.length, note: "Organized spaces", icon: FolderOpen, color: "var(--nb-primary)" },
-      { label: "Loved", value: activeWebsites.filter((website) => website.isFavorite).length, note: "Pinned by you", icon: Heart, color: "var(--nb-accent)" },
-    ],
-    [activeWebsites, flatFolders.length],
-  );
+
 
   const loadFolders = useCallback(async () => {
     const response = await fetch("/api/folders");
@@ -148,7 +121,36 @@ export default function WesiteApp() {
   async function deleteWebsite(website: WebsiteItem) { const response = await fetch(`/api/websites/${website._id}`, { method: "DELETE" }); if (!response.ok) { toast.error("Could not move website to trash"); return; } toast.success("Moved to trash"); loadWebsites(); loadFolders(); }
   async function restoreWebsite(website: WebsiteItem) { const response = await fetch(`/api/websites/${website._id}/restore`, { method: "POST" }); if (!response.ok) { const payload = await response.json().catch(() => null); toast.error(payload?.error ?? "Could not restore website"); return; } toast.success("Restored website"); loadWebsites(); loadFolders(); }
   async function permanentlyDeleteWebsite(website: WebsiteItem) { const response = await fetch(`/api/websites/${website._id}/permanent`, { method: "DELETE" }); if (!response.ok) { toast.error("Could not delete website permanently"); return; } toast.success("Deleted permanently"); loadWebsites(); loadFolders(); }
-  async function toggleFavorite(website: WebsiteItem) { await fetch(`/api/websites/${website._id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isFavorite: !website.isFavorite }) }); loadWebsites(); }
+  async function toggleFavorite(website: WebsiteItem) {
+    const nextFavorite = !website.isFavorite;
+    setWebsites((prev) =>
+      prev.map((item) => (item._id === website._id ? { ...item, isFavorite: nextFavorite } : item))
+    );
+
+    try {
+      const response = await fetch(`/api/websites/${website._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: nextFavorite }),
+      });
+
+      if (!response.ok) {
+        setWebsites((prev) =>
+          prev.map((item) => (item._id === website._id ? { ...item, isFavorite: website.isFavorite } : item))
+        );
+        toast.error("Could not update favorite status");
+        return;
+      }
+
+      toast.success(nextFavorite ? "Added to favorites" : "Removed from favorites");
+      loadWebsites();
+    } catch {
+      setWebsites((prev) =>
+        prev.map((item) => (item._id === website._id ? { ...item, isFavorite: website.isFavorite } : item))
+      );
+      toast.error("Could not update favorite status");
+    }
+  }
   async function moveWebsiteToFolder(websiteId: string, folderId: string | null, successMessage = "Moved website") { if (!websiteId) return; const response = await fetch(`/api/websites/${websiteId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ folderId }) }); if (!response.ok) { toast.error("Could not move website"); return; } toast.success(successMessage); loadWebsites(); loadFolders(); }
   async function moveDraggedWebsite(folderId: string, websiteId: string) { await moveWebsiteToFolder(websiteId, folderId); }
   async function copyWebsite(website: WebsiteItem) { setCopiedWebsite(website); try { await navigator.clipboard.writeText(website.url); } catch {} toast.success("Website copied. Select a folder and paste."); }
@@ -230,8 +232,8 @@ export default function WesiteApp() {
             <h1 className="text-lg font-extrabold" style={{ color: "var(--nb-fg)" }}>Sign in to Wesite</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--nb-muted)" }}>Your bookmark library is private to your account.</p>
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <a className="nb-btn nb-btn-primary" href="/login">Login</a>
-              <a className="nb-btn nb-btn-surface" href="/register">Register</a>
+              <a className="nb-btn nb-btn-primary text-xs font-bold py-2.5 flex items-center justify-center" href="/login">Sign In</a>
+              <a className="nb-btn nb-btn-surface text-xs font-bold py-2.5 flex items-center justify-center" href="/register">Register</a>
             </div>
           </div>
         </main>
@@ -242,6 +244,7 @@ export default function WesiteApp() {
             selectedFolder={selectedFolder}
             onSelectFolder={setSelectedFolder}
             onEditFolder={openFolderEditor}
+            onCreateFolder={createFolder}
             onDropWebsite={moveDraggedWebsite}
             mobileOpen={mobileSidebarOpen}
             onCloseMobile={() => setMobileSidebarOpen(false)}
@@ -360,83 +363,7 @@ export default function WesiteApp() {
                 </div>
               ) : null}
 
-              {/* Smart Insights */}
-              {showInsights ? (
-                <div className="mb-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                  <div>
-                    <div className="nb-card-static p-4 sm:p-5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Library overview</p>
-                          <p className="mt-0.5 text-xs" style={{ color: "var(--nb-muted)" }}>Your workspace at a glance</p>
-                        </div>
-                        <span className="nb-tag" style={{ color: "var(--nb-primary)" }}>
-                          <Sparkles className="size-3.5" />
-                          Smart
-                        </span>
-                      </div>
 
-                      <div className="mt-4 grid gap-3 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--nb-border)]">
-                        {smartStats.map((card) => (
-                          <div key={card.label} className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
-                            <span className="grid size-11 shrink-0 place-items-center rounded-xl border-[3px]" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-strong)" }}>
-                              <card.icon className="size-5" style={{ color: card.color }} />
-                            </span>
-                            <div className="min-w-0">
-                              <p className="nb-label truncate">{card.label}</p>
-                              <p className="mt-0.5 text-2xl font-extrabold tabular-nums leading-none" style={{ color: "var(--nb-fg)" }}>{card.value}</p>
-                              <p className="mt-1 truncate text-[10px] font-semibold" style={{ color: "var(--nb-muted)" }}>{card.note}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="nb-card-static p-4" style={{ background: "var(--nb-surface-alt)" }}>
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>Smart lanes</p>
-                        <p className="text-xs" style={{ color: "var(--nb-muted)" }}>Quick access to important bookmarks.</p>
-                      </div>
-                      <ArrowUpRight className="size-4" style={{ color: "var(--nb-primary)" }} />
-                    </div>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                      {[
-                        { label: "Most loved", icon: Sparkles, items: mostLoved },
-                        { label: "Recently added", icon: Clock3, items: recentlyAdded },
-                        { label: "Recently visited", icon: SquareCheckBig, items: recentlyVisited },
-                      ].map((lane) => (
-                        <div key={lane.label} className="nb-card-sm p-3">
-                          <div className="flex items-center gap-2 text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
-                            <lane.icon className="size-3.5" style={{ color: "var(--nb-primary)" }} />
-                            <span className="flex-1">{lane.label}</span>
-                            <span className="nb-tag text-[9px]">{lane.items.length}</span>
-                          </div>
-                          <div className="mt-3 space-y-1.5">
-                            {lane.items.map((website) => (
-                              <button
-                                key={website._id}
-                                type="button"
-                                onClick={() => openWebsite(website)}
-                                className="nb-sidebar-item text-xs py-1.5"
-                              >
-                                <span className="nb-card-yellow grid size-6 shrink-0 place-items-center rounded-lg border text-[9px] font-extrabold" style={{ borderColor: "var(--nb-border)" }}>
-                                  {(website.title || website.domain || "W").charAt(0).toUpperCase()}
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span className="block truncate">{website.title || website.domain}</span>
-                                  <span className="block truncate text-[10px]" style={{ color: "var(--nb-muted)" }}>{website.domain}</span>
-                                </span>
-                              </button>
-                            ))}
-                            {!lane.items.length ? <p className="text-[10px] font-semibold" style={{ color: "var(--nb-muted)" }}>Nothing here yet.</p> : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
               {/* Loading */}
               {loading ? (

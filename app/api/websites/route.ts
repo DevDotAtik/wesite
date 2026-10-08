@@ -15,55 +15,55 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
 
-  const searchParams = request.nextUrl.searchParams;
-  const { limit, page } = parsePagination(searchParams);
-  const search = searchParams.get("search");
-  const folderId = searchParams.get("folderId");
-  const tag = searchParams.get("tag");
-  const favorite = searchParams.get("favorite");
-  const trashed = searchParams.get("trashed");
-  const sort = searchParams.get("sort") ?? "smart";
-  const query: Record<string, unknown> = { userId: auth.user._id };
+    const searchParams = request.nextUrl.searchParams;
+    const { limit, page } = parsePagination(searchParams);
+    const search = searchParams.get("search");
+    const folderId = searchParams.get("folderId");
+    const tag = searchParams.get("tag");
+    const favorite = searchParams.get("favorite");
+    const trashed = searchParams.get("trashed");
+    const sort = searchParams.get("sort") ?? "smart";
+    const query: Record<string, unknown> = { userId: auth.user._id };
 
-  if (folderId === "root" || folderId === "unsorted") query.folderId = null;
-  else if (folderId) {
-    if (!isValidObjectId(folderId)) return invalidIdResponse();
-    query.folderId = folderId;
-  }
-  if (tag) query.tags = tag;
-  if (favorite === "true") query.isFavorite = true;
-  query.isTrashed = trashed === "true";
+    if (folderId === "root" || folderId === "unsorted") query.folderId = null;
+    else if (folderId) {
+      if (!isValidObjectId(folderId)) return invalidIdResponse();
+      query.folderId = folderId;
+    }
+    if (tag) query.tags = tag;
+    if (favorite === "true") query.isFavorite = true;
+    query.isTrashed = trashed === "true";
 
-  if (search) {
-    const safeSearch = escapeRegex(search);
-    query.$or = [
-      { title: { $regex: safeSearch, $options: "i" } },
-      { description: { $regex: safeSearch, $options: "i" } },
-      { domain: { $regex: safeSearch, $options: "i" } },
-      { tags: { $regex: safeSearch, $options: "i" } },
-    ];
-  }
+    if (search) {
+      const safeSearch = escapeRegex(search);
+      query.$or = [
+        { title: { $regex: safeSearch, $options: "i" } },
+        { description: { $regex: safeSearch, $options: "i" } },
+        { domain: { $regex: safeSearch, $options: "i" } },
+        { tags: { $regex: safeSearch, $options: "i" } },
+      ];
+    }
 
-  let sortOrder: Record<string, 1 | -1>;
+    let sortOrder: Record<string, 1 | -1>;
 
-  if (sort === "recent") {
-    sortOrder = { createdAt: -1 };
-  } else if (sort === "visited") {
-    sortOrder = { lastVisitedAt: -1, visitCount: -1, createdAt: -1 };
-  } else if (sort === "loved") {
-    sortOrder = { isFavorite: -1, visitCount: -1, lastVisitedAt: -1, createdAt: -1 };
-  } else if (sort === "trash") {
-    sortOrder = { trashedAt: -1, createdAt: -1 };
-  } else {
-    sortOrder = { isFavorite: -1, lastVisitedAt: -1, createdAt: -1 };
-  }
+    if (sort === "recent") {
+      sortOrder = { createdAt: -1 };
+    } else if (sort === "visited") {
+      sortOrder = { lastVisitedAt: -1, visitCount: -1, createdAt: -1 };
+    } else if (sort === "loved") {
+      sortOrder = { isFavorite: -1, visitCount: -1, lastVisitedAt: -1, createdAt: -1 };
+    } else if (sort === "trash") {
+      sortOrder = { trashedAt: -1, createdAt: -1 };
+    } else {
+      sortOrder = { isFavorite: -1, lastVisitedAt: -1, createdAt: -1 };
+    }
 
-  const [websites, total] = await Promise.all([
-    Website.find(query).sort(sortOrder).skip((page - 1) * limit).limit(limit).lean(),
-    Website.countDocuments(query),
-  ]);
+    const [websites, total] = await Promise.all([
+      Website.find(query).sort(sortOrder).skip((page - 1) * limit).limit(limit).lean(),
+      Website.countDocuments(query),
+    ]);
 
-  return json({ websites: serializeDocument(websites), pagination: { page, limit, total } });
+    return json({ websites: serializeDocument(websites), pagination: { page, limit, total } });
 }
 
 export async function POST(request: NextRequest) {

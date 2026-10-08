@@ -48,9 +48,6 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/dashboard" className="nb-btn nb-btn-surface nb-btn-sm hidden sm:inline-flex">
-              Demo Workspace
-            </Link>
             <Link href="/login" className="nb-btn nb-btn-ghost nb-btn-sm hidden sm:inline-flex">
               Sign In
             </Link>
@@ -83,8 +80,8 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
               Get Started for Free
               <ArrowRight className="size-4" />
             </Link>
-            <Link href="/dashboard" className="nb-btn nb-btn-surface">
-              View Demo Workspace
+            <Link href="/login" className="nb-btn nb-btn-surface">
+              Sign In to Your Workspace
             </Link>
           </div>
           <div className="mt-7 flex justify-center">

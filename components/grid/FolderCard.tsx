@@ -38,7 +38,7 @@ export default function FolderCard({ id, name, color = "#3b82f6", icon, count = 
         <span className="nb-card-yellow grid size-11 shrink-0 place-items-center rounded-xl border-[3px]" style={{ borderColor: "var(--nb-border)", background: color, boxShadow: "2px 2px 0 0 var(--nb-shadow)" }}>
           <FolderIcon value={icon} className="size-5 text-white" color="#ffffff" />
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 flex-1 pr-16">
           <span className="block truncate text-sm font-bold" style={{ color: "var(--nb-fg)" }}>{name}</span>
           <span className="text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>{count} {count === 1 ? "item" : "items"}</span>
         </span>
