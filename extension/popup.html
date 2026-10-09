@@ -602,6 +602,9 @@
         <p id="header-user"></p>
       </div>
       <div class="header-actions">
+        <button id="open-webflow-btn" class="btn btn-ghost btn-icon btn-sm" title="Open WebFlow Studio">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
+        </button>
         <button id="theme-btn" class="btn btn-ghost btn-icon btn-sm" title="Toggle dark mode" aria-label="Toggle dark mode">
           <svg id="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           <svg id="theme-icon-dark" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6.36 6.36 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
@@ -663,8 +666,12 @@
         </label>
       </div>
 
-      <div class="save-actions">
-        <button id="save-btn" class="btn btn-primary">Save to Wesite</button>
+      <div class="save-actions" style="display:flex;gap:6px;">
+        <button id="save-btn" class="btn btn-primary" style="flex:1;">Save to Wesite</button>
+        <button id="save-webflow-btn" class="btn btn-surface" title="Save and start a WebFlow with this tool" style="padding:6px 10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
+          WebFlow
+        </button>
       </div>
     </div>
 

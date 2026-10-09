@@ -598,6 +598,14 @@ async function showMain(initialUser) {
     // Save
     $("#save-btn").addEventListener("click", doSave);
 
+    // WebFlow
+    $("#open-webflow-btn")?.addEventListener("click", async () => {
+      const base = await getApiBase();
+      chrome.tabs.create({ url: `${base}/webflow` });
+    });
+
+    $("#save-webflow-btn")?.addEventListener("click", doSaveAndWebFlow);
+
     // Logout
     $("#logout-btn").addEventListener("click", async () => {
       await logout();
@@ -734,3 +742,54 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+async function doSaveAndWebFlow() {
+  const tab = await getActiveTab();
+  if (!tab || !tab.url) return;
+
+  const btn = $("#save-webflow-btn");
+  if (btn) {
+    btn.disabled = true;
+    setText(btn, "Creating...");
+  }
+
+  const saveRes = await saveWebsite({
+    url: tab.url,
+    folderId: $("#folder-select")?.value || null,
+    tags: currentTags,
+    notes: $("#save-notes")?.value.trim() || "",
+    isFavorite: $("#save-favorite")?.checked || false,
+  });
+
+  const base = await getApiBase();
+  const token = await getToken();
+
+  if (saveRes.ok && saveRes.website) {
+    try {
+      const wfRes = await fetch(`${base}/api/webflows`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: `${saveRes.website.title || tab.title || "Tool"} Workflow`,
+          initialWebsiteId: saveRes.website._id,
+        }),
+      });
+
+      if (wfRes.ok) {
+        const wfData = await wfRes.json();
+        chrome.tabs.create({ url: `${base}/webflow/${wfData.webflow._id}` });
+        window.close();
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  chrome.tabs.create({ url: `${base}/webflow` });
+  window.close();
+}
+

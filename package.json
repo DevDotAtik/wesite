@@ -10,6 +10,8 @@
     "seed": "node scripts/seed.mjs"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
+    "@xyflow/react": "^12.12.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
     "google-auth-library": "^11.1.0",
@@ -17,10 +19,13 @@
     "lucide-react": "^1.24.0",
     "mongoose": "^9.7.4",
     "next": "16.2.10",
+    "otplib": "^13.5.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.9.2",
     "sonner": "^2.0.7",
+    "yaml": "^2.9.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

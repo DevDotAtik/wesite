@@ -20,6 +20,7 @@ import {
   SquareCheckBig,
   Tag,
   Trash2,
+  Workflow,
   X,
 } from "lucide-react";
 import { FolderIcon } from "@/lib/folder-icons";
@@ -429,6 +430,14 @@ function SidebarContent(props: SidebarProps) {
               </button>
             );
           })}
+          <Link
+            href="/webflow"
+            className="nb-sidebar-item flex items-center gap-2 group"
+          >
+            <Workflow className="size-4 shrink-0 text-indigo-500 group-hover:scale-110 transition-transform" />
+            <span className="min-w-0 flex-1 truncate font-bold text-indigo-600 dark:text-indigo-400">WebFlow Studio</span>
+            <span className="rounded bg-indigo-100 dark:bg-indigo-950 px-1 py-0.2 text-[9px] font-mono font-bold text-indigo-600 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">NEW</span>
+          </Link>
         </div>
       </section>
 

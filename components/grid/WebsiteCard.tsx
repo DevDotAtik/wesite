@@ -11,8 +11,10 @@ import {
   Share2,
   Star,
   Trash2,
+  Workflow,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AddToWebFlowModal } from "@/components/webflow/AddToWebFlowModal";
 
 export type WebsiteItem = {
   _id: string;
@@ -149,6 +151,7 @@ export default function WebsiteCard({
   const [dragging, setDragging] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [isWebFlowModalOpen, setIsWebFlowModalOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
 
   // Automatic landing page screenshot URL with fallback to ogImageUrl
@@ -212,7 +215,8 @@ export default function WebsiteCard({
      ============================================================ */
   if (view === "list") {
     return (
-      <article
+      <>
+        <article
         draggable={!selected}
         onDragStart={(event) => {
           event.dataTransfer.effectAllowed = "move";
@@ -416,6 +420,18 @@ export default function WebsiteCard({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    setIsWebFlowModalOpen(true);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10"
+                  title="Add to WebFlow"
+                  aria-label="Add to WebFlow"
+                >
+                  <Workflow className="size-3.5 sm:size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onOpen(website);
                   }}
                   className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2"
@@ -441,14 +457,22 @@ export default function WebsiteCard({
           </div>
         </div>
       </article>
-    );
-  }
+
+      <AddToWebFlowModal
+        isOpen={isWebFlowModalOpen}
+        onClose={() => setIsWebFlowModalOpen(false)}
+        website={website}
+      />
+    </>
+  );
+}
 
   /* ============================================================
      GRID VIEW (Daily.dev Styled Card with 16:9 Landing Screenshot)
      ============================================================ */
   return (
-    <article
+    <>
+      <article
       draggable={!selected}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
@@ -712,6 +736,18 @@ export default function WebsiteCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsWebFlowModalOpen(true);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10 transition-all"
+                title="Add to WebFlow"
+                aria-label="Add to WebFlow"
+              >
+                <Workflow className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
                   onOpen(website);
                 }}
                 className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
@@ -737,5 +773,12 @@ export default function WebsiteCard({
         )}
       </div>
     </article>
-  );
+
+    <AddToWebFlowModal
+      isOpen={isWebFlowModalOpen}
+      onClose={() => setIsWebFlowModalOpen(false)}
+      website={website}
+    />
+  </>
+);
 }

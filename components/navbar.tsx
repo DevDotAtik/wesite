@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
-import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Newspaper, Plus, Search, Settings, SquareCheckBig, UserCircle } from "lucide-react";
+import { BarChart3, Bell, Clock, Command, Grid3X3, List, Menu, Newspaper, Plus, Search, Settings, SquareCheckBig, UserCircle, Workflow } from "lucide-react";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type NavbarProps = {
@@ -52,6 +52,7 @@ export default function Navbar({
         <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
           {[
             { href: "/dashboard", label: "Library", icon: Grid3X3 },
+            { href: "/webflow", label: "WebFlow", icon: Workflow },
             { href: "/news", label: "News", icon: Newspaper },
             { href: "/history", label: "History", icon: Clock },
             { href: "/todo", label: "Todo", icon: SquareCheckBig },

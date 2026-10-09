@@ -2,15 +2,48 @@ import { z } from "zod";
 
 export const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Invalid id");
 
-export const registerSchema = z.object({
+export const registerSetup2faSchema = z.object({
   name: z.string().min(2).max(80),
   email: z.string().email().max(160),
   password: z.string().min(8).max(128),
 });
 
+export const registerConfirm2faSchema = z.object({
+  setupToken: z.string().min(10),
+  code: z.string().min(6).max(20).optional(),
+  skip: z.boolean().optional(),
+});
+
+export const registerSchema = z.object({
+  name: z.string().min(2).max(80).optional(),
+  email: z.string().email().max(160).optional(),
+  password: z.string().min(8).max(128).optional(),
+  setupToken: z.string().optional(),
+  code: z.string().optional(),
+  skip: z.boolean().optional(),
+});
+
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  twoFactorCode: z.string().optional(),
+});
+
+export const login2faSchema = z.object({
+  tempToken: z.string().min(10),
+  code: z.string().min(4).max(30),
+  isRecoveryCode: z.boolean().optional(),
+});
+
+export const enable2faSchema = z.object({
+  secret: z.string().min(16),
+  code: z.string().min(6).max(10),
+  recoveryCodes: z.array(z.string()).min(1),
+});
+
+export const disable2faSchema = z.object({
+  password: z.string().optional(),
+  code: z.string().optional(),
 });
 
 export const googleAuthSchema = z.object({

@@ -5,7 +5,7 @@ const userSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: false, default: null },
-    googleId: { type: String, default: null, unique: true, sparse: true },
+    googleId: { type: String, required: false, unique: true, sparse: true },
     authProvider: {
       type: String,
       enum: ["email", "google"],
@@ -20,6 +20,9 @@ const userSchema = new Schema(
       enum: ["light", "dark", "system"],
       default: "system",
     },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, default: null },
+    twoFactorRecoveryCodes: { type: [String], default: [] },
   },
   { timestamps: true },
 );

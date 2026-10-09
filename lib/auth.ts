@@ -54,7 +54,9 @@ export async function getAuthUser(request: NextRequest) {
   try {
     const payload = verifyAuthToken(token);
     await connectToDatabase();
-    const user = await User.findById(payload.userId).select("-passwordHash -resetTokenHash").lean();
+    const user = await User.findById(payload.userId)
+      .select("-passwordHash -resetTokenHash -twoFactorSecret -twoFactorRecoveryCodes")
+      .lean();
     return user;
   } catch {
     return null;
