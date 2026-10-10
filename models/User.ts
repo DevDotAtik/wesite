@@ -13,6 +13,7 @@ const userSchema = new Schema(
     },
     emailVerified: { type: Boolean, default: false },
     avatarUrl: { type: String, default: "" },
+    googleAvatarUrl: { type: String, default: "" },
     resetTokenHash: { type: String, default: null },
     resetTokenExpiresAt: { type: Date, default: null },
     themePreference: {

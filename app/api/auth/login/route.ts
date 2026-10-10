@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
   const token = signAuthToken({ userId: user._id.toString(), email: user.email });
   const response = NextResponse.json({
+    token,
     user: serializeDocument({
       ...user.toObject(),
       passwordHash: undefined,
@@ -89,6 +90,6 @@ export async function POST(request: NextRequest) {
     }),
   });
 
-  response.cookies.set(AUTH_COOKIE, token, authCookieOptions());
+  response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));
   return response;
 }

@@ -22,6 +22,11 @@ const themeScript = `
     root.classList.toggle('dark', isDark);
     root.dataset.theme = isDark ? 'dark' : 'light';
     root.style.colorScheme = isDark ? 'dark' : 'light';
+
+    var rawPrefs = localStorage.getItem('wesite-preferences');
+    var prefs = rawPrefs ? JSON.parse(rawPrefs) : {};
+    root.classList.toggle('nb-reduce-motion', prefs.reduceMotion === true);
+    root.classList.toggle('nb-no-smooth-scroll', prefs.smoothScroll === false);
   } catch(e) {}
 })();
 `;

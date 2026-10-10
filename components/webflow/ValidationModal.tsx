@@ -7,11 +7,10 @@ import {
   AlertCircle,
   Info,
   CheckCircle2,
-  Workflow,
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import type { WorkflowValidationResult, ValidationIssue } from "@/lib/webflow/validator";
+import type { WorkflowValidationResult } from "@/lib/webflow/validator";
 
 interface ValidationModalProps {
   isOpen: boolean;
@@ -30,10 +29,9 @@ export function ValidationModal({
 
   const errors = validation.issues.filter((i) => i.level === "error");
   const warnings = validation.issues.filter((i) => i.level === "warning");
-  const infos = validation.issues.filter((i) => i.level === "info");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
       <div className="relative flex flex-col w-full max-w-2xl max-h-[85vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div

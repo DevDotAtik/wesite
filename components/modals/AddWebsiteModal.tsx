@@ -217,29 +217,40 @@ export default function AddWebsiteModal({
 
         <div className="nb-modal-body">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-xs font-bold sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
-              URL
-              <input value={url} onChange={(event) => setUrl(event.target.value)} autoFocus type="url" required placeholder="https://example.com" className="nb-input mt-2" />
-            </label>
-            <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
-              Title
-              <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Website title" className="nb-input mt-2" />
-            </label>
-            <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
-              Folder
-              <select value={websiteFolderId} onChange={(event) => setWebsiteFolderId(event.target.value)} className="nb-input mt-2">
+            <div className="sm:col-span-2">
+              <label htmlFor="website-url-input" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                URL
+              </label>
+              <input id="website-url-input" value={url} onChange={(event) => setUrl(event.target.value)} autoFocus type="url" required placeholder="https://example.com" className="nb-input mt-2" />
+            </div>
+            <div>
+              <label htmlFor="website-title-input" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Title
+              </label>
+              <input id="website-title-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Website title" className="nb-input mt-2" />
+            </div>
+            <div>
+              <label htmlFor="website-folder-select" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Folder
+              </label>
+              <select id="website-folder-select" value={websiteFolderId} onChange={(event) => setWebsiteFolderId(event.target.value)} className="nb-input mt-2">
                 {folderOptions.map((option) => (
                   <option key={option._id} value={option._id}>{option.name}</option>
                 ))}
               </select>
-            </label>
-            <label className="block text-xs font-bold sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
-              Description
-              <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Short note about this site" className="nb-input mt-2" />
-            </label>
-            <label className="block text-xs font-bold relative sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
-              Tags
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="website-desc-textarea" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Description
+              </label>
+              <textarea id="website-desc-textarea" value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Short note about this site" className="nb-input mt-2" />
+            </div>
+            <div className="relative sm:col-span-2">
+              <label htmlFor="website-tags-input" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Tags
+              </label>
               <input
+                id="website-tags-input"
                 ref={tagInputRef}
                 value={tags}
                 onChange={(event) => { setTags(event.target.value); setShowSuggestions(true); setActiveSuggestion(-1); }}
@@ -270,15 +281,19 @@ export default function AddWebsiteModal({
                   ))}
                 </div>
               ) : null}
-            </label>
-            <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
-              Custom Icon URL
-              <input value={customIconUrl} onChange={(event) => setCustomIconUrl(event.target.value)} placeholder="https://..." className="nb-input mt-2" />
-            </label>
-            <label className="block text-xs font-bold sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
-              Notes
-              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} placeholder="Private notes" className="nb-input mt-2" />
-            </label>
+            </div>
+            <div>
+              <label htmlFor="website-icon-url-input" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Custom Icon URL
+              </label>
+              <input id="website-icon-url-input" value={customIconUrl} onChange={(event) => setCustomIconUrl(event.target.value)} placeholder="https://..." className="nb-input mt-2" />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="website-notes-textarea" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Notes
+              </label>
+              <textarea id="website-notes-textarea" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} placeholder="Private notes" className="nb-input mt-2" />
+            </div>
           </div>
 
           {isEdit && customIconUrl ? (

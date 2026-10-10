@@ -17,7 +17,6 @@ import {
   Layers,
   Loader2,
   Lock,
-  QrCode,
   Search,
   ShieldCheck,
   Sparkles,
@@ -81,7 +80,12 @@ const GIS_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 export default function AuthForm({ mode }: AuthFormProps) {
   // Common state
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("email") || "";
+    }
+    return "";
+  });
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -284,8 +288,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      if (payload.token) {
+        try {
+          localStorage.setItem("wesite_token", payload.token);
+        } catch {}
+      }
+
       toast.success("Account created and protected with 2FA!");
-      window.location.href = "/dashboard";
+      window.location.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -316,8 +326,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      if (payload.token) {
+        try {
+          localStorage.setItem("wesite_token", payload.token);
+        } catch {}
+      }
+
       toast.success("Account created! You can enable 2FA anytime in Settings.");
-      window.location.href = "/dashboard";
+      window.location.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -327,14 +343,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
   // Handler: Normal Login submit
   async function handleLoginSubmit(event: React.FormEvent) {
     event.preventDefault();
+    event.stopPropagation();
     setLoading(true);
     setError("");
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password;
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
       });
 
       const payload = await response.json().catch(() => null);
@@ -354,8 +374,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      if (payload.token) {
+        try {
+          localStorage.setItem("wesite_token", payload.token);
+        } catch {}
+      }
+
       toast.success("Signed in successfully");
-      window.location.href = "/dashboard";
+      window.location.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -365,6 +391,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   // Handler: Login 2FA code verification
   async function handleLogin2FAVerify(event: React.FormEvent) {
     event.preventDefault();
+    event.stopPropagation();
     if (!loginTotpCode.trim()) {
       setError("Please enter your verification code or recovery code.");
       return;
@@ -393,6 +420,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      if (payload.token) {
+        try {
+          localStorage.setItem("wesite_token", payload.token);
+        } catch {}
+      }
+
       if (payload.usedRecoveryCode) {
         toast.warning(
           `Signed in using recovery code. ${payload.remainingRecoveryCodes} recovery code(s) remaining.`,
@@ -401,7 +434,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         toast.success("Two-factor authentication verified!");
       }
 
-      window.location.href = "/dashboard";
+      window.location.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -878,7 +911,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
           {/* ========================================================= */}
           {((isRegister && registrationStage === "credentials") ||
             (!isRegister && loginStage === "credentials")) ? (
-            <form onSubmit={isRegister ? handleRegisterStep1 : handleLoginSubmit}>
+            <form
+              action="javascript:void(0);"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (isRegister) handleRegisterStep1(e);
+                else handleLoginSubmit(e);
+              }}
+            >
               <div className="mb-6">
                 <div className="mb-5 flex items-center justify-between">
                   <Link href="/" className="flex items-center gap-2">
@@ -956,6 +996,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     type="email"
                     required
                     autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     aria-invalid={Boolean(error)}
                     aria-describedby={error ? "auth-error" : undefined}
                     placeholder="name@example.com"
@@ -973,6 +1016,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
                       required
                       minLength={isRegister ? 8 : 1}
                       autoComplete={isRegister ? "new-password" : "current-password"}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       aria-invalid={Boolean(error)}
                       aria-describedby={error ? "auth-error" : undefined}
                       placeholder="••••••••"
@@ -991,9 +1037,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </div>
 
               {error ? (
-                <p id="auth-error" role="alert" className="nb-tag nb-tag-danger mt-4 w-full text-center">
-                  {error}
-                </p>
+                <div id="auth-error" role="alert" className="nb-tag nb-tag-danger mt-4 w-full text-center flex flex-col items-center gap-1.5 py-2 px-3">
+                  <span>{error}</span>
+                  {error.toLowerCase().includes("already exists") ? (
+                    <Link
+                      href={`/login?email=${encodeURIComponent(email)}`}
+                      className="text-xs font-black underline hover:opacity-80 transition-opacity"
+                    >
+                      Click here to Sign In with this email →
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
 
               <button

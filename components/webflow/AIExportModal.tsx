@@ -6,7 +6,6 @@ import {
   Copy,
   Check,
   Download,
-  Bot,
   AlertTriangle,
   CheckCircle2,
   AlertCircle,
@@ -15,6 +14,7 @@ import {
   Code2,
   Sparkles,
 } from "lucide-react";
+import { AIIcon } from "./AIIcon";
 import {
   convertToAIAgentFormat,
   convertToHumanMarkdown,
@@ -141,18 +141,18 @@ export function AIExportModal({
   const warningCount = validation.issues.filter((i) => i.level === "warning").length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
       <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b-3 border-nb-border bg-indigo-600 px-6 py-4 text-white">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-indigo-700 font-black shadow-nb-sm border border-nb-border">
-              <Bot className="h-5 w-5" />
+              <AIIcon className="h-5 w-5" glow />
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
                 Export for AI Agent
-                <span className="rounded bg-indigo-500/80 px-2 py-0.5 text-xs font-mono font-bold uppercase tracking-wider text-white border border-indigo-400">
+                <span className="rounded bg-indigo-700 px-2 py-0.5 text-xs font-mono font-bold uppercase tracking-wider text-white border border-indigo-400">
                   v{workflow.version || 1}.0
                 </span>
               </h2>
@@ -247,7 +247,7 @@ export function AIExportModal({
         {/* Export Tabs & Action Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-nb-border px-6 py-2.5 bg-nb-card">
           {/* Format Tabs */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setActiveTab("json")}

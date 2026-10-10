@@ -334,7 +334,7 @@ export default function MacSidebar({
 
       {/* Mobile Overlay */}
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 backdrop-blur-sm lg:hidden" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onCloseMobile}>
+        <div className="fixed inset-0 z-50 lg:hidden" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onCloseMobile}>
           <aside
             role="dialog"
             aria-modal="true"
@@ -357,6 +357,7 @@ export default function MacSidebar({
             <nav aria-label="Pages" className="mb-4 grid gap-0.5">
               {[
                 { href: "/dashboard", label: "Library", icon: Inbox },
+                { href: "/webflow", label: "WebFlow Studio", icon: Workflow },
                 { href: "/news", label: "News Feed", icon: Newspaper },
                 { href: "/history", label: "History", icon: Clock },
                 { href: "/todo", label: "Todo", icon: SquareCheckBig },

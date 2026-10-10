@@ -56,7 +56,12 @@ export type WebFlowNodeData = {
   tags?: string[];
   category?: string;
   author?: string;
-  status?: "draft" | "configured" | "ready";
+  status?: "draft" | "configured" | "ready" | string;
+
+  // Custom Styling
+  customBg?: string;
+  customBorderColor?: string;
+
   [key: string]: unknown;
 };
 

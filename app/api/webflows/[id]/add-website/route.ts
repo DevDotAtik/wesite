@@ -38,10 +38,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       x = data.position.x;
       y = data.position.y;
     } else if (webflow.nodes && webflow.nodes.length > 0) {
-      const maxX = Math.max(...webflow.nodes.map((n: any) => n.position?.x || 0));
-      const lastNode = webflow.nodes[webflow.nodes.length - 1] as any;
+      const maxX = Math.max(...webflow.nodes.map((n) => (n.position ? n.position.x : 0)));
+      const lastNode = webflow.nodes[webflow.nodes.length - 1];
       x = maxX + 300;
-      y = lastNode.position?.y || 150;
+      y = (lastNode && lastNode.position) ? lastNode.position.y : 150;
     }
 
     const newNodeId = `node_site_${Date.now()}`;
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       },
     };
 
-    webflow.nodes.push(newNode as any);
+    webflow.nodes.push(newNode as unknown as (typeof webflow.nodes)[number]);
     await webflow.save();
 
     return json({

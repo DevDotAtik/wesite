@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BarChart3, Bell, Clock, ExternalLink, Grid3X3, Search, Settings, SquareCheckBig, X } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, Bell, Clock, ExternalLink, Grid3X3, Newspaper, Search, Settings, SquareCheckBig, Workflow, X } from "lucide-react";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 
 type CommandPaletteProps = {
@@ -13,6 +14,8 @@ type CommandPaletteProps = {
 
 const navCommands = [
   { id: "library", label: "Go to Library", icon: Grid3X3, href: "/dashboard" },
+  { id: "webflow", label: "Go to WebFlow", icon: Workflow, href: "/webflow" },
+  { id: "news", label: "Go to News", icon: Newspaper, href: "/news" },
   { id: "analytics", label: "Go to Analytics", icon: BarChart3, href: "/analytics" },
   { id: "history", label: "Go to History", icon: Clock, href: "/history" },
   { id: "monitoring", label: "Go to Monitoring", icon: Bell, href: "/monitoring" },
@@ -85,7 +88,7 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
               {results.nav.map((cmd) => {
                 const Icon = cmd.icon;
                 return (
-                  <a
+                  <Link
                     key={cmd.id}
                     href={cmd.href}
                     onClick={handleClose}
@@ -95,7 +98,7 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{cmd.label}</span>
                     </span>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -119,7 +122,9 @@ export default function CommandPalette({ open, websites, onClose, onOpenWebsite 
                     <span className="block truncate text-xs" style={{ color: "var(--nb-muted)" }}>{website.url}</span>
                   </span>
                   {website.visitCount ? (
-                    <span className="nb-tag text-[9px]">{website.visitCount} visits</span>
+                    <span className="text-xs font-semibold shrink-0" style={{ color: "var(--nb-muted)" }}>
+                      {website.visitCount} {website.visitCount === 1 ? "visit" : "visits"}
+                    </span>
                   ) : null}
                 </button>
               ))}

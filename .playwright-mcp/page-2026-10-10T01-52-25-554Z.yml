@@ -1,0 +1,32 @@
+- generic [active] [ref=f8e1]:
+  - link "Skip to content" [ref=f8e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f8e3]:
+    - generic [ref=f8e4]:
+      - generic [ref=f8e6]:
+        - button "Toggle navigation menu" [ref=f8e7] [cursor=pointer]
+        - link "Wesite Wesite" [ref=f8e9] [cursor=pointer]:
+          - /url: /
+          - img "Wesite" [ref=f8e10]
+          - generic [ref=f8e11]: Wesite
+        - generic [ref=f8e12]:
+          - button "Switch to light theme (currently system)" [ref=f8e13] [cursor=pointer]
+          - button "Add website" [ref=f8e16] [cursor=pointer]
+          - link "Account" [ref=f8e18] [cursor=pointer]:
+            - /url: /login
+      - main [ref=f8e24]:
+        - generic [ref=f8e25]:
+          - generic [ref=f8e31]:
+            - heading "Settings" [level=1] [ref=f8e32]
+            - paragraph [ref=f8e33]: Tune your profile, appearance, security and data controls.
+          - generic [ref=f8e34]:
+            - tablist "Settings sections" [ref=f8e36]:
+              - tab "Profile" [selected] [ref=f8e37]
+              - tab "Appearance" [ref=f8e41]
+              - tab "Notifications" [ref=f8e48]
+              - tab "Security" [ref=f8e54]
+              - tab "Data & privacy" [ref=f8e58]
+              - tab "About" [ref=f8e63]
+            - paragraph [ref=f8e68]: Profile
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f8e77] [cursor=pointer]

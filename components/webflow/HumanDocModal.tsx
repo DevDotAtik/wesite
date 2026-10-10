@@ -10,7 +10,6 @@ import {
   FileText,
   Eye,
   ExternalLink,
-  Layers,
 } from "lucide-react";
 import { convertToHumanMarkdown } from "@/lib/webflow/converters";
 import type { WebFlowNode, WebFlowEdge, WebFlowVariable } from "@/lib/webflow/types";
@@ -81,7 +80,7 @@ export function HumanDocModal({
   const noteNodes = nodes.filter((n) => n.data.kind === "note");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
       <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b-3 border-nb-border bg-amber-500 px-6 py-4 text-black">
@@ -108,7 +107,7 @@ export function HumanDocModal({
         </div>
 
         {/* View Toggle & Actions */}
-        <div className="flex items-center justify-between border-b-2 border-nb-border px-6 py-3 bg-nb-surface-alt">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-nb-border px-4 sm:px-6 py-3 bg-nb-surface-alt">
           <div className="flex items-center gap-2">
             <button
               type="button"

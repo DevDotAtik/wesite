@@ -2,6 +2,7 @@ const API_STORAGE_KEY = "wesite_api_url";
 const TOKEN_STORAGE_KEY = "wesite_token";
 const RECENT_KEY = "wesite_recent";
 const THEME_STORAGE_KEY = "wesite_theme";
+const FOLDERS_CACHE_KEY = "wesite_folders_cache";
 const DEFAULT_API_BASE = "http://localhost:3000";
 const LIBRARY_DEBOUNCE_MS = 220;
 
@@ -147,8 +148,19 @@ async function login(email, password) {
 async function fetchFolders() {
   const result = await apiFetch("/api/folders");
   if (result.ok) {
-    const folders = result.data?.flatFolders || [];
-    void setFoldersCache(folders);
+    const raw = result.data;
+    const folders = Array.isArray(raw?.flatFolders)
+      ? raw.flatFolders
+      : Array.isArray(raw?.folders)
+      ? raw.folders
+      : Array.isArray(raw)
+      ? raw
+      : [];
+    try {
+      await setFoldersCache(folders);
+    } catch {
+      // Best-effort caching
+    }
     return folders;
   }
   return [];
@@ -551,6 +563,14 @@ async function showMain(initialUser) {
   ]);
 
   if (!me.ok) {
+    const adopted = await adoptGoogleSession().catch(() => ({ ok: false }));
+    if (adopted.ok) {
+      const freshFolders = await fetchFolders().catch(() => []);
+      currentFolders = freshFolders;
+      paintFolderOptions();
+      setText($("#header-user"), `Signed in as ${adopted.user?.name || "User"}`);
+      return;
+    }
     showLogin();
     return;
   }
@@ -614,28 +634,49 @@ async function showMain(initialUser) {
 
     // Refresh
     $("#refresh-btn").addEventListener("click", async () => {
+      const btn = $("#refresh-btn");
+      if (btn) {
+        btn.style.transform = "rotate(180deg)";
+        btn.style.transition = "transform 0.3s ease";
+      }
       await loadFolders();
       await loadCurrentPage();
+      const libraryTab = $("#tab-library");
+      if (libraryTab && !libraryTab.classList.contains("hidden")) {
+        await loadLibrary();
+      }
+      setTimeout(() => {
+        if (btn) btn.style.transform = "none";
+      }, 350);
     });
   }
 }
 
 function paintFolderOptions() {
   const select = $("#folder-select");
+  if (!select) return;
+  const previousValue = select.value;
   select.innerHTML = '<option value="">Unsorted</option>';
   currentFolders.forEach((folder) => {
     const opt = document.createElement("option");
     opt.value = folder._id;
-    opt.textContent = folder.name;
+    opt.textContent = folder.name || "Untitled";
     select.appendChild(opt);
   });
+  if (previousValue && currentFolders.some((f) => f._id === previousValue)) {
+    select.value = previousValue;
+  }
 }
 
 async function paintCachedFolders() {
-  const cached = await getFoldersCache();
-  if (cached && Array.isArray(cached.folders)) {
-    currentFolders = cached.folders;
-    paintFolderOptions();
+  try {
+    const cached = await getFoldersCache();
+    if (cached && Array.isArray(cached.folders) && cached.folders.length) {
+      currentFolders = cached.folders;
+      paintFolderOptions();
+    }
+  } catch {
+    // Best-effort cache painting
   }
 }
 

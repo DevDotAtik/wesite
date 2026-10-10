@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     // Check likes / bookmarks if authenticated
     const authUser = await requireUser(request).then((r) => r.user).catch(() => null);
-    let interactionsMap = new Map<string, { liked?: boolean; bookmarked?: boolean }>();
+    const interactionsMap = new Map<string, { liked?: boolean; bookmarked?: boolean }>();
 
     if (authUser && rawWebflows.length > 0) {
       const flowIds = rawWebflows.map((w) => w._id);

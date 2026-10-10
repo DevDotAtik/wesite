@@ -1,0 +1,100 @@
+- generic [ref=f1e1]:
+  - link "Skip to content" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f1e3]:
+    - main [ref=f1e4]:
+      - generic [ref=f1e5]:
+        - generic [ref=f1e6]:
+          - link "Wesite home Wesite Developer Library & Wire" [ref=f1e7] [cursor=pointer]:
+            - /url: /
+            - img "Wesite home" [ref=f1e8]
+            - generic [ref=f1e9]:
+              - generic [ref=f1e10]: Wesite
+              - text: Developer Library & Wire
+          - generic [ref=f1e11]: Live Indexing
+        - generic [ref=f1e15]:
+          - generic [ref=f1e16]:
+            - generic [ref=f1e17]: Your personal library of the web
+            - heading "Every link you keep, shelved and searchable." [level=1] [ref=f1e21]
+            - paragraph [ref=f1e22]: Save links in seconds, track breaking dev news, and query thousands of resources with sub-millisecond keyboard search.
+          - generic [ref=f1e23]:
+            - generic [ref=f1e24]:
+              - generic [ref=f1e25]:
+                - generic [ref=f1e26]:
+                  - generic [ref=f1e30]: ⌘K search
+                  - generic [ref=f1e31]: "|"
+                  - generic [ref=f1e32]: Next.js, Tailwind, System Design…
+                - generic [ref=f1e33]: 0.3ms
+              - generic [ref=f1e34]:
+                - generic [ref=f1e35]:
+                  - generic [ref=f1e36]: "N"
+                  - generic [ref=f1e37]:
+                    - generic [ref=f1e38]: Next.js 16 Documentation
+                    - generic [ref=f1e39]: nextjs.org/docs • App Router
+                - generic [ref=f1e40]: ★ SAVED
+            - generic [ref=f1e41]:
+              - generic [ref=f1e42]:
+                - generic [ref=f1e43]: DEV WIRE
+                - generic [ref=f1e46]: 2h ago
+              - generic [ref=f1e47]: "Tailwind CSS v4 & React 19: Architecture teardown and benchmarks"
+              - generic [ref=f1e48]:
+                - generic [ref=f1e49]: 680 upvotes
+                - generic [ref=f1e53]: 245 saves
+        - generic [ref=f1e57]:
+          - generic [ref=f1e58]: Free 2FA Built-in
+          - generic [ref=f1e63]: Keyboard first
+          - generic [ref=f1e67]: Curated feeds
+      - generic [ref=f1e140]:
+        - generic [ref=f1e141]:
+          - button "Back" [ref=f1e142]
+          - generic [ref=f1e145]: Step 2 of 2 • 100% Free
+        - generic [ref=f1e146]:
+          - generic [ref=f1e147]: FREE 2FA SECURITY
+          - heading "Protect your account" [level=1] [ref=f1e151]
+          - paragraph [ref=f1e152]:
+            - text: Scan the QR code using any free authenticator app (
+            - strong [ref=f1e153]: Google Authenticator
+            - text: ","
+            - strong [ref=f1e154]: Microsoft Authenticator
+            - text: ","
+            - strong [ref=f1e155]: Apple Passwords
+            - text: ", or"
+            - strong [ref=f1e156]: Authy
+            - text: ).
+        - generic [ref=f1e157]:
+          - img "2FA Setup QR Code" [ref=f1e158]
+          - generic [ref=f1e159]: Scan with your phone camera or authenticator
+        - button "Can't scan? Enter key manually Show" [ref=f1e161]:
+          - generic [ref=f1e162]: Can't scan? Enter key manually
+          - generic [ref=f1e166]: Show
+        - generic [ref=f1e167]:
+          - generic [ref=f1e168]:
+            - generic [ref=f1e169]: Backup Recovery Codes (8)
+            - generic [ref=f1e173]:
+              - button "Copy" [ref=f1e174] [cursor=pointer]
+              - button "Save" [ref=f1e178] [cursor=pointer]
+          - paragraph [ref=f1e182]: "Save these one-time codes safely in case you lose access to your phone:"
+          - generic [ref=f1e183]:
+            - generic [ref=f1e184]: 6EFCB-9597C
+            - generic [ref=f1e185]: DFECF-88442
+            - generic [ref=f1e186]: 4238F-B40FA
+            - generic [ref=f1e187]: F48E0-74BEB
+            - generic [ref=f1e188]: 7945E-3092E
+            - generic [ref=f1e189]: 1FAED-EEA1B
+            - generic [ref=f1e190]: FD5C8-F8066
+            - generic [ref=f1e191]: 1405A-ABB1C
+        - generic [ref=f1e192]:
+          - generic [ref=f1e193]:
+            - text: Enter 6-digit code from authenticator app
+            - textbox "Enter 6-digit code from authenticator app" [active] [ref=f1e194]:
+              - /placeholder: "123456"
+          - button "Verify & Create Account" [disabled] [ref=f1e195]
+          - generic [ref=f1e199]:
+            - button "Skip for now (configure later)" [ref=f1e200]
+            - generic [ref=f1e201]: 100% Free • No SMS
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=f1e202]:
+        - generic [ref=f1e206]: Account details saved! Now scan the QR code with your authenticator app.
+  - button "Open Next.js Dev Tools" [ref=f1e120] [cursor=pointer]
+  - alert [ref=f1e139]

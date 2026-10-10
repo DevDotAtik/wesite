@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       user.googleId = googleId;
+      user.googleAvatarUrl = avatarUrl;
       user.emailVerified = emailVerified;
       if (!user.avatarUrl && avatarUrl) {
         user.avatarUrl = avatarUrl;
@@ -95,7 +96,11 @@ export async function POST(request: NextRequest) {
       authProvider: "google",
       emailVerified,
       avatarUrl,
+      googleAvatarUrl: avatarUrl,
     });
+  } else if (user.googleAvatarUrl !== avatarUrl && avatarUrl) {
+    user.googleAvatarUrl = avatarUrl;
+    await user.save();
   }
 
   const token = signAuthToken({ userId: user._id.toString(), email: user.email });
@@ -107,6 +112,6 @@ export async function POST(request: NextRequest) {
   });
 
   const response = NextResponse.json({ user: safeUser });
-  response.cookies.set(AUTH_COOKIE, token, authCookieOptions());
+  response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));
   return response;
 }

@@ -84,9 +84,10 @@ export async function POST(request: NextRequest) {
         twoFactorSecret,
         twoFactorRecoveryCodes,
       });
-    } catch (err: any) {
-      if (err?.code === 11000) {
-        if (err?.keyPattern?.email) {
+    } catch (err: unknown) {
+      const mongoErr = err as { code?: number; keyPattern?: Record<string, unknown> };
+      if (mongoErr?.code === 11000) {
+        if (mongoErr?.keyPattern?.email) {
           return apiError("An account with this email already exists", 409);
         }
         console.error("Duplicate key error on non-email field during registration:", err);
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
     const token = signAuthToken({ userId: user._id.toString(), email: user.email });
     const response = NextResponse.json(
       {
+        token,
         user: serializeDocument({
           ...user.toObject(),
           passwordHash: undefined,
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
 
-    response.cookies.set(AUTH_COOKIE, token, authCookieOptions());
+    response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));
     return response;
   } catch (err) {
     console.error("Register exception:", err);

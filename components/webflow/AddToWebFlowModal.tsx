@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -9,12 +9,19 @@ import {
   X,
   Globe,
   ArrowRight,
-  Layers,
-  Sparkles,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
+
+interface WebFlowListItem {
+  _id: string;
+  name: string;
+  description?: string;
+  nodes?: unknown[];
+  category?: string;
+  updatedAt?: string;
+}
 
 interface AddToWebFlowModalProps {
   isOpen: boolean;
@@ -22,21 +29,22 @@ interface AddToWebFlowModalProps {
   website: WebsiteItem | null;
 }
 
+const subscribe = () => () => {};
+
 export function AddToWebFlowModal({
   isOpen,
   onClose,
   website,
 }: AddToWebFlowModalProps) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(subscribe, () => true, () => false);
   const [loading, setLoading] = useState(false);
-  const [flows, setFlows] = useState<any[]>([]);
+  const [flows, setFlows] = useState<WebFlowListItem[]>([]);
   const [loadingFlows, setLoadingFlows] = useState(false);
-  const [newFlowName, setNewFlowName] = useState("");
+  const [customFlowName, setCustomFlowName] = useState("");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const defaultFlowName = website?.title ? `${website.title} Workflow` : "New WebFlow";
+  const newFlowName = customFlowName.trim() ? customFlowName : defaultFlowName;
 
   // Lock body scroll and listen for Escape key when open
   useEffect(() => {
@@ -58,18 +66,31 @@ export function AddToWebFlowModal({
 
   // Load existing workflows
   useEffect(() => {
+    let ignore = false;
     if (isOpen && website) {
-      setNewFlowName(website.title ? `${website.title} Workflow` : "New WebFlow");
-      setLoadingFlows(true);
-      fetch("/api/webflows?scope=my&limit=40")
-        .then((res) => (res.ok ? res.json() : Promise.reject()))
-        .then((data) => setFlows(data.webflows || []))
-        .catch(() => setFlows([]))
-        .finally(() => setLoadingFlows(false));
+      const fetchWorkflows = async () => {
+        await Promise.resolve();
+        if (ignore) return;
+        setLoadingFlows(true);
+        try {
+          const res = await fetch("/api/webflows?scope=my&limit=40");
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          if (!ignore) setFlows(data.webflows || []);
+        } catch {
+          if (!ignore) setFlows([]);
+        } finally {
+          if (!ignore) setLoadingFlows(false);
+        }
+      };
+      fetchWorkflows();
     }
+    return () => {
+      ignore = true;
+    };
   }, [isOpen, website]);
 
-  if (!mounted || !isOpen || !website) return null;
+  if (!isClient || !isOpen || !website) return null;
 
   const handleCreateNew = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,8 +122,9 @@ export function AddToWebFlowModal({
       toast.success("WebFlow created with tool!");
       onClose();
       router.push(`/webflow/${data.webflow._id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create workflow");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create workflow";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -135,8 +157,9 @@ export function AddToWebFlowModal({
       toast.success("Tool attached to WebFlow!");
       onClose();
       router.push(`/webflow/${flowId}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add to workflow");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to add to workflow";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -144,7 +167,7 @@ export function AddToWebFlowModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -204,7 +227,7 @@ export function AddToWebFlowModal({
               type="text"
               required
               value={newFlowName}
-              onChange={(e) => setNewFlowName(e.target.value)}
+              onChange={(e) => setCustomFlowName(e.target.value)}
               placeholder="e.g. Price Scraper & Alert"
               className="flex-1 rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-bold text-nb-fg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />

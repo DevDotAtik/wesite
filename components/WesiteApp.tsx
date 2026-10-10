@@ -70,13 +70,19 @@ export default function WesiteApp() {
   const activeWebsites = useMemo(() => websites.filter((website) => !website.isTrashed), [websites]);
 
 
+  const getAuthHeaders = useCallback((): HeadersInit => {
+    if (typeof window === "undefined") return {};
+    const token = localStorage.getItem("wesite_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
+
   const loadFolders = useCallback(async () => {
-    const response = await fetch("/api/folders");
+    const response = await fetch("/api/folders", { headers: getAuthHeaders() });
     if (response.ok) {
       const payload = await response.json();
       setFolders(payload.folders ?? []);
     }
-  }, []);
+  }, [getAuthHeaders]);
 
   const loadWebsites = useCallback(async () => {
     const params = new URLSearchParams();
@@ -89,22 +95,22 @@ export default function WesiteApp() {
     else if (!["home", "all"].includes(selectedFolder)) { params.set("folderId", selectedFolder); params.set("sort", "smart"); }
     else { params.set("sort", "smart"); }
 
-    const response = await fetch(`/api/websites?${params.toString()}`);
+    const response = await fetch(`/api/websites?${params.toString()}`, { headers: getAuthHeaders() });
     if (response.ok) {
       const payload = await response.json();
       setWebsites(payload.websites ?? []);
     }
-  }, [search, selectedFolder]);
+  }, [getAuthHeaders, search, selectedFolder]);
 
   const bootstrap = useCallback(async () => {
     setLoading(true);
-    const me = await fetch("/api/auth/me");
+    const me = await fetch("/api/auth/me", { headers: getAuthHeaders() });
     if (!me.ok) { setUser(null); setLoading(false); return; }
     const payload = await me.json();
     setUser(payload.user);
     await Promise.all([loadFolders(), loadWebsites()]);
     setLoading(false);
-  }, [loadFolders, loadWebsites]);
+  }, [getAuthHeaders, loadFolders, loadWebsites]);
 
   useEffect(() => { const timer = window.setTimeout(() => { bootstrap(); }, 0); return () => window.clearTimeout(timer); }, [bootstrap]);
 
@@ -252,7 +258,7 @@ export default function WesiteApp() {
 
           <main className="min-w-0 flex-1 overflow-auto">
             {/* Breadcrumb */}
-            <div className="border-b-3 px-4 py-3 backdrop-blur-sm sm:px-6" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+            <div className="border-b-3 px-4 py-3 sm:px-6" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
               <div className="flex flex-wrap items-center gap-2 text-sm font-semibold" style={{ color: "var(--nb-muted)" }}>
                 <button type="button" onClick={() => setSelectedFolder("home")} className="hover:underline" style={{ color: "var(--nb-fg)" }}>All Websites</button>
                 {selectedFolderNode ? (
@@ -276,7 +282,7 @@ export default function WesiteApp() {
                   <h1 className="text-2xl font-extrabold" style={{ color: "var(--nb-fg)" }}>{selectedFolderNode?.name ?? "Library"}</h1>
                   <p className="text-sm font-semibold" style={{ color: "var(--nb-muted)" }}>{activeWebsites.length} websites saved here</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <button type="button" onClick={selectAll} className="nb-btn nb-btn-ghost nb-btn-sm">
                     {selectedIds.size === websites.length && websites.length > 0 ? <CheckSquare className="size-4" /> : <Square className="size-4" />}
                     {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
@@ -414,12 +420,33 @@ export default function WesiteApp() {
                       ))}
                     </div>
                   ) : (
-                    <div className="nb-card-static grid min-h-72 place-items-center border-dashed text-center" style={{ borderStyle: "dashed" }}>
-                      <div>
-                        <p className="text-sm font-bold" style={{ color: "var(--nb-fg)" }}>{selectedFolder === "trash" ? "Trash is empty" : "No websites here yet"}</p>
-                        <button type="button" onClick={openWebsiteCreator} className="nb-btn nb-btn-primary nb-btn-sm mt-4">
-                          Add Website
-                        </button>
+                    <div className="nb-card-static grid min-h-72 place-items-center border-dashed text-center p-8" style={{ borderStyle: "dashed" }}>
+                      <div className="max-w-xs space-y-2">
+                        {selectedFolder === "trash" ? (
+                          <>
+                            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border-2" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
+                              <Trash2 className="size-6 text-[var(--nb-muted)]" />
+                            </div>
+                            <p className="text-base font-extrabold" style={{ color: "var(--nb-fg)" }}>Trash is empty</p>
+                            <p className="text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>
+                              Websites you delete will appear here and can be restored anytime.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border-2" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
+                              <Sparkles className="size-6 text-[var(--nb-primary)]" />
+                            </div>
+                            <p className="text-base font-extrabold" style={{ color: "var(--nb-fg)" }}>No websites here yet</p>
+                            <p className="text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>
+                              Bookmark and organize your favorite tools, docs, and inspiration.
+                            </p>
+                            <button type="button" onClick={openWebsiteCreator} className="nb-btn nb-btn-primary nb-btn-sm mt-3">
+                              <Sparkles className="size-4" />
+                              Add Website
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

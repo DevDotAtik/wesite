@@ -10,33 +10,24 @@ import {
   Bot,
   Heart,
   GitFork,
-  Bookmark,
-  Layers,
   ArrowRight,
-  Clock,
   Sparkles,
-  ExternalLink,
   Trash2,
   Copy,
   Globe,
   Lock,
-  Eye,
   LayoutGrid,
-  FileCode,
-  CheckCircle2,
-  BookOpen,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 import { AIExportModal } from "@/components/webflow/AIExportModal";
+import { AICopilotModal } from "@/components/webflow/AICopilotModal";
+import { AIIcon } from "@/components/webflow/AIIcon";
 import type {
   WebFlowCategory,
   WebFlowVisibility,
   WebFlowItem,
-  WebFlowNode,
-  WebFlowEdge,
-  WebFlowVariable,
 } from "@/lib/webflow/types";
 
 const CATEGORIES: Array<"All" | WebFlowCategory> = [
@@ -62,23 +53,37 @@ export default function WebFlowHubPage() {
   const [selectedCategory, setSelectedCategory] = useState<"All" | WebFlowCategory>("All");
   const [searchQuery, setSearchQuery] = useState("");
 
+interface WebFlowTemplateItem {
+  id?: string;
+  templateKey?: string;
+  key?: string;
+  _id?: string;
+  name: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  nodes?: unknown[];
+  nodeCount?: number;
+}
+
   // Data states
   const [myFlows, setMyFlows] = useState<WebFlowItem[]>([]);
   const [exploreFlows, setExploreFlows] = useState<WebFlowItem[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<WebFlowTemplateItem[]>([]);
   const [stats, setStats] = useState({
     totalFlows: 0,
     publicFlows: 0,
     totalRemixes: 0,
     totalLikes: 0,
     totalNodes: 0,
-    mostUsedTool: null as any,
+    mostUsedTool: null as { name: string; count: number } | null,
   });
 
   const [loading, setLoading] = useState(true);
 
   // Create Modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAIGenerateOpen, setIsAIGenerateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newCategory, setNewCategory] = useState<WebFlowCategory>("Productivity");
@@ -88,7 +93,7 @@ export default function WebFlowHubPage() {
   // Quick AI Export Modal from Hub
   const [quickExportFlow, setQuickExportFlow] = useState<WebFlowItem | null>(null);
 
-  // File Import Ref
+  // File import ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,16 +113,16 @@ export default function WebFlowHubPage() {
       toast.dismiss();
       toast.success("WebFlow imported successfully!");
       router.push(`/webflow/${data.webflow._id}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss();
-      toast.error(err.message || "Invalid WebFlow JSON file");
+      const message = err instanceof Error ? err.message : "Invalid WebFlow JSON file";
+      toast.error(message);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  // Fetch Stats
-  const fetchStats = async () => {
+  const refreshStats = async () => {
     try {
       const res = await fetch("/api/webflows/stats");
       if (res.ok) {
@@ -129,65 +134,76 @@ export default function WebFlowHubPage() {
     }
   };
 
-  // Fetch My Flows
-  const fetchMyFlows = async () => {
+  const refreshMyFlows = async () => {
     try {
-      setLoading(true);
       const res = await fetch("/api/webflows?scope=my&limit=100");
       if (res.ok) {
         const data = await res.json();
         setMyFlows(data.webflows || []);
       }
     } catch {
-      toast.error("Failed to load your workflows");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch Explore
-  const fetchExplore = async () => {
-    try {
-      setLoading(true);
-      const catParam = selectedCategory !== "All" ? `&category=${selectedCategory}` : "";
-      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
-      const res = await fetch(`/api/webflows?scope=explore&limit=50${catParam}${searchParam}`);
-      if (res.ok) {
-        const data = await res.json();
-        setExploreFlows(data.webflows || []);
-      }
-    } catch {
-      toast.error("Failed to load explore workflows");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch Templates
-  const fetchTemplates = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/webflows/templates");
-      if (res.ok) {
-        const data = await res.json();
-        setTemplates(data.templates || []);
-      }
-    } catch {
-      toast.error("Failed to load templates");
-    } finally {
-      setLoading(false);
+      // ignore
     }
   };
 
   useEffect(() => {
-    fetchStats();
+    let ignore = false;
+    const run = async () => {
+      try {
+        const res = await fetch("/api/webflows/stats");
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore) setStats(data.stats);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (activeTab === "my-flows") fetchMyFlows();
-    else if (activeTab === "explore") fetchExplore();
-    else if (activeTab === "templates") fetchTemplates();
-  }, [activeTab, selectedCategory]);
+    let ignore = false;
+    const run = async () => {
+      await Promise.resolve();
+      if (ignore) return;
+      setLoading(true);
+      try {
+        if (activeTab === "my-flows") {
+          const res = await fetch("/api/webflows?scope=my&limit=100");
+          if (res.ok) {
+            const data = await res.json();
+            if (!ignore) setMyFlows(data.webflows || []);
+          }
+        } else if (activeTab === "explore") {
+          const catParam = selectedCategory !== "All" ? `&category=${selectedCategory}` : "";
+          const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
+          const res = await fetch(`/api/webflows?scope=explore&limit=50${catParam}${searchParam}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (!ignore) setExploreFlows(data.webflows || []);
+          }
+        } else if (activeTab === "templates") {
+          const res = await fetch("/api/webflows/templates");
+          if (res.ok) {
+            const data = await res.json();
+            if (!ignore) setTemplates(data.templates || []);
+          }
+        }
+      } catch {
+        if (!ignore) toast.error("Failed to load workflows");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, selectedCategory, searchQuery]);
 
   // Create Flow Handler
   const handleCreateFlow = async (e: React.FormEvent) => {
@@ -216,8 +232,9 @@ export default function WebFlowHubPage() {
       toast.success("WebFlow created!");
       setIsCreateOpen(false);
       router.push(`/webflow/${data.webflow._id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Could not create workflow");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not create workflow";
+      toast.error(message);
     } finally {
       setCreating(false);
     }
@@ -246,8 +263,9 @@ export default function WebFlowHubPage() {
 
       toast.success("Template cloned!", { id: "template-clone" });
       router.push(`/webflow/${data.webflow._id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Could not instantiate template", { id: "template-clone" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not instantiate template";
+      toast.error(message, { id: "template-clone" });
     }
   };
 
@@ -269,8 +287,9 @@ export default function WebFlowHubPage() {
 
       toast.success("Remixed to your account!", { id: "flow-remix" });
       router.push(`/webflow/${data.webflow._id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Remix failed", { id: "flow-remix" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Remix failed";
+      toast.error(message, { id: "flow-remix" });
     }
   };
 
@@ -300,9 +319,10 @@ export default function WebFlowHubPage() {
       if (!res.ok) throw new Error("Failed to delete");
       toast.success("Workflow deleted");
       setMyFlows((flows) => flows.filter((f) => f._id !== flowId));
-      fetchStats();
-    } catch (err: any) {
-      toast.error(err.message || "Delete failed");
+      refreshStats();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Delete failed";
+      toast.error(message);
     }
   };
 
@@ -311,12 +331,13 @@ export default function WebFlowHubPage() {
     try {
       const res = await fetch(`/api/webflows/${flowId}/duplicate`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to duplicate");
-      const data = await res.json();
+      await res.json();
       toast.success("Workflow duplicated!");
-      fetchMyFlows();
-      fetchStats();
-    } catch (err: any) {
-      toast.error(err.message || "Duplicate failed");
+      refreshMyFlows();
+      refreshStats();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Duplicate failed";
+      toast.error(message);
     }
   };
 
@@ -343,13 +364,13 @@ export default function WebFlowHubPage() {
             <div className="space-y-3 max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/20 px-3 py-1 text-xs font-mono font-bold text-indigo-300">
                 <Workflow className="h-3.5 w-3.5" />
-                The Visual Operating System for the Web
+                Visual Tool Orchestration & Multi-Step Workflows
               </div>
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
                 Turn your saved websites into visual, executable workflows.
               </h1>
               <p className="text-sm text-indigo-200 leading-relaxed">
-                Connect your tools, document real-world processes step-by-step, and generate deterministic specifications ready for autonomous AI agents.
+                Connect tools, document real-world processes step-by-step, and generate deterministic specifications ready for autonomous AI agents.
               </p>
             </div>
 
@@ -363,8 +384,16 @@ export default function WebFlowHubPage() {
               />
               <button
                 type="button"
+                onClick={() => setIsAIGenerateOpen(true)}
+                className="flex items-center gap-2 rounded-2xl border-3 border-nb-border bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-black px-5 py-3 text-sm font-black shadow-nb-md hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
+              >
+                <AIIcon className="h-4 w-4" glow />
+                <span>Generate with AI</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsCreateOpen(true)}
-                className="flex items-center gap-2 rounded-2xl border-3 border-nb-border bg-amber-400 hover:bg-amber-300 text-black px-5 py-3 text-sm font-black shadow-nb-md hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
+                className="flex items-center gap-2 rounded-2xl border-3 border-nb-border bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 text-sm font-black shadow-nb-md hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create WebFlow</span>
@@ -372,7 +401,7 @@ export default function WebFlowHubPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 rounded-2xl border-2 border-white/40 bg-white/10 hover:bg-white/20 text-white px-4 py-3 text-sm font-bold backdrop-blur-sm transition-colors"
+                className="flex items-center gap-2 rounded-2xl border-2 border-white bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-3 text-sm font-bold shadow-nb-sm transition-colors"
                 title="Import WebFlow from JSON or AI Agent Spec"
               >
                 <Upload className="h-4 w-4 text-indigo-300" />
@@ -381,7 +410,7 @@ export default function WebFlowHubPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("templates")}
-                className="flex items-center gap-2 rounded-2xl border-2 border-white/40 bg-white/10 hover:bg-white/20 text-white px-4 py-3 text-sm font-bold backdrop-blur-sm transition-colors"
+                className="flex items-center gap-2 rounded-2xl border-2 border-white bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-3 text-sm font-bold shadow-nb-sm transition-colors"
               >
                 <Sparkles className="h-4 w-4 text-amber-300" />
                 <span>Browse Templates</span>
@@ -413,7 +442,7 @@ export default function WebFlowHubPage() {
         {/* Navigation Tabs & Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b-3 border-nb-border pb-4">
           {/* Main Tabs */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full sm:w-auto shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab("my-flows")}
@@ -616,7 +645,8 @@ export default function WebFlowHubPage() {
                               href={`/webflow/${flow._id}`}
                               className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-sm hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
                             >
-                              <span>Open Canvas</span>
+                              <span className="hidden sm:inline">Open Canvas</span>
+                              <span className="sm:hidden">View Diagram</span>
                               <ArrowRight className="h-3 w-3" />
                             </Link>
                           </div>
@@ -723,7 +753,7 @@ export default function WebFlowHubPage() {
             {activeTab === "templates" && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map((tpl) => {
-                  const templateId = tpl.id || tpl.key;
+                  const templateId = String(tpl.id || tpl.templateKey || tpl.key || tpl._id || tpl.name);
                   const nodeCount = tpl.nodeCount ?? tpl.nodes?.length ?? 0;
                   return (
                     <div
@@ -783,7 +813,7 @@ export default function WebFlowHubPage() {
 
       {/* Create WebFlow Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
           <div className="relative w-full max-w-lg rounded-2xl border-3 border-nb-border bg-nb-card p-6 shadow-nb-xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b-2 border-nb-border pb-3 mb-4">
               <div className="flex items-center gap-2">
@@ -837,7 +867,7 @@ export default function WebFlowHubPage() {
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as WebFlowCategory)}
-                    className="w-full rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-bold text-nb-fg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-xl border-2 border-nb-border bg-nb-surface dark:bg-zinc-900 px-3 py-2 text-xs font-bold text-nb-fg dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                   >
                     {CATEGORIES.filter((c) => c !== "All").map((c) => (
                       <option key={c} value={c}>
@@ -854,7 +884,7 @@ export default function WebFlowHubPage() {
                   <select
                     value={newVisibility}
                     onChange={(e) => setNewVisibility(e.target.value as WebFlowVisibility)}
-                    className="w-full rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-bold text-nb-fg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-xl border-2 border-nb-border bg-nb-surface dark:bg-zinc-900 px-3 py-2 text-xs font-bold text-nb-fg dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                   >
                     <option value="private">🔒 Private</option>
                     <option value="public">🌐 Public (Explore)</option>
@@ -900,6 +930,13 @@ export default function WebFlowHubPage() {
           variables={quickExportFlow.variables || []}
         />
       )}
+
+      {/* AI Copilot Creation Modal */}
+      <AICopilotModal
+        isOpen={isAIGenerateOpen}
+        onClose={() => setIsAIGenerateOpen(false)}
+        mode="create"
+      />
     </div>
   );
 }

@@ -77,6 +77,7 @@
   color-scheme: light;
 }
 
+.dark,
 [data-theme="dark"] {
   --nb-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --nb-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -144,6 +145,14 @@
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: var(--nb-primary);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* ============================================
@@ -283,12 +292,12 @@ body {
   border-color: color-mix(in srgb, var(--nb-primary) 55%, var(--nb-border));
 }
 
-.nb-input:focus {
+.nb-input:focus,
+.nb-input:focus-visible {
   border-color: var(--nb-primary);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--nb-primary) 60%, transparent),
-    0 0 16px -4px color-mix(in srgb, var(--nb-primary) 65%, transparent);
+  box-shadow: 3px 3px 0 0 var(--nb-primary);
   outline: none;
+  outline-offset: 0;
 }
 
 /* Sidebar rows pick up the same neon edge */
@@ -392,6 +401,43 @@ body {
   box-shadow: var(--nb-shadow-sm) !important;
 }
 
+/* Mobile responsive button sizing to prevent crowding */
+@media (max-width: 640px) {
+  .nb-btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.8125rem;
+    gap: 0.35rem;
+    border-width: 2px;
+    border-radius: 10px;
+  }
+
+  .nb-btn-sm {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.725rem;
+    border-width: 2px;
+    border-radius: 8px;
+    gap: 0.25rem;
+  }
+
+  .nb-btn-icon {
+    padding: 0.35rem;
+    width: 2.125rem;
+    height: 2.125rem;
+    min-width: 2.125rem;
+    min-height: 2.125rem;
+    border-width: 2px;
+    border-radius: 8px;
+  }
+
+  .nb-btn-icon.nb-btn-sm {
+    padding: 0.275rem;
+    width: 1.875rem;
+    height: 1.875rem;
+    min-width: 1.875rem;
+    min-height: 1.875rem;
+  }
+}
+
 /* ============================================
    NB INPUT — Form Component
    ============================================ */
@@ -417,9 +463,12 @@ body {
   font-weight: 600;
 }
 
-.nb-input:focus {
+.nb-input:focus,
+.nb-input:focus-visible {
   border-color: var(--nb-primary);
   box-shadow: 3px 3px 0 0 var(--nb-primary);
+  outline: none;
+  outline-offset: 0;
 }
 
 .nb-input:disabled {
@@ -449,6 +498,45 @@ select.nb-input {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   padding-right: 2.5rem;
+}
+
+/* Global Native Select & Option dark-mode preservation */
+select {
+  color-scheme: light;
+  background-color: var(--nb-surface);
+  color: var(--nb-fg);
+}
+
+select option,
+option {
+  background-color: var(--nb-surface);
+  color: var(--nb-fg);
+}
+
+[data-theme="dark"] select,
+.dark select,
+html.dark select,
+body.dark select {
+  color-scheme: dark !important;
+  background-color: var(--nb-card) !important;
+  color: var(--nb-fg) !important;
+}
+
+[data-theme="dark"] select option,
+.dark select option,
+[data-theme="dark"] option,
+.dark option,
+[data-theme="dark"] select optgroup,
+.dark select optgroup {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+}
+
+[data-theme="dark"] select.nb-input,
+.dark select.nb-input {
+  background-color: var(--nb-card) !important;
+  color: var(--nb-fg) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
 }
 
 /* ============================================
@@ -521,15 +609,24 @@ select.nb-input {
   background: var(--nb-surface-alt);
 }
 
-/* Visible keyboard focus beyond buttons */
+/* Visible keyboard focus for links and sidebar items */
 a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-.nb-sidebar-item:focus-visible,
-.nb-input:focus-visible {
+.nb-sidebar-item:focus-visible {
   outline: 2px solid var(--nb-primary);
   outline-offset: 2px;
+}
+
+/* Eliminate gap between border and outline on all input fields across all pages */
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+.nb-input:focus,
+.nb-input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
 }
 
 /* Hover-revealed actions must also appear for keyboard and touch users */
@@ -686,8 +783,7 @@ textarea:focus-visible,
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
   display: grid;
   place-items: center;
   padding: 1.5rem;
@@ -723,6 +819,32 @@ textarea:focus-visible,
   gap: 0.5rem;
   padding: 1rem 1.5rem;
   border-top: 3px solid var(--nb-border);
+}
+
+@media (max-width: 640px) {
+  .nb-overlay {
+    padding: 0.75rem;
+  }
+
+  .nb-modal {
+    border-width: 2px;
+    border-radius: 14px;
+    max-height: 90vh;
+  }
+
+  .nb-modal-header {
+    padding: 0.875rem 1rem;
+    border-bottom-width: 2px;
+  }
+
+  .nb-modal-body {
+    padding: 1rem;
+  }
+
+  .nb-modal-footer {
+    padding: 0.75rem 1rem;
+    border-top-width: 2px;
+  }
 }
 
 /* ============================================
@@ -1344,6 +1466,85 @@ textarea:focus-visible,
 .brutalist-card-c { background: var(--nb-bruto-cyan); }
 
 /* ============================================
+   NB SWITCH — Toggle control
+   ============================================ */
+
+.nb-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border: 3px solid var(--nb-border);
+  border-radius: 999px;
+  background: var(--nb-surface-alt);
+  box-shadow: var(--nb-shadow-sm);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nb-switch:hover {
+  box-shadow: var(--nb-shadow-md);
+  transform: translate(-1px, -1px);
+}
+
+.nb-switch:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.nb-switch:focus-visible {
+  outline: 3px solid var(--nb-primary);
+  outline-offset: 2px;
+}
+
+.nb-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--nb-border);
+  border-radius: 999px;
+  background: var(--nb-surface);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.nb-switch-on {
+  background: var(--nb-primary);
+}
+
+.nb-switch-on .nb-switch-knob {
+  transform: translateX(1.25rem);
+  background: var(--nb-primary-fg);
+}
+
+.nb-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ============================================
+   NB DISPLAY PREFERENCES (global classes)
+   ============================================ */
+
+html.nb-reduce-motion *,
+html.nb-reduce-motion *::before,
+html.nb-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.nb-no-smooth-scroll {
+  scroll-behavior: auto !important;
+}
+
+/* ============================================
    ZINE — harm-reduction-zine revival, scoped to
    the landing field-guide section. Paper tones are
    fixed (a pinned sheet) in both themes on purpose.
@@ -1555,3 +1756,114 @@ details.zine-step .zine-step-body {
     transition: none;
   }
 }
+
+/* ============================================
+   REACT FLOW CANVAS, CONTROLS & MINIMAP RADAR
+   ============================================ */
+
+/* React Flow Canvas background */
+.react-flow {
+  background-color: var(--nb-bg) !important;
+}
+
+/* Neo-Brutalist High-Tech Floating Controls */
+.react-flow__controls {
+  border: 2px solid var(--nb-border) !important;
+  border-radius: 14px !important;
+  background: var(--nb-card) !important;
+  box-shadow: 3px 3px 0 0 var(--nb-border) !important;
+  overflow: hidden !important;
+  padding: 4px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  z-index: 20 !important;
+}
+
+.react-flow__controls-button {
+  background: var(--nb-surface) !important;
+  border: 1.5px solid var(--nb-border) !important;
+  border-radius: 8px !important;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--nb-fg) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--nb-surface-strong) !important;
+  border-color: var(--nb-primary) !important;
+  transform: scale(1.05) !important;
+}
+
+.react-flow__controls-button:active {
+  transform: scale(0.95) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  color: var(--nb-fg) !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Neo-Brutalist HUD Radar MiniMap */
+.react-flow__minimap {
+  background-color: var(--nb-card) !important;
+  border: 2.5px solid var(--nb-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 4px 4px 0 0 var(--nb-border) !important;
+  overflow: hidden !important;
+  z-index: 20 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .react-flow__minimap,
+.dark .react-flow__minimap {
+  background-color: #121215 !important;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45) !important;
+  stroke: var(--nb-primary) !important;
+  stroke-width: 2px !important;
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+.react-flow__minimap-node {
+  rx: 3px !important;
+  ry: 3px !important;
+}
+
+/* Mobile View-Only WebFlow Diagram */
+.webflow-readonly .react-flow__handle {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .webflow-readonly .react-flow__controls {
+    bottom: 12px !important;
+    left: 12px !important;
+    transform: scale(0.9);
+    transform-origin: bottom left;
+  }
+}
+
+/* Recharts Mobile Responsiveness & Overflow Prevention */
+.recharts-responsive-container {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.recharts-wrapper {
+  max-width: 100% !important;
+}
+.recharts-surface {
+  max-width: 100% !important;
+}
+

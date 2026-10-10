@@ -3,8 +3,8 @@ import { z } from "zod";
 export const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Invalid id");
 
 export const registerSetup2faSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email().max(160),
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().email().max(160),
   password: z.string().min(8).max(128),
 });
 
@@ -15,8 +15,8 @@ export const registerConfirm2faSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2).max(80).optional(),
-  email: z.string().email().max(160).optional(),
+  name: z.string().trim().min(2).max(80).optional(),
+  email: z.string().trim().email().max(160).optional(),
   password: z.string().min(8).max(128).optional(),
   setupToken: z.string().optional(),
   code: z.string().optional(),
@@ -24,7 +24,7 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(1),
   twoFactorCode: z.string().optional(),
 });
@@ -51,7 +51,7 @@ export const googleAuthSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
 });
 
 export const resetPasswordSchema = z.object({
@@ -110,10 +110,24 @@ export const metadataFetchSchema = z.object({
   url: z.string().min(1).max(2048),
 });
 
+export const profileAvatarSchema = z.string().refine(
+  (value) => {
+    if (!value) return true;
+    if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/.test(value)) return true;
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid avatar URL" },
+);
+
 export const profilePatchSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   email: z.string().email().max(160).optional(),
-  avatarUrl: z.string().url().or(z.literal("")).optional(),
+  avatarUrl: profileAvatarSchema.optional(),
   themePreference: z.enum(["light", "dark", "system"]).optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(8).max(128).optional(),

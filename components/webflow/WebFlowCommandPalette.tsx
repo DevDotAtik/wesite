@@ -1,26 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Search,
-  Workflow,
-  Sparkles,
-  BookOpen,
-  CheckCircle2,
-  Maximize2,
-  Save,
-  Globe,
-  Sliders,
-  Plus,
-  Zap,
-  Bot,
-  Split,
-  StickyNote,
-  ArrowRight,
-  ArrowLeft,
-  X,
-  Command,
-} from "lucide-react";
+import { Search, X } from "lucide-react";
 
 export type PaletteCommand = {
   id: string;
@@ -54,15 +35,14 @@ export function WebFlowCommandPalette({
 
   useEffect(() => {
     if (isOpen) {
-      setQuery("");
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => {
+        setQuery("");
+        setSelectedIndex(0);
+        inputRef.current?.focus();
+      }, 10);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -94,7 +74,7 @@ export function WebFlowCommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-100">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/80 p-4 animate-in fade-in duration-100">
       <div className="relative w-full max-w-xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden flex flex-col">
         {/* Input Bar */}
         <div className="flex items-center gap-3 border-b-2 border-nb-border px-4 py-3 bg-nb-surface">
@@ -103,7 +83,10 @@ export function WebFlowCommandPalette({
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
             placeholder="Type a command or search actions... (⌘K)"
             className="flex-1 bg-transparent text-sm font-bold text-nb-fg focus:outline-none placeholder:text-nb-muted placeholder:font-medium"
           />

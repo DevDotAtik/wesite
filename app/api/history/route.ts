@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, json, parsePagination, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, isValidObjectId, json, parsePagination, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Visit from "@/models/Visit";
 
@@ -60,14 +60,27 @@ export async function DELETE(request: NextRequest) {
 
   if (auth.response) return auth.response;
 
-  const { range: deleteRange, error: deleteError } = dateRangeFilter(request.nextUrl.searchParams);
-
-  if (deleteError) return apiError(deleteError, 400);
+  let bodyIds: string[] | null = null;
+  try {
+    const body = await request.json();
+    if (Array.isArray(body?.ids)) {
+      bodyIds = body.ids.filter((id: unknown) => typeof id === "string" && isValidObjectId(id as string));
+    }
+  } catch {
+    // Body is empty or not JSON, proceed with query params
+  }
 
   const query: Record<string, unknown> = { userId: auth.user._id };
 
-  if (Object.keys(deleteRange).length) {
-    query.visitedAt = deleteRange;
+  if (bodyIds && bodyIds.length > 0) {
+    query._id = { $in: bodyIds };
+  } else {
+    const { range: deleteRange, error: deleteError } = dateRangeFilter(request.nextUrl.searchParams);
+    if (deleteError) return apiError(deleteError, 400);
+
+    if (Object.keys(deleteRange).length) {
+      query.visitedAt = deleteRange;
+    }
   }
 
   await connectToDatabase();

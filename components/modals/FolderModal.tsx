@@ -134,18 +134,22 @@ export default function FolderModal({
 
         <div className="nb-modal-body">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-xs font-bold sm:col-span-2" style={{ color: "var(--nb-fg)" }}>
-              Folder Name
-              <input value={name} onChange={(event) => setName(event.target.value)} autoFocus placeholder="Project Ideas" className="nb-input mt-2" />
-            </label>
-            <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
-              Parent Folder
-              <select value={parentFolderId} onChange={(event) => setParentFolderId(event.target.value)} className="nb-input mt-2">
+            <div className="sm:col-span-2">
+              <label htmlFor="folder-name-input" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Folder Name
+              </label>
+              <input id="folder-name-input" value={name} onChange={(event) => setName(event.target.value)} autoFocus placeholder="Project Ideas" className="nb-input mt-2" />
+            </div>
+            <div>
+              <label htmlFor="folder-parent-select" className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
+                Parent Folder
+              </label>
+              <select id="folder-parent-select" value={parentFolderId} onChange={(event) => setParentFolderId(event.target.value)} className="nb-input mt-2">
                 {folderOptions.map((option) => (
                   <option key={option._id} value={option._id}>{option.name}</option>
                 ))}
               </select>
-            </label>
+            </div>
             <label className="block text-xs font-bold" style={{ color: "var(--nb-fg)" }}>
               Color
               <div className="mt-2 grid grid-cols-5 gap-2">

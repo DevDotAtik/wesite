@@ -87,26 +87,26 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (data.tags !== undefined) webflow.tags = data.tags;
     if (data.visibility !== undefined) webflow.visibility = data.visibility;
     if (data.isTemplate !== undefined) webflow.isTemplate = data.isTemplate;
-    if (data.nodes !== undefined) webflow.nodes = data.nodes as any;
-    if (data.edges !== undefined) webflow.edges = data.edges as any;
-    if (data.variables !== undefined) webflow.variables = data.variables as any;
+    if (data.nodes !== undefined) webflow.nodes = data.nodes as unknown as typeof webflow.nodes;
+    if (data.edges !== undefined) webflow.edges = data.edges as unknown as typeof webflow.edges;
+    if (data.variables !== undefined) webflow.variables = data.variables as unknown as typeof webflow.variables;
     if (data.viewport !== undefined) webflow.viewport = data.viewport;
 
     // Handle manual or important version creation
     if (data.saveVersionNote) {
       const nextVersion = (webflow.version || 1) + 1;
       webflow.version = nextVersion;
-      if (!webflow.versions) webflow.versions = [] as any;
-      webflow.versions.push({
+      if (!webflow.versions) (webflow as unknown as { versions: unknown[] }).versions = [];
+      (webflow.versions as unknown as unknown[]).push({
         versionNumber: nextVersion,
         savedAt: new Date(),
         note: data.saveVersionNote,
         snapshot: {
-          nodes: (webflow.nodes || []) as any,
-          edges: (webflow.edges || []) as any,
-          variables: (webflow.variables || []) as any,
+          nodes: (webflow.nodes || []) as unknown as typeof webflow.nodes,
+          edges: (webflow.edges || []) as unknown as typeof webflow.edges,
+          variables: (webflow.variables || []) as unknown as typeof webflow.variables,
         },
-      } as any);
+      });
     }
 
     await webflow.save();

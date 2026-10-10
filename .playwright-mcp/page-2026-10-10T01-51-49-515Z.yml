@@ -1,0 +1,103 @@
+- generic [ref=f7e1]:
+  - link "Skip to content" [ref=f7e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f7e3]:
+    - generic [ref=f7e4]:
+      - generic [ref=f7e6]:
+        - link "Wesite Wesite" [ref=f7e7] [cursor=pointer]:
+          - /url: /
+          - img "Wesite" [ref=f7e8]
+          - generic [ref=f7e9]: Wesite
+        - navigation [ref=f7e10]:
+          - link "Library" [ref=f7e11] [cursor=pointer]:
+            - /url: /dashboard
+          - link "WebFlow" [ref=f7e14] [cursor=pointer]:
+            - /url: /webflow
+          - link "News" [ref=f7e19] [cursor=pointer]:
+            - /url: /news
+          - link "History" [ref=f7e23] [cursor=pointer]:
+            - /url: /history
+          - link "Todo" [ref=f7e27] [cursor=pointer]:
+            - /url: /todo
+          - link "Analytics" [ref=f7e31] [cursor=pointer]:
+            - /url: /analytics
+          - link "Monitor" [ref=f7e34] [cursor=pointer]:
+            - /url: /monitoring
+          - link "Settings" [ref=f7e38] [cursor=pointer]:
+            - /url: /settings
+        - generic [ref=f7e42]:
+          - generic [ref=f7e43]:
+            - textbox "Search websites, tags, folders…" [ref=f7e44]
+            - button "Open command palette" [ref=f7e46] [cursor=pointer]:
+              - generic [ref=f7e49]: K
+          - button "Switch to system theme (currently dark)" [ref=f7e238] [cursor=pointer]
+          - button "Add website" [ref=f7e53] [cursor=pointer]
+          - link "Settings Tester" [ref=f7e133] [cursor=pointer]:
+            - /url: /settings
+      - main [ref=f7e61]:
+        - generic [ref=f7e62]:
+          - generic [ref=f7e63]:
+            - generic [ref=f7e68]:
+              - heading "Settings" [level=1] [ref=f7e69]
+              - paragraph [ref=f7e70]: Tune your profile, appearance, security and data controls.
+            - generic [ref=f7e71]:
+              - generic [ref=f7e72]: Free 2FA
+              - generic [ref=f7e73]: Theme sync
+              - generic [ref=f7e74]: Export / import
+          - generic [ref=f7e75]:
+            - complementary [ref=f7e76]:
+              - button "ST Settings Tester settings.tester@example.com" [ref=f7e134]:
+                - generic [ref=f7e135]: ST
+                - generic [ref=f7e136]:
+                  - generic [ref=f7e137]: Settings Tester
+                  - generic [ref=f7e138]: settings.tester@example.com
+              - navigation "Settings sections" [ref=f7e79]:
+                - button "Profile" [ref=f7e80] [cursor=pointer]
+                - button "Appearance" [ref=f7e85] [cursor=pointer]
+                - button "Notifications" [ref=f7e93] [cursor=pointer]
+                - button "Security" [ref=f7e100] [cursor=pointer]
+                - button "Data & privacy" [ref=f7e105] [cursor=pointer]
+                - button "About" [active] [ref=f7e111] [cursor=pointer]
+              - button "Sign out" [ref=f7e116] [cursor=pointer]
+            - generic [ref=f7e120]:
+              - generic [ref=f7e450]:
+                - generic [ref=f7e451]:
+                  - generic [ref=f7e452]:
+                    - generic [ref=f7e457]:
+                      - heading "About Wesite" [level=2] [ref=f7e458]
+                      - paragraph [ref=f7e459]: A bold, privacy-friendly bookmark manager.
+                    - generic [ref=f7e460]: v0.1.0
+                  - generic [ref=f7e462]:
+                    - img "Wesite" [ref=f7e463]
+                    - generic [ref=f7e464]:
+                      - heading "Wesite" [level=3] [ref=f7e465]
+                      - paragraph [ref=f7e466]: Save, organize, monitor and automate the websites you care about — all in one neo-brutalist workspace. Your bookmarks, folders, monitors and automations live in your account.
+                - generic [ref=f7e467]:
+                  - generic [ref=f7e473]:
+                    - heading "Keyboard shortcuts" [level=2] [ref=f7e474]
+                    - paragraph [ref=f7e475]: Move faster without touching the mouse.
+                  - generic [ref=f7e477]:
+                    - generic [ref=f7e478]:
+                      - generic [ref=f7e479]: Open command palette
+                      - generic [ref=f7e480]:
+                        - generic [ref=f7e481]: Ctrl
+                        - generic [ref=f7e482]: K
+                    - generic [ref=f7e483]:
+                      - generic [ref=f7e484]: Jump to search (on dashboard)
+                      - generic [ref=f7e485]: /
+                    - generic [ref=f7e487]:
+                      - generic [ref=f7e488]: Close dialogs and palettes
+                      - generic [ref=f7e489]: Esc
+                - generic [ref=f7e491]:
+                  - generic [ref=f7e497]:
+                    - heading "Legal" [level=2] [ref=f7e498]
+                    - paragraph [ref=f7e499]: The boring but important stuff.
+                  - generic [ref=f7e501]:
+                    - link "Terms of service" [ref=f7e502] [cursor=pointer]:
+                      - /url: /terms
+                    - link "Privacy policy" [ref=f7e510] [cursor=pointer]:
+                      - /url: /privacy
+              - generic [ref=f7e189]: All changes saved
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f7e129] [cursor=pointer]
+  - alert [ref=f7e192]

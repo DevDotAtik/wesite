@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/workflow",
+        destination: "/webflow",
+      },
+      {
+        source: "/workflow/:id*",
+        destination: "/webflow/:id*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

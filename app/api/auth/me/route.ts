@@ -17,7 +17,15 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  return json({ user: serializeDocument(user) });
+  await connectToDatabase();
+  const account = await User.findById(user._id).select("passwordHash").lean();
+
+  return json({
+    user: {
+      ...serializeDocument(user),
+      hasPassword: Boolean(account?.passwordHash),
+    },
+  });
 }
 
 export async function PATCH(request: NextRequest) {

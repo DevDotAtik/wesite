@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { THEME_CHANGE_EVENT, THEME_STORAGE_KEY, resolveThemePreference, type ThemePreference } from "@/lib/theme";
+import { PREFERENCES_CHANGE_EVENT, applyDisplayPreferences, readPreferences } from "@/lib/preferences";
 
 function resolveStoredPreference(): ThemePreference {
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -22,19 +23,25 @@ export default function ThemeProvider() {
       root.style.colorScheme = resolved;
     };
 
+    const syncPreferences = () => applyDisplayPreferences(readPreferences());
+
     syncTheme();
+    syncPreferences();
 
     const handleStorage = () => syncTheme();
     const handleThemeChange = () => syncTheme();
+    const handlePreferenceChange = () => syncPreferences();
 
     media.addEventListener("change", syncTheme);
     window.addEventListener("storage", handleStorage);
     window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+    window.addEventListener(PREFERENCES_CHANGE_EVENT, handlePreferenceChange);
 
     return () => {
       media.removeEventListener("change", syncTheme);
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+      window.removeEventListener(PREFERENCES_CHANGE_EVENT, handlePreferenceChange);
     };
   }, []);
 

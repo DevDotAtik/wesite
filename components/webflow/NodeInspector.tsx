@@ -6,15 +6,9 @@ import {
   Trash2,
   Plus,
   Sparkles,
-  Play,
   Globe,
   ExternalLink,
-  Code2,
   Variable,
-  Info,
-  Check,
-  Tag,
-  Clock,
   Layers,
 } from "lucide-react";
 import type {
@@ -71,7 +65,7 @@ export function NodeInspector({
   onUpdateWorkflowMeta,
   onUpdateVariables,
 }: NodeInspectorProps) {
-  const [activeTab, setActiveTab] = useState<"general" | "action" | "ports" | "instructions">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "action" | "ports" | "instructions" | "style">("general");
 
   // New variable form state for workflow variables
   const [newVarName, setNewVarName] = useState("");
@@ -166,7 +160,7 @@ export function NodeInspector({
               <select
                 value={workflowCategory}
                 onChange={(e) => onUpdateWorkflowMeta({ category: e.target.value as WebFlowCategory })}
-                className="w-full rounded-lg border-2 border-nb-border bg-nb-card px-3 py-1.5 text-xs font-bold text-nb-fg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border-2 border-nb-border bg-nb-card dark:bg-zinc-900 px-3 py-1.5 text-xs font-bold text-nb-fg dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -231,8 +225,8 @@ export function NodeInspector({
                 />
                 <select
                   value={newVarType}
-                  onChange={(e) => setNewVarType(e.target.value as any)}
-                  className="rounded-lg border border-nb-border bg-nb-card px-2 py-1 text-xs"
+                  onChange={(e) => setNewVarType(e.target.value as WebFlowVariable["type"])}
+                  className="rounded-lg border border-nb-border bg-nb-card dark:bg-zinc-900 px-2 py-1 text-xs text-nb-fg dark:text-zinc-100 cursor-pointer"
                 >
                   <option value="string">string</option>
                   <option value="number">number</option>
@@ -334,13 +328,13 @@ export function NodeInspector({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b-2 border-nb-border bg-nb-card text-xs font-bold">
+      <div className="flex border-b-2 border-nb-border bg-nb-card text-xs font-bold overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab("general")}
-          className={`flex-1 py-2 text-center border-b-2 ${
+          className={`flex-1 min-w-[60px] py-2 text-center border-b-2 ${
             activeTab === "general"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt/50"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt font-black"
               : "border-transparent text-nb-muted hover:text-nb-fg"
           }`}
         >
@@ -349,9 +343,9 @@ export function NodeInspector({
         <button
           type="button"
           onClick={() => setActiveTab("action")}
-          className={`flex-1 py-2 text-center border-b-2 ${
+          className={`flex-1 min-w-[60px] py-2 text-center border-b-2 ${
             activeTab === "action"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt/50"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt font-black"
               : "border-transparent text-nb-muted hover:text-nb-fg"
           }`}
         >
@@ -360,24 +354,35 @@ export function NodeInspector({
         <button
           type="button"
           onClick={() => setActiveTab("ports")}
-          className={`flex-1 py-2 text-center border-b-2 ${
+          className={`flex-1 min-w-[60px] py-2 text-center border-b-2 ${
             activeTab === "ports"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt/50"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt font-black"
               : "border-transparent text-nb-muted hover:text-nb-fg"
           }`}
         >
-          I/O Ports
+          Ports
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("instructions")}
-          className={`flex-1 py-2 text-center border-b-2 ${
+          className={`flex-1 min-w-[60px] py-2 text-center border-b-2 ${
             activeTab === "instructions"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt/50"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt font-black"
               : "border-transparent text-nb-muted hover:text-nb-fg"
           }`}
         >
           AI Guide
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("style")}
+          className={`flex-1 min-w-[60px] py-2 text-center border-b-2 ${
+            activeTab === "style"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-nb-surface-alt font-black"
+              : "border-transparent text-nb-muted hover:text-nb-fg"
+          }`}
+        >
+          Style
         </button>
       </div>
 
@@ -503,7 +508,7 @@ export function NodeInspector({
                   value={nodeData.noteContent || ""}
                   onChange={(e) => handleUpdate({ noteContent: e.target.value })}
                   placeholder="Document reminders, credentials policy, or prerequisites..."
-                  className="w-full rounded-lg border-2 border-nb-border bg-amber-50/50 dark:bg-amber-950/20 p-2.5 text-xs text-nb-fg focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
+                  className="w-full rounded-lg border-2 border-nb-border bg-amber-100 dark:bg-amber-950 p-2.5 text-xs text-nb-fg focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
                 />
               </div>
             )}
@@ -604,16 +609,16 @@ export function NodeInspector({
               <div className="grid grid-cols-2 gap-2">
                 <select
                   value={portTarget}
-                  onChange={(e) => setPortTarget(e.target.value as any)}
-                  className="rounded-lg border border-nb-border bg-nb-card px-2 py-1 text-xs font-bold"
+                  onChange={(e) => setPortTarget(e.target.value as "input" | "output")}
+                  className="rounded-lg border border-nb-border bg-nb-card dark:bg-zinc-900 px-2 py-1 text-xs font-bold text-nb-fg dark:text-zinc-100 cursor-pointer"
                 >
                   <option value="input">Input Port</option>
                   <option value="output">Output Port</option>
                 </select>
                 <select
                   value={newPortType}
-                  onChange={(e) => setNewPortType(e.target.value as any)}
-                  className="rounded-lg border border-nb-border bg-nb-card px-2 py-1 text-xs"
+                  onChange={(e) => setNewPortType(e.target.value as "string" | "number" | "boolean" | "file" | "json" | "any")}
+                  className="rounded-lg border border-nb-border bg-nb-card dark:bg-zinc-900 px-2 py-1 text-xs text-nb-fg dark:text-zinc-100 cursor-pointer"
                 >
                   <option value="string">string</option>
                   <option value="number">number</option>
@@ -660,6 +665,157 @@ export function NodeInspector({
                 placeholder="e.g. 1. Click on the 'New' button in the upper right. 2. Enter repository name as {{repo_name}}. 3. Set visibility to Public."
                 className="w-full rounded-lg border-2 border-nb-border bg-nb-card p-2.5 text-xs text-nb-fg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono leading-relaxed"
               />
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: STYLE & CARD APPEARANCE --- */}
+        {activeTab === "style" && (
+          <div className="space-y-4">
+            {/* Custom Card Background */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-nb-fg">
+                  Card Background Color
+                </label>
+                {Boolean(nodeData.customBg) && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdate({ customBg: undefined })}
+                    className="text-[10px] font-bold text-rose-600 hover:underline"
+                  >
+                    Reset BG
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-5 gap-1.5">
+                {[
+                  { name: "Default", color: "" },
+                  { name: "White", color: "#ffffff" },
+                  { name: "Ivory", color: "#fef3c7" },
+                  { name: "Mint", color: "#d1fae5" },
+                  { name: "Ice Blue", color: "#e0f2fe" },
+                  { name: "Lavender", color: "#ede9fe" },
+                  { name: "Rose", color: "#ffe4e6" },
+                  { name: "Charcoal", color: "#18181b" },
+                  { name: "Indigo", color: "#1e1b4b" },
+                  { name: "Forest", color: "#064e3b" },
+                ].map((c) => {
+                  const isCurrent =
+                    (!nodeData.customBg && !c.color) ||
+                    nodeData.customBg === c.color;
+                  return (
+                    <button
+                      key={c.name}
+                      type="button"
+                      title={c.name}
+                      onClick={() =>
+                        handleUpdate({
+                          customBg: c.color ? c.color : undefined,
+                        })
+                      }
+                      style={c.color ? { backgroundColor: c.color } : undefined}
+                      className={`h-7 rounded-lg border-2 border-nb-border shadow-nb-xs transition-transform ${
+                        !c.color ? "bg-nb-card" : ""
+                      } ${
+                        isCurrent
+                          ? "ring-2 ring-indigo-500 scale-110"
+                          : "hover:scale-105"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Custom Color Input */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={typeof nodeData.customBg === "string" ? nodeData.customBg : "#ffffff"}
+                  onChange={(e) => handleUpdate({ customBg: e.target.value })}
+                  className="h-8 w-10 cursor-pointer rounded-lg border-2 border-nb-border p-0.5 bg-nb-card"
+                />
+                <input
+                  type="text"
+                  placeholder="#hex background"
+                  value={typeof nodeData.customBg === "string" ? nodeData.customBg : ""}
+                  onChange={(e) => handleUpdate({ customBg: e.target.value })}
+                  className="flex-1 rounded-lg border-2 border-nb-border bg-nb-card px-2.5 py-1 text-xs font-mono font-bold text-nb-fg"
+                />
+              </div>
+            </div>
+
+            {/* Custom Card Border Color */}
+            <div className="space-y-2 pt-2 border-t-2 border-nb-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-nb-fg">
+                  Card Border Color
+                </label>
+                {Boolean(nodeData.customBorderColor) && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdate({ customBorderColor: undefined })}
+                    className="text-[10px] font-bold text-rose-600 hover:underline"
+                  >
+                    Reset Border
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { name: "Default", color: "" },
+                  { name: "Dark", color: "#0f172a" },
+                  { name: "Indigo", color: "#6366f1" },
+                  { name: "Emerald", color: "#10b981" },
+                  { name: "Amber", color: "#f59e0b" },
+                  { name: "Rose", color: "#ef4444" },
+                  { name: "Purple", color: "#8b5cf6" },
+                  { name: "Cyan", color: "#06b6d4" },
+                ].map((c) => {
+                  const isCurrent =
+                    (!nodeData.customBorderColor && !c.color) ||
+                    nodeData.customBorderColor === c.color;
+                  return (
+                    <button
+                      key={c.name}
+                      type="button"
+                      title={c.name}
+                      onClick={() =>
+                        handleUpdate({
+                          customBorderColor: c.color ? c.color : undefined,
+                        })
+                      }
+                      className={`h-7 rounded-lg border-3 transition-transform ${
+                        isCurrent
+                          ? "ring-2 ring-indigo-500 scale-105"
+                          : "hover:scale-102"
+                      } bg-nb-card`}
+                      style={{
+                        borderColor: c.color || "var(--nb-border)",
+                      }}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Custom Border Color Input */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="color"
+                  value={typeof nodeData.customBorderColor === "string" ? nodeData.customBorderColor : "#6366f1"}
+                  onChange={(e) => handleUpdate({ customBorderColor: e.target.value })}
+                  className="h-8 w-10 cursor-pointer rounded-lg border-2 border-nb-border p-0.5 bg-nb-card"
+                />
+                <input
+                  type="text"
+                  placeholder="#hex border"
+                  value={typeof nodeData.customBorderColor === "string" ? nodeData.customBorderColor : ""}
+                  onChange={(e) => handleUpdate({ customBorderColor: e.target.value })}
+                  className="flex-1 rounded-lg border-2 border-nb-border bg-nb-card px-2.5 py-1 text-xs font-mono font-bold text-nb-fg"
+                />
+              </div>
             </div>
           </div>
         )}

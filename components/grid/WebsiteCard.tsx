@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
-  BarChart3,
   Check,
   ExternalLink,
+  MoreVertical,
   Pencil,
   RotateCcw,
   Share2,
@@ -185,6 +185,23 @@ export default function WebsiteCard({
   );
 
   const [copied, setCopied] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClose = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClose);
+    document.addEventListener("touchstart", handleClose);
+    return () => {
+      document.removeEventListener("mousedown", handleClose);
+      document.removeEventListener("touchstart", handleClose);
+    };
+  }, [menuOpen]);
 
   const handleCopyLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -210,6 +227,133 @@ export default function WebsiteCard({
     }
   };
 
+  const renderDropdownMenu = (alignRight = true) => (
+    <div
+      ref={menuRef}
+      onClick={(e) => e.stopPropagation()}
+      className={`absolute ${alignRight ? "right-0" : "left-0"} top-9 z-40 min-w-44 rounded-xl border-2 border-[var(--nb-border)] bg-[var(--nb-card)] p-1.5 shadow-[4px_4px_0_0_var(--nb-shadow)] space-y-0.5 text-xs font-bold animate-in fade-in zoom-in-95 duration-100`}
+      style={{ borderColor: "var(--nb-border)", background: "var(--nb-card)" }}
+    >
+      {mode === "trash" ? (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onRestore?.(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <RotateCcw className="size-3.5 text-emerald-500" />
+            <span>Restore website</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onPermanentDelete?.(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-rose-500"
+          >
+            <Trash2 className="size-3.5" />
+            <span>Delete permanently</span>
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onOpen(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <ExternalLink className="size-3.5 text-indigo-500" />
+            <span>Open website</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onEdit(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <Pencil className="size-3.5 text-amber-500" />
+            <span>Edit website</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onToggleFavorite(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <Star className={`size-3.5 ${website.isFavorite ? "fill-amber-500 text-amber-500" : "text-amber-500"}`} />
+            <span>{website.isFavorite ? "Remove favorite" : "Add to favorites"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              handleCopyLink(e);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <Share2 className="size-3.5 text-blue-500" />
+            <span>Share / Copy link</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              setIsWebFlowModalOpen(true);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <Workflow className="size-3.5 text-purple-500" />
+            <span>Add to WebFlow</span>
+          </button>
+          {onSelect && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(false);
+                onSelect(website._id, !selected);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)] border-t border-[var(--nb-border)]/30 mt-1 pt-1.5"
+            >
+              <Check className="size-3.5 text-[var(--nb-primary)]" />
+              <span>{selected ? "Deselect" : "Select card"}</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              onDelete(website);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-rose-500/10 text-rose-500 border-t border-[var(--nb-border)]/30 mt-1 pt-1.5"
+          >
+            <Trash2 className="size-3.5" />
+            <span>Move to trash</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+
   /* ============================================================
      LIST VIEW (Daily.dev Compact Row with 16:9 Landing Screenshot)
      ============================================================ */
@@ -228,12 +372,12 @@ export default function WebsiteCard({
           setDragging(true);
         }}
         onDragEnd={() => setDragging(false)}
-        className={`nb-card nb-card-enter group relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 p-3 transition-transform hover:-translate-x-0.5 ${
-          selected ? "ring-2 ring-[var(--nb-primary)]" : ""
-        } ${dragging ? "opacity-70" : ""}`}
+        className={`nb-card nb-card-enter group relative flex items-center justify-between gap-2.5 sm:gap-4 p-3 transition-transform hover:-translate-x-0.5 ${
+          menuOpen ? "overflow-visible z-20" : ""
+        } ${selected ? "ring-2 ring-[var(--nb-primary)]" : ""} ${dragging ? "opacity-70" : ""}`}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3.5">
-          {/* Selection Checkbox */}
+          {/* Selection Checkbox - always visible on mobile, hover on desktop */}
           {onSelect && mode !== "trash" && (
             <button
               type="button"
@@ -246,7 +390,7 @@ export default function WebsiteCard({
               className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                 selected
                   ? "border-[var(--nb-border)] bg-[var(--nb-primary)] text-white shadow-xs opacity-100"
-                  : "border-[var(--nb-border)]/40 bg-[var(--nb-surface)] text-[var(--nb-muted)] hover:border-[var(--nb-border)] hover:text-[var(--nb-fg)] opacity-0 group-hover:opacity-100"
+                  : "border-[var(--nb-border)]/40 bg-[var(--nb-surface)] text-[var(--nb-muted)] hover:border-[var(--nb-border)] hover:text-[var(--nb-fg)] opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               }`}
             >
               {selected ? (
@@ -290,9 +434,9 @@ export default function WebsiteCard({
             )}
           </div>
 
-          {/* Text details */}
+          {/* Text details - Takes full available space before hovering */}
           <div
-            className="min-w-0 flex-1 cursor-pointer"
+            className="min-w-0 flex-1 cursor-pointer pr-1"
             onClick={() => (mode === "trash" ? undefined : onOpen(website))}
           >
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
@@ -310,6 +454,11 @@ export default function WebsiteCard({
                   • {createdOn}
                 </span>
               ) : null}
+              {mode !== "trash" && (
+                <span className="shrink-0 text-[10px] font-medium" style={{ color: "var(--nb-muted)" }}>
+                  • {visitCount} {visitCount === 1 ? "visit" : "visits"}
+                </span>
+              )}
               {website.isFavorite && (
                 <Star className="size-3 shrink-0 fill-[var(--nb-warning)] text-[var(--nb-warning)]" />
               )}
@@ -335,126 +484,126 @@ export default function WebsiteCard({
           </div>
         </div>
 
-        {/* Action Buttons & Metadata Row */}
-        <div className="flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 border-t border-[var(--nb-border)]/15 pt-2 sm:border-t-0 sm:pt-0">
-          {/* Metadata on mobile: Adding date or visit count */}
-          <div className="flex items-center gap-2 min-w-0 sm:hidden">
-            {createdOn ? (
-              <span className="text-[10px] font-semibold" style={{ color: "var(--nb-muted)" }}>
-                Added {createdOn}
-              </span>
-            ) : null}
-            {mode !== "trash" && visitCount > 0 ? (
-              <span className="nb-tag text-[9px] font-bold">
-                <BarChart3 className="size-2.5" />
-                {visitCount}
-              </span>
-            ) : null}
-          </div>
+        {/* Mobile 3-Dots Action Button */}
+        <div className="relative sm:hidden shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((prev) => !prev);
+            }}
+            aria-label="More options"
+            title="More options"
+            className="flex size-8 items-center justify-center rounded-lg border-2 border-[var(--nb-border)] bg-[var(--nb-card)] text-[var(--nb-fg)] shadow-xs active:scale-95"
+          >
+            <MoreVertical className="size-4" />
+          </button>
+          {menuOpen && renderDropdownMenu(true)}
+        </div>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 ml-auto sm:ml-0 shrink-0">
-            {mode === "trash" ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onRestore?.(website)}
-                  className="nb-btn nb-btn-surface nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1 border-2"
-                  title="Restore"
-                >
-                  <RotateCcw className="size-3.5" />
-                  <span>Restore</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onPermanentDelete?.(website)}
-                  className="nb-btn nb-btn-ghost nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1"
-                  style={{ color: "var(--nb-danger)" }}
-                  title="Delete permanently"
-                >
-                  <Trash2 className="size-3.5" />
-                  <span>Delete</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite(website);
-                  }}
-                  className={`nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2 ${
-                    website.isFavorite ? "border-amber-400 bg-amber-400/15 text-amber-500" : ""
+        {/* Action Buttons: Revealed ONLY on card hover on desktop */}
+        <div className="hidden sm:flex opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150 absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-10 items-center gap-1 sm:gap-1.5 bg-[var(--nb-card)] p-1 sm:px-2 sm:py-1 rounded-xl border-2 border-[var(--nb-border)] shadow-nb-sm">
+          {mode === "trash" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onRestore?.(website)}
+                className="nb-btn nb-btn-surface nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1 border-2"
+                title="Restore"
+              >
+                <RotateCcw className="size-3.5" />
+                <span>Restore</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onPermanentDelete?.(website)}
+                className="nb-btn nb-btn-ghost nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1"
+                style={{ color: "var(--nb-danger)" }}
+                title="Delete permanently"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Delete</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(website);
+                }}
+                className={`nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2 ${
+                  website.isFavorite ? "border-amber-400 bg-amber-400/15 text-amber-500" : ""
+                }`}
+                title={website.isFavorite ? "Favorited (click to remove)" : "Add to favorites"}
+                aria-label="Toggle favorite"
+              >
+                <Star
+                  className={`size-3.5 sm:size-4 ${
+                    website.isFavorite ? "fill-amber-500 text-amber-500" : ""
                   }`}
-                  title={website.isFavorite ? "Favorited (click to remove)" : "Add to favorites"}
-                  aria-label="Toggle favorite"
-                >
-                  <Star
-                    className={`size-3.5 sm:size-4 ${
-                      website.isFavorite ? "fill-amber-500 text-amber-500" : ""
-                    }`}
-                  />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2"
-                  title={copied ? "Copied to clipboard!" : "Share / Copy link"}
-                  aria-label="Share link"
-                >
-                  {copied ? <Check className="size-3.5 sm:size-4 text-emerald-500 nb-pop-in" /> : <Share2 className="size-3.5 sm:size-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(website);
-                  }}
-                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2"
-                  title="Edit website"
-                  aria-label="Edit website"
-                >
-                  <Pencil className="size-3.5 sm:size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsWebFlowModalOpen(true);
-                  }}
-                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10"
-                  title="Add to WebFlow"
-                  aria-label="Add to WebFlow"
-                >
-                  <Workflow className="size-3.5 sm:size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpen(website);
-                  }}
-                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2"
-                  title="Open website"
-                  aria-label="Open website"
-                >
-                  <ExternalLink className="size-3.5 sm:size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(website);
-                  }}
-                  className="nb-btn nb-btn-surface nb-btn-icon size-8 sm:h-8.5 sm:w-8.5 border-2 text-rose-600 hover:border-rose-500 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400"
-                  title="Move to trash"
-                  aria-label="Delete website"
-                >
-                  <Trash2 className="size-3.5 sm:size-4" />
-                </button>
-              </>
-            )}
-          </div>
+                />
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2"
+                title={copied ? "Copied to clipboard!" : "Share / Copy link"}
+                aria-label="Share link"
+              >
+                {copied ? <Check className="size-3.5 sm:size-4 text-emerald-500 nb-pop-in" /> : <Share2 className="size-3.5 sm:size-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(website);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2"
+                title="Edit website"
+                aria-label="Edit website"
+              >
+                <Pencil className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsWebFlowModalOpen(true);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10"
+                title="Add to WebFlow"
+                aria-label="Add to WebFlow"
+              >
+                <Workflow className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen(website);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2"
+                title="Open website"
+                aria-label="Open website"
+              >
+                <ExternalLink className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(website);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2 text-rose-600 hover:border-rose-500 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400"
+                title="Move to trash"
+                aria-label="Delete website"
+              >
+                <Trash2 className="size-3.5 sm:size-4" />
+              </button>
+            </>
+          )}
         </div>
       </article>
 
@@ -484,7 +633,9 @@ export default function WebsiteCard({
         setDragging(true);
       }}
       onDragEnd={() => setDragging(false)}
-      className={`nb-card-static nb-card-enter group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--nb-shadow)] ${
+      className={`nb-card-static nb-card-enter group flex flex-col justify-between ${
+        menuOpen ? "overflow-visible z-20" : "overflow-hidden"
+      } transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--nb-shadow)] ${
         selected ? "ring-2 ring-[var(--nb-primary)]" : ""
       } ${dragging ? "opacity-70" : ""}`}
     >
@@ -541,7 +692,7 @@ export default function WebsiteCard({
             </div>
           )}
 
-          {/* Select Checkbox - blends with card, shows on hover or when selected */}
+          {/* Select Checkbox - visible on mobile or on hover/selected on desktop */}
           {onSelect && mode !== "trash" && (
             <button
               type="button"
@@ -551,19 +702,38 @@ export default function WebsiteCard({
               }}
               aria-label={selected ? "Deselect" : "Select"}
               title={selected ? "Deselect" : "Select"}
-              className={`absolute top-2.5 left-2.5 z-10 flex size-7 items-center justify-center rounded-lg border-2 backdrop-blur-md transition-all duration-200 ${
+              className={`absolute top-2.5 left-2.5 z-10 flex size-7 items-center justify-center rounded-lg border-2 transition-all duration-200 ${
                 selected
                   ? "opacity-100 border-[var(--nb-border)] bg-[var(--nb-primary)] text-white shadow-xs scale-105"
-                  : "opacity-0 group-hover:opacity-100 border-white/50 bg-black/45 text-white hover:bg-black/75 hover:border-white shadow-xs"
+                  : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 border-[var(--nb-border)] bg-[var(--nb-card)] text-[var(--nb-fg)] hover:bg-[var(--nb-surface-alt)] shadow-xs"
               }`}
             >
               {selected ? (
                 <Check className="size-4 stroke-[3]" />
               ) : (
-                <span className="size-2 rounded-xs border-2 border-white/80" />
+                <span className="size-2 rounded-xs border-2 border-current" />
               )}
             </button>
           )}
+
+          {/* Single 3-Dots Action Menu Trigger (Visible on mobile, hover on desktop) */}
+          <div className="absolute top-2.5 right-2.5 z-20">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((prev) => !prev);
+              }}
+              aria-label="More options"
+              title="More options"
+              className={`flex size-7 items-center justify-center rounded-lg border-2 border-[var(--nb-border)] bg-[var(--nb-card)] text-[var(--nb-fg)] hover:bg-[var(--nb-surface-alt)] shadow-xs transition-transform active:scale-95 ${
+                menuOpen ? "opacity-100" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              }`}
+            >
+              <MoreVertical className="size-4" />
+            </button>
+            {menuOpen && renderDropdownMenu(true)}
+          </div>
         </div>
 
         {/* Card Body */}
@@ -591,17 +761,10 @@ export default function WebsiteCard({
             </div>
 
             {mode !== "trash" && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                {createdOn ? (
-                  <span className="text-[10px] font-medium" style={{ color: "var(--nb-muted)" }}>
-                    {createdOn}
-                  </span>
-                ) : null}
-                {visitCount > 0 && (
-                  <span className="nb-tag text-[9px] font-bold">
-                    <BarChart3 className="size-2.5" />
-                    {visitCount}
-                  </span>
+              <div className="flex items-center gap-1.5 shrink-0 text-[10px] font-medium" style={{ color: "var(--nb-muted)" }}>
+                <span>{visitCount} {visitCount === 1 ? "visit" : "visits"}</span>
+                {website.isFavorite && (
+                  <Star className="size-3 shrink-0 fill-[var(--nb-warning)] text-[var(--nb-warning)] ml-0.5" />
                 )}
               </div>
             )}
@@ -609,7 +772,7 @@ export default function WebsiteCard({
 
           {/* Title */}
           <h3
-            className="text-sm font-black leading-snug line-clamp-1 group-hover:underline"
+            className="text-sm font-black leading-snug line-clamp-2 group-hover:underline"
             style={{ color: "var(--nb-fg)" }}
             title={website.title || website.domain}
           >
@@ -619,7 +782,7 @@ export default function WebsiteCard({
           {/* Description */}
           {website.description ? (
             <p
-              className="mt-1 text-xs leading-relaxed line-clamp-2"
+              className="mt-1 text-xs leading-relaxed line-clamp-2 sm:line-clamp-3"
               style={{ color: "var(--nb-muted)" }}
               title={website.description}
             >
@@ -649,128 +812,143 @@ export default function WebsiteCard({
 
       {/* Card Footer Actions Bar */}
       <div
-        className="flex items-center justify-between border-t-2 px-3 py-2 sm:px-3.5"
+        className="relative min-h-[44px] flex items-center justify-between border-t-2 px-3 py-2 sm:px-3.5 overflow-hidden"
         style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}
       >
-        {mode === "trash" ? (
-          <div className="flex items-center gap-1.5 w-full justify-between">
-            <button
-              type="button"
-              onClick={() => onRestore?.(website)}
-              className="nb-btn nb-btn-surface nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1 border-2"
-              title="Restore website"
-            >
-              <RotateCcw className="size-3.5" />
-              <span>Restore</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onPermanentDelete?.(website)}
-              className="nb-btn nb-btn-ghost nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1"
-              style={{ color: "var(--nb-danger)" }}
-              title="Delete permanently"
-            >
-              <Trash2 className="size-3.5" />
-              <span>Delete</span>
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Left Action Buttons: Favorite, Share, Edit */}
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              {/* Favorite Button */}
+        {/* Simple text info before hover on desktop */}
+        <div className="flex items-center justify-between w-full text-[11px] font-medium text-[var(--nb-muted)] transition-opacity duration-150 sm:group-hover:opacity-0 sm:pointer-events-none">
+          <span className="font-semibold text-[var(--nb-fg)]">
+            {mode === "trash" ? (
+              <span className="text-rose-500">In Trash</span>
+            ) : (
+              <span>{visitCount} {visitCount === 1 ? "visit" : "visits"}</span>
+            )}
+          </span>
+          {createdOn ? <span>Added {createdOn}</span> : null}
+        </div>
+
+        {/* Action Buttons: Revealed ONLY on card hover on desktop */}
+        <div className="hidden sm:flex absolute inset-0 items-center justify-between px-3 sm:px-3.5 bg-[var(--nb-surface)] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150">
+          {mode === "trash" ? (
+            <div className="flex items-center gap-1.5 w-full justify-between">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFavorite(website);
-                }}
-                className={`nb-btn nb-btn-surface nb-btn-icon size-8 border-2 transition-all ${
-                  website.isFavorite
-                    ? "border-amber-400 bg-amber-400/15 text-amber-500 hover:bg-amber-400/25"
-                    : "text-[var(--nb-muted)] hover:text-amber-500"
-                }`}
-                title={website.isFavorite ? "Favorited (click to remove)" : "Add to favorites"}
-                aria-label="Toggle favorite"
+                onClick={() => onRestore?.(website)}
+                className="nb-btn nb-btn-surface nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1 border-2"
+                title="Restore website"
               >
-                <Star
-                  className={`size-3.5 sm:size-4 ${
-                    website.isFavorite ? "fill-amber-500 text-amber-500" : ""
+                <RotateCcw className="size-3.5" />
+                <span>Restore</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onPermanentDelete?.(website)}
+                className="nb-btn nb-btn-ghost nb-btn-sm h-8 px-2.5 text-xs font-bold gap-1"
+                style={{ color: "var(--nb-danger)" }}
+                title="Delete permanently"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Delete</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Left Action Buttons: Favorite, Share, Edit */}
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                {/* Favorite Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(website);
+                  }}
+                  className={`nb-btn nb-btn-surface nb-btn-icon size-8 border-2 transition-all ${
+                    website.isFavorite
+                      ? "border-amber-400 bg-amber-400/15 text-amber-500 hover:bg-amber-400/25"
+                      : "text-[var(--nb-muted)] hover:text-amber-500"
                   }`}
-                />
-              </button>
+                  title={website.isFavorite ? "Favorited (click to remove)" : "Add to favorites"}
+                  aria-label="Toggle favorite"
+                >
+                  <Star
+                    className={`size-3.5 sm:size-4 ${
+                      website.isFavorite ? "fill-amber-500 text-amber-500" : ""
+                    }`}
+                  />
+                </button>
 
-              {/* Share / Copy Button */}
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
-                title={copied ? "Copied to clipboard!" : "Share / Copy link"}
-                aria-label="Share link"
-              >
-                {copied ? (
-                  <Check className="size-3.5 sm:size-4 text-emerald-500 nb-pop-in" />
-                ) : (
-                  <Share2 className="size-3.5 sm:size-4" />
-                )}
-              </button>
+                {/* Share / Copy Button */}
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
+                  title={copied ? "Copied to clipboard!" : "Share / Copy link"}
+                  aria-label="Share link"
+                >
+                  {copied ? (
+                    <Check className="size-3.5 sm:size-4 text-emerald-500 nb-pop-in" />
+                  ) : (
+                    <Share2 className="size-3.5 sm:size-4" />
+                  )}
+                </button>
 
-              {/* Edit Button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(website);
-                }}
-                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
-                title="Edit website"
-                aria-label="Edit website"
-              >
-                <Pencil className="size-3.5 sm:size-4" />
-              </button>
-            </div>
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(website);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
+                  title="Edit website"
+                  aria-label="Edit website"
+                >
+                  <Pencil className="size-3.5 sm:size-4" />
+                </button>
+              </div>
 
-            {/* Right Action Buttons: Open, Delete */}
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsWebFlowModalOpen(true);
-                }}
-                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10 transition-all"
-                title="Add to WebFlow"
-                aria-label="Add to WebFlow"
-              >
-                <Workflow className="size-3.5 sm:size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpen(website);
-                }}
-                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
-                title="Open website in new tab"
-                aria-label="Open website"
-              >
-                <ExternalLink className="size-3.5 sm:size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(website);
-                }}
-                className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-rose-500 hover:border-rose-500 hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400 transition-all"
-                title="Move to trash"
-                aria-label="Move to trash"
-              >
-                <Trash2 className="size-3.5 sm:size-4" />
-              </button>
-            </div>
-          </>
-        )}
+              {/* Right Action Buttons: WebFlow, Open, Delete */}
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsWebFlowModalOpen(true);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10 transition-all"
+                  title="Add to WebFlow"
+                  aria-label="Add to WebFlow"
+                >
+                  <Workflow className="size-3.5 sm:size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpen(website);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-[var(--nb-muted)] hover:text-[var(--nb-fg)] transition-all"
+                  title="Open website in new tab"
+                  aria-label="Open website"
+                >
+                  <ExternalLink className="size-3.5 sm:size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(website);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-rose-500 hover:border-rose-500 hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400 transition-all"
+                  title="Move to trash"
+                  aria-label="Move to trash"
+                >
+                  <Trash2 className="size-3.5 sm:size-4" />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </article>
 

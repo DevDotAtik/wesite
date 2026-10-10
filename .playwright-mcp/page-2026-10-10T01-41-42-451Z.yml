@@ -1,0 +1,88 @@
+- generic [ref=f4e1]:
+  - link "Skip to content" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f4e3]:
+    - generic [ref=f4e4]:
+      - generic [ref=f4e6]:
+        - link "Wesite Wesite" [ref=f4e7] [cursor=pointer]:
+          - /url: /
+          - img "Wesite" [ref=f4e8]
+          - generic [ref=f4e9]: Wesite
+        - navigation [ref=f4e10]:
+          - link "Library" [ref=f4e11] [cursor=pointer]:
+            - /url: /dashboard
+          - link "WebFlow" [ref=f4e14] [cursor=pointer]:
+            - /url: /webflow
+          - link "News" [ref=f4e19] [cursor=pointer]:
+            - /url: /news
+          - link "History" [ref=f4e23] [cursor=pointer]:
+            - /url: /history
+          - link "Todo" [ref=f4e27] [cursor=pointer]:
+            - /url: /todo
+          - link "Analytics" [ref=f4e31] [cursor=pointer]:
+            - /url: /analytics
+          - link "Monitor" [ref=f4e34] [cursor=pointer]:
+            - /url: /monitoring
+          - link "Settings" [ref=f4e38] [cursor=pointer]:
+            - /url: /settings
+        - generic [ref=f4e42]:
+          - generic [ref=f4e43]:
+            - textbox "Search websites, tags, folders…" [ref=f4e44]
+            - button "Open command palette" [ref=f4e46] [cursor=pointer]:
+              - generic [ref=f4e49]: K
+          - button "Switch to light theme (currently system)" [ref=f4e50] [cursor=pointer]
+          - button "Add website" [ref=f4e53] [cursor=pointer]
+          - link "Settings Tester" [ref=f4e133] [cursor=pointer]:
+            - /url: /settings
+      - main [ref=f4e61]:
+        - generic [ref=f4e62]:
+          - generic [ref=f4e63]:
+            - generic [ref=f4e68]:
+              - heading "Settings" [level=1] [ref=f4e69]
+              - paragraph [ref=f4e70]: Tune your profile, appearance, security and data controls.
+            - generic [ref=f4e71]:
+              - generic [ref=f4e72]: Free 2FA
+              - generic [ref=f4e73]: Theme sync
+              - generic [ref=f4e74]: Export / import
+          - generic [ref=f4e75]:
+            - complementary [ref=f4e76]:
+              - button "ST Settings Tester settings.tester@example.com" [ref=f4e134]:
+                - generic [ref=f4e135]: ST
+                - generic [ref=f4e136]:
+                  - generic [ref=f4e137]: Settings Tester
+                  - generic [ref=f4e138]: settings.tester@example.com
+              - navigation "Settings sections" [ref=f4e79]:
+                - button "Profile" [ref=f4e80] [cursor=pointer]
+                - button "Appearance" [active] [ref=f4e85] [cursor=pointer]
+                - button "Notifications" [ref=f4e93] [cursor=pointer]
+                - button "Security" [ref=f4e100] [cursor=pointer]
+                - button "Data & privacy" [ref=f4e105] [cursor=pointer]
+                - button "About" [ref=f4e111] [cursor=pointer]
+              - button "Sign out" [ref=f4e116] [cursor=pointer]
+            - generic [ref=f4e120]:
+              - generic [ref=f4e193]:
+                - generic [ref=f4e203]:
+                  - heading "Appearance" [level=2] [ref=f4e204]
+                  - paragraph [ref=f4e205]: Look and feel of your workspace. Theme syncs across devices; the rest stays on this browser.
+                - generic [ref=f4e207]:
+                  - generic [ref=f4e208]:
+                    - text: Color theme
+                    - generic [ref=f4e209]:
+                      - button "Light" [ref=f4e210]
+                      - button "Dark" [ref=f4e217]
+                      - button "System" [ref=f4e220]
+                  - generic [ref=f4e223]:
+                    - generic [ref=f4e225]:
+                      - generic [ref=f4e226]:
+                        - generic [ref=f4e227]: Reduce animations
+                        - generic [ref=f4e228]: Disable entrance effects, hover pops and motion for a calmer experience.
+                      - switch "Reduce animations" [ref=f4e229] [cursor=pointer]
+                    - generic [ref=f4e232]:
+                      - generic [ref=f4e233]:
+                        - generic [ref=f4e234]: Smooth scrolling
+                        - generic [ref=f4e235]: Animate in-page scrolling between sections and anchors.
+                      - switch "Smooth scrolling" [checked] [ref=f4e236] [cursor=pointer]
+              - generic [ref=f4e189]: All changes saved
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f4e129] [cursor=pointer]
+  - alert [ref=f4e192]

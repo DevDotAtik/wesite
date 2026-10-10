@@ -184,7 +184,7 @@ function ArticleCover({
         />
         {/* Category tag chip overlay */}
         <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
-          <span className="nb-tag text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md" style={{ background: "rgba(0, 0, 0, 0.75)", color: "#fff", borderColor: "rgba(255, 255, 255, 0.25)" }}>
+          <span className="nb-tag text-[9px] font-extrabold uppercase tracking-wider" style={{ background: "#000", color: "#fff", borderColor: "rgba(255, 255, 255, 0.4)" }}>
             {displayCategory}
           </span>
         </div>
@@ -226,8 +226,8 @@ function ArticleCover({
       {/* Centered stylized brand badge */}
       <div className="relative z-10 my-auto flex items-center gap-3">
         <div
-          className="flex size-11 items-center justify-center rounded-xl border-2 p-1.5 shadow-[3px_3px_0_0_rgba(0,0,0,0.4)] backdrop-blur-md"
-          style={{ borderColor: "#ffffff", background: "rgba(255, 255, 255, 0.95)" }}
+          className="flex size-11 items-center justify-center rounded-xl border-2 p-1.5 shadow-[3px_3px_0_0_rgba(0,0,0,0.4)]"
+          style={{ borderColor: "#ffffff", background: "#ffffff" }}
         >
           <FaviconImg src={faviconUrl || ""} domain={domain} size={28} />
         </div>
@@ -260,21 +260,19 @@ function SpotlightHero({
   onSave: (item: NewsItem) => void;
   isSaved: boolean;
 }) {
-  const [currentImg, setCurrentImg] = useState<string | undefined>(item.imageUrl);
+  const [fetchedImg, setFetchedImg] = useState<string | undefined>();
+  const currentImg = item.imageUrl || fetchedImg;
   const [copied, setCopied] = useState(false);
   const theme = useMemo(() => getDomainTheme(item.domain), [item.domain]);
 
   useEffect(() => {
-    if (item.imageUrl) {
-      setCurrentImg(item.imageUrl);
-      return;
-    }
+    if (item.imageUrl) return;
     let isMounted = true;
     fetch(`/api/news/image?url=${encodeURIComponent(item.link)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data?.imageUrl) {
-          setCurrentImg(data.imageUrl);
+          setFetchedImg(data.imageUrl);
         }
       })
       .catch(() => {});
@@ -396,21 +394,19 @@ function DailyDevCard({
   onSave: (item: NewsItem) => void;
   isSaved: boolean;
 }) {
-  const [currentImg, setCurrentImg] = useState<string | undefined>(item.imageUrl);
+  const [fetchedImg, setFetchedImg] = useState<string | undefined>();
+  const currentImg = item.imageUrl || fetchedImg;
   const [copied, setCopied] = useState(false);
   const theme = useMemo(() => getDomainTheme(item.domain), [item.domain]);
 
   useEffect(() => {
-    if (item.imageUrl) {
-      setCurrentImg(item.imageUrl);
-      return;
-    }
+    if (item.imageUrl) return;
     let isMounted = true;
     fetch(`/api/news/image?url=${encodeURIComponent(item.link)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data?.imageUrl) {
-          setCurrentImg(data.imageUrl);
+          setFetchedImg(data.imageUrl);
         }
       })
       .catch(() => {});
@@ -525,19 +521,17 @@ function CompactNewsRow({
   onSave: (item: NewsItem) => void;
   isSaved: boolean;
 }) {
-  const [currentImg, setCurrentImg] = useState<string | undefined>(item.imageUrl);
+  const [fetchedImg, setFetchedImg] = useState<string | undefined>();
+  const currentImg = item.imageUrl || fetchedImg;
 
   useEffect(() => {
-    if (item.imageUrl) {
-      setCurrentImg(item.imageUrl);
-      return;
-    }
+    if (item.imageUrl) return;
     let isMounted = true;
     fetch(`/api/news/image?url=${encodeURIComponent(item.link)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data?.imageUrl) {
-          setCurrentImg(data.imageUrl);
+          setFetchedImg(data.imageUrl);
         }
       })
       .catch(() => {});
@@ -647,19 +641,19 @@ export default function NewsPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Saved news stories map (stored in localStorage & synced with Wesite library)
-  const [savedArticles, setSavedArticles] = useState<Map<string, NewsItem>>(new Map());
-
-  useEffect(() => {
+  const [savedArticles, setSavedArticles] = useState<Map<string, NewsItem>>(() => {
+    if (typeof window === "undefined") return new Map();
     try {
       const stored = localStorage.getItem("wesite_saved_news");
       if (stored) {
         const parsed: NewsItem[] = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setSavedArticles(new Map(parsed.map((item) => [item.link, item])));
+          return new Map(parsed.map((item) => [item.link, item]));
         }
       }
     } catch {}
-  }, []);
+    return new Map();
+  });
 
   const handleSave = useCallback(
     async (item: NewsItem) => {
@@ -754,13 +748,63 @@ export default function NewsPage() {
   }, []);
 
   useEffect(() => {
-    loadNews();
-  }, [loadNews]);
+    let ignore = false;
+    const initialLoad = async () => {
+      try {
+        const res = await fetch("/api/news", {
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (!res.ok) {
+          if (!ignore) {
+            if (res.status === 401) {
+              setError("Please sign in to view your news feed.");
+            } else {
+              setError("Could not load news. Please try again.");
+            }
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (!ignore) {
+          setFeeds(data.feeds ?? []);
+          setEmptyFeeds(data.emptyFeeds ?? []);
+          setAllArticles(data.allArticles ?? []);
+          setPage(1);
+          setDisplayCount(15);
+          setHasMore(true);
+        }
+      } catch (err: unknown) {
+        if (!ignore) {
+          if (err instanceof Error && err.name === "TimeoutError") {
+            setError("News feed request timed out. Please click Refresh to try again.");
+          } else {
+            setError("Network error. Please try again.");
+          }
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    };
+
+    initialLoad();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Reset display count on search or filter change
-  useEffect(() => {
+  const [prevFilter, setPrevFilter] = useState(filter);
+  const [prevSearch, setPrevSearch] = useState(search);
+  if (filter !== prevFilter || search !== prevSearch) {
+    setPrevFilter(filter);
+    setPrevSearch(search);
     setDisplayCount(15);
-  }, [filter, search]);
+  }
 
   // Unique domains across all loaded feeds
   const allDomains = useMemo(() => {

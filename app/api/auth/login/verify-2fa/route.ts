@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
 
     const token = signAuthToken({ userId: user._id.toString(), email: user.email });
     const response = NextResponse.json({
+      token,
       user: serializeDocument({
         ...user.toObject(),
         passwordHash: undefined,
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       remainingRecoveryCodes: user.twoFactorRecoveryCodes?.length ?? 0,
     });
 
-    response.cookies.set(AUTH_COOKIE, token, authCookieOptions());
+    response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));
     return response;
   } catch (err) {
     console.error("Login 2FA verification error:", err);

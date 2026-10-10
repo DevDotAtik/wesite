@@ -63,11 +63,23 @@ export async function getAuthUser(request: NextRequest) {
   }
 }
 
-export function authCookieOptions() {
+export function isSecureContext(request?: NextRequest): boolean {
+  if (!request) {
+    return process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false";
+  }
+  const proto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol;
+  return proto.includes("https");
+}
+
+export function authCookieOptions(request?: NextRequest) {
+  const isHttps = request
+    ? isSecureContext(request)
+    : process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false";
+
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   };

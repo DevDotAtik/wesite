@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { apiError, json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import WebFlow from "@/models/WebFlow";
-import Website from "@/models/Website";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,18 +23,20 @@ export async function GET(request: NextRequest) {
     const siteUsageMap = new Map<string, { count: number; name: string; url?: string; domain?: string; favicon?: string }>();
 
     userWebflows.forEach((flow) => {
-      (flow.nodes || []).forEach((node: any) => {
+      (flow.nodes || []).forEach((node: { data?: { kind?: string; websiteId?: unknown; websiteUrl?: string; websiteTitle?: string; label?: string; websiteDomain?: string; websiteFaviconUrl?: string } }) => {
         if (node.data?.kind === "website" && (node.data.websiteId || node.data.websiteUrl)) {
-          const key = node.data.websiteId ? node.data.websiteId.toString() : node.data.websiteUrl;
-          const current = siteUsageMap.get(key) || {
-            count: 0,
-            name: node.data.websiteTitle || node.data.label || "Website",
-            url: node.data.websiteUrl,
-            domain: node.data.websiteDomain,
-            favicon: node.data.websiteFaviconUrl,
-          };
-          current.count += 1;
-          siteUsageMap.set(key, current);
+          const key = String(node.data.websiteId || node.data.websiteUrl || "");
+          if (key) {
+            const current = siteUsageMap.get(key) || {
+              count: 0,
+              name: node.data.websiteTitle || node.data.label || "Website",
+              url: node.data.websiteUrl,
+              domain: node.data.websiteDomain,
+              favicon: node.data.websiteFaviconUrl,
+            };
+            current.count += 1;
+            siteUsageMap.set(key, current);
+          }
         }
       });
     });
