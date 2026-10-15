@@ -22,12 +22,15 @@ export const WebsiteNode = memo(({ data, selected }: NodeProps) => {
     status = "draft",
     customBg,
     customBorderColor,
+    executionState = "idle",
   } = nodeData;
 
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const displayTitle = websiteTitle || label || websiteDomain || "Website Tool";
+  const isRunning = executionState === "running";
+  const isSuccess = executionState === "success";
 
   // Derive high-resolution preview screenshot with reliable fallback
   const previewImageUrl = useMemo(() => {
@@ -41,23 +44,36 @@ export const WebsiteNode = memo(({ data, selected }: NodeProps) => {
     return null;
   }, [websiteThumbnailUrl, websiteUrl]);
 
-  const customStyle: React.CSSProperties = {};
-  if (typeof customBg === "string" && customBg) {
-    customStyle.backgroundColor = customBg;
-  }
-  if (typeof customBorderColor === "string" && customBorderColor) {
-    customStyle.borderColor = customBorderColor;
-  }
+  const customStyle: React.CSSProperties = {
+    backgroundColor: typeof customBg === "string" && customBg ? customBg : "var(--nb-card)",
+    borderColor: typeof customBorderColor === "string" && customBorderColor ? customBorderColor : "var(--nb-border)",
+  };
 
   return (
     <div
       style={customStyle}
-      className={`group relative min-w-[280px] max-w-[340px] rounded-2xl border-3 border-nb-border bg-nb-card p-3 shadow-nb-md transition-all duration-200 ${
-        selected
-          ? "ring-4 ring-indigo-500 shadow-nb-xl -translate-y-1"
-          : "hover:border-indigo-500 hover:shadow-nb-lg"
+      className={`group relative w-auto min-w-[280px] max-w-[420px] rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-md transition-all duration-200 ${
+        isRunning
+          ? "ring-4 ring-indigo-500 shadow-[0_0_25px_rgba(99,102,241,0.5)] -translate-y-1 webflow-node-executing"
+          : isSuccess
+          ? "ring-3 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.35)]"
+          : selected
+          ? "ring-3 ring-indigo-500 shadow-nb-xl -translate-y-1"
+          : "hover:border-indigo-500 hover:shadow-nb-lg hover:-translate-y-0.5"
       }`}
     >
+      {/* Simulation status pill */}
+      {isRunning && (
+        <div className="absolute -top-3 right-4 z-20 flex items-center gap-1.5 rounded-full bg-indigo-600 border border-white/20 px-2.5 py-0.5 text-[9px] font-black text-white shadow-md animate-bounce">
+          <span className="size-1.5 rounded-full bg-white animate-ping" />
+          <span>Executing...</span>
+        </div>
+      )}
+      {isSuccess && (
+        <div className="absolute -top-3 right-4 z-20 flex items-center gap-1 rounded-full bg-emerald-600 border border-white/20 px-2.5 py-0.5 text-[9px] font-black text-white shadow-md">
+          <span>✔ Done</span>
+        </div>
+      )}
       {/* Target input handle (Left) */}
       <Handle
         type="target"
@@ -128,12 +144,12 @@ export const WebsiteNode = memo(({ data, selected }: NodeProps) => {
 
       {/* Header Info */}
       <div className="flex items-start justify-between gap-2 border-b-2 border-nb-border pb-2">
-        <div className="overflow-hidden">
-          <h4 className="text-xs font-black tracking-tight text-nb-fg truncate" title={displayTitle}>
+        <div className="min-w-0 flex-1">
+          <h4 className="text-xs font-black tracking-tight text-nb-fg break-words leading-snug" title={displayTitle}>
             {displayTitle}
           </h4>
           {nodeData.description && (
-            <p className="text-[10px] text-nb-muted line-clamp-1 font-medium mt-0.5">
+            <p className="text-[10px] text-nb-muted font-medium mt-0.5 break-words leading-relaxed">
               {nodeData.description}
             </p>
           )}
@@ -149,11 +165,11 @@ export const WebsiteNode = memo(({ data, selected }: NodeProps) => {
           <Play className="h-2.5 w-2.5 fill-current" />
           <span>Action</span>
         </div>
-        <div className="mt-1 text-xs font-bold text-nb-fg line-clamp-1">
+        <div className="mt-1 text-xs font-bold text-nb-fg break-words leading-snug">
           {action || "Navigate & Interact"}
         </div>
         {actionDescription && (
-          <div className="mt-0.5 text-[11px] text-nb-muted line-clamp-2 leading-relaxed">
+          <div className="mt-1 text-[11px] text-nb-muted break-words leading-relaxed">
             {actionDescription}
           </div>
         )}

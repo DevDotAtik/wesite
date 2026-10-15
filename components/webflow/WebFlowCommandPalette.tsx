@@ -75,9 +75,22 @@ export function WebFlowCommandPalette({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/80 p-4 animate-in fade-in duration-100">
-      <div className="relative w-full max-w-xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden flex flex-col">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative w-full max-w-xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden flex flex-col"
+      >
         {/* Input Bar */}
-        <div className="flex items-center gap-3 border-b-2 border-nb-border px-4 py-3 bg-nb-surface">
+        <div
+          style={{
+            backgroundColor: "var(--nb-surface)",
+            borderColor: "var(--nb-border)",
+          }}
+          className="flex items-center gap-3 border-b-2 border-nb-border px-4 py-3 bg-nb-surface"
+        >
           <Search className="h-5 w-5 text-nb-muted" />
           <input
             ref={inputRef}

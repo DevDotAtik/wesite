@@ -17,14 +17,15 @@ export const TransformNode = memo(({ data, selected }: NodeProps) => {
     customBorderColor,
   } = nodeData;
 
-  const customStyle: React.CSSProperties = {};
-  if (typeof customBg === "string" && customBg) customStyle.backgroundColor = customBg;
-  if (typeof customBorderColor === "string" && customBorderColor) customStyle.borderColor = customBorderColor;
+  const customStyle: React.CSSProperties = {
+    backgroundColor: typeof customBg === "string" && customBg ? customBg : "var(--nb-card)",
+    borderColor: typeof customBorderColor === "string" && customBorderColor ? customBorderColor : "var(--nb-border)",
+  };
 
   return (
     <div
       style={customStyle}
-      className={`relative min-w-[220px] max-w-[280px] rounded-xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-md transition-all duration-150 ${
+      className={`relative w-auto min-w-[220px] max-w-[420px] rounded-xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-md transition-all duration-150 ${
         selected
           ? "ring-3 ring-teal-500 shadow-nb-lg -translate-y-0.5"
           : "hover:border-teal-400"
@@ -37,12 +38,12 @@ export const TransformNode = memo(({ data, selected }: NodeProps) => {
         className="!w-3 !h-3 !border-2 !border-nb-border !bg-teal-500 !-left-1.5 transition-transform hover:scale-125"
       />
 
-      <div className="flex items-center justify-between gap-2 border-b-2 border-nb-border pb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-2 border-b-2 border-nb-border pb-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex h-5 w-5 items-center justify-center rounded bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shrink-0">
             <ArrowUpDown className="h-3 w-3" />
           </div>
-          <span className="truncate text-xs font-black tracking-tight text-nb-fg">
+          <span className="break-words text-xs font-black tracking-tight text-nb-fg leading-tight">
             {label}
           </span>
         </div>
@@ -51,12 +52,12 @@ export const TransformNode = memo(({ data, selected }: NodeProps) => {
         </span>
       </div>
 
-      <div className="mt-2 text-xs font-bold text-nb-fg">
+      <div className="mt-2 text-xs font-bold text-nb-fg break-words leading-snug">
         {action || "Map & Format Data"}
       </div>
 
       {actionDescription && (
-        <div className="mt-1 text-[11px] text-nb-muted line-clamp-2">
+        <div className="mt-1 text-[11px] text-nb-muted break-words leading-relaxed">
           {actionDescription}
         </div>
       )}

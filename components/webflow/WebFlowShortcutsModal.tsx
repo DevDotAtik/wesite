@@ -33,6 +33,7 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ["Right Click"], label: "Open contextual action menu", category: "Canvas Navigation" },
 
   // Execution & Tools
+  { keys: ["⌘", "↵"], label: "Simulate & test flow execution", category: "Execution & Tools" },
   { keys: ["⌘", "K"], label: "Open command palette", category: "Execution & Tools" },
   { keys: ["⌘", "J"], label: "Trigger AI Copilot assistant", category: "Execution & Tools" },
   { keys: ["⌘", "/"], label: "Open keyboard shortcuts guide", category: "Execution & Tools" },
@@ -54,7 +55,15 @@ export function WebFlowShortcutsModal({ isOpen, onClose }: WebFlowShortcutsModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto animate-in fade-in duration-100">
-      <div className="relative flex flex-col w-full max-w-xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden text-nb-fg">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          color: "var(--nb-fg)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative flex flex-col w-full max-w-xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden text-nb-fg"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b-3 border-nb-border bg-indigo-600 px-6 py-4 text-white">
           <div className="flex items-center gap-3">

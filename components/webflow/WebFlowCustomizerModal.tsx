@@ -69,7 +69,14 @@ export function WebFlowCustomizerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto animate-in fade-in duration-100">
-      <div className="relative flex flex-col w-full max-w-2xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden my-6">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative flex flex-col w-full max-w-2xl rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden my-6"
+      >
         {/* Header - Solid Opaque */}
         <div className="flex items-center justify-between border-b-3 border-nb-border bg-amber-400 px-6 py-4 text-black">
           <div className="flex items-center gap-3">

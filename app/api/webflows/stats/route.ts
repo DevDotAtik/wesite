@@ -11,13 +11,15 @@ export async function GET(request: NextRequest) {
     await connectToDatabase();
 
     const userWebflows = await WebFlow.find({ userId: user._id })
-      .select("name visibility forkCount likeCount nodes updatedAt")
+      .select("name visibility forkCount likeCount viewCount nodes updatedAt")
       .lean();
 
     const totalWebflows = userWebflows.length;
     const publicWebflows = userWebflows.filter((w) => w.visibility === "public").length;
-    const totalRemixes = userWebflows.reduce((sum, w) => sum + (w.forkCount || 0), 0);
-    const totalLikes = userWebflows.reduce((sum, w) => sum + (w.likeCount || 0), 0);
+    const totalRemixes = userWebflows.reduce((sum, w) => sum + ((w as { forkCount?: number }).forkCount || 0), 0);
+    const totalLikes = userWebflows.reduce((sum, w) => sum + ((w as { likeCount?: number }).likeCount || 0), 0);
+    const totalViews = userWebflows.reduce((sum, w) => sum + ((w as { viewCount?: number }).viewCount || 0), 0);
+    const totalNodes = userWebflows.reduce((sum, w) => sum + (w.nodes?.length || 0), 0);
 
     // Count website usages
     const siteUsageMap = new Map<string, { count: number; name: string; url?: string; domain?: string; favicon?: string }>();
@@ -47,9 +49,12 @@ export async function GET(request: NextRequest) {
     return json({
       stats: {
         totalWebflows,
+        totalFlows: totalWebflows,
         publicWebflows,
         totalRemixes,
         totalLikes,
+        totalViews,
+        totalNodes,
         topTool,
         popularTools: sortedTools.slice(0, 5),
       },

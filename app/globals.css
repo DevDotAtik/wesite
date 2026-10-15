@@ -22,6 +22,30 @@
   --color-card: var(--nb-card);
   --font-sans: var(--nb-font);
   --font-mono: var(--nb-font-mono);
+
+  --color-nb-bg: var(--nb-bg);
+  --color-nb-fg: var(--nb-fg);
+  --color-nb-card: var(--nb-card);
+  --color-nb-surface: var(--nb-surface);
+  --color-nb-surface-alt: var(--nb-surface-alt);
+  --color-nb-surface-strong: var(--nb-surface-strong);
+  --color-nb-border: var(--nb-border);
+  --color-nb-muted: var(--nb-muted);
+  --color-nb-primary: var(--nb-primary);
+  --color-nb-primary-fg: var(--nb-primary-fg);
+  --color-nb-secondary: var(--nb-secondary);
+  --color-nb-accent: var(--nb-accent);
+  --color-nb-warning: var(--nb-warning);
+  --color-nb-danger: var(--nb-danger);
+  --color-nb-success: var(--nb-success);
+
+  --shadow-nb-xs: 2px 2px 0 0 var(--nb-shadow);
+  --shadow-nb-sm: 2px 2px 0 0 var(--nb-shadow);
+  --shadow-nb-md: 4px 4px 0 0 var(--nb-shadow);
+  --shadow-nb-lg: 6px 6px 0 0 var(--nb-shadow);
+  --shadow-nb-xl: 10px 10px 0 0 var(--nb-shadow);
+
+  --border-width-3: 3px;
 }
 
 /* ============================================
@@ -1867,3 +1891,60 @@ details.zine-step .zine-step-body {
   max-width: 100% !important;
 }
 
+/* Explicit Neo-Brutalist utility classes for WebFlow & UI elements */
+.border-3 { border-width: 3px !important; }
+.border-t-3 { border-top-width: 3px !important; }
+.border-b-3 { border-bottom-width: 3px !important; }
+.border-l-3 { border-left-width: 3px !important; }
+.border-r-3 { border-right-width: 3px !important; }
+
+.bg-nb-card { background-color: var(--nb-card) !important; }
+.bg-nb-surface { background-color: var(--nb-surface) !important; }
+.bg-nb-surface-alt { background-color: var(--nb-surface-alt) !important; }
+.bg-nb-surface-strong { background-color: var(--nb-surface-strong) !important; }
+.bg-nb-bg { background-color: var(--nb-bg) !important; }
+.border-nb-border { border-color: var(--nb-border) !important; }
+.text-nb-fg { color: var(--nb-fg) !important; }
+.text-nb-muted { color: var(--nb-muted) !important; }
+
+.shadow-nb-xs { box-shadow: 2px 2px 0 0 var(--nb-shadow) !important; }
+.shadow-nb-sm { box-shadow: 2px 2px 0 0 var(--nb-shadow) !important; }
+.shadow-nb-md { box-shadow: 4px 4px 0 0 var(--nb-shadow) !important; }
+.shadow-nb-lg { box-shadow: 6px 6px 0 0 var(--nb-shadow) !important; }
+.shadow-nb-xl { box-shadow: 10px 10px 0 0 var(--nb-shadow) !important; }
+
+/* WebFlow Edge Flow Animation & Interactive Canvas Effects */
+@keyframes nb-edge-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.react-flow__edge.animated path.react-flow__edge-path {
+  stroke-dasharray: 6 4 !important;
+  animation: nb-edge-flow 1s linear infinite !important;
+}
+
+@keyframes nb-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.7), 0 0 45px rgba(99, 102, 241, 0.35);
+  }
+}
+
+.webflow-node-executing {
+  animation: nb-glow-pulse 1.2s ease-in-out infinite !important;
+}
+
+.react-flow__handle {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease !important;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.35) !important;
+}

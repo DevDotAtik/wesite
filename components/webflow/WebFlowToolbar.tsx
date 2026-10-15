@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -20,6 +20,9 @@ import {
   Redo2,
   Keyboard,
   Sliders,
+  Play,
+  Square,
+  Upload,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
 import type { WebFlowVisibility } from "@/lib/webflow/types";
@@ -49,6 +52,11 @@ interface WebFlowToolbarProps {
   onOpenShortcuts?: () => void;
   onOpenCustomizer?: () => void;
   isReadOnly?: boolean;
+  isRunningSimulation?: boolean;
+  onRunSimulation?: () => void;
+  onStopSimulation?: () => void;
+  viewCount?: number;
+  onImportJSON?: (file: File) => void;
 }
 
 export function WebFlowToolbar({
@@ -76,11 +84,17 @@ export function WebFlowToolbar({
   onOpenShortcuts,
   onOpenCustomizer,
   isReadOnly = false,
+  isRunningSimulation = false,
+  onRunSimulation,
+  onStopSimulation,
+  viewCount = 0,
+  onImportJSON,
 }: WebFlowToolbarProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(workflowName);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleNameBlur = () => {
     setIsEditingName(false);
@@ -202,6 +216,17 @@ export function WebFlowToolbar({
                 Unsaved changes
               </span>
             )}
+
+            {/* View Count Badge */}
+            {typeof viewCount === "number" && (
+              <span
+                className="hidden lg:flex items-center gap-1 rounded-full bg-nb-surface border border-nb-border/40 px-2 py-0.5 text-[10px] font-mono font-bold text-nb-muted shrink-0"
+                title={`${viewCount} total viewers have seen this WebFlow`}
+              >
+                <Eye className="h-3 w-3 text-indigo-500" />
+                <span>{viewCount} {viewCount === 1 ? "view" : "views"}</span>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -275,6 +300,36 @@ export function WebFlowToolbar({
             </span>
           )}
         </button>
+
+        {/* Test / Simulate Flow Button */}
+        {onRunSimulation && (
+          <button
+            type="button"
+            onClick={isRunningSimulation ? onStopSimulation : onRunSimulation}
+            className={`flex items-center gap-1.5 rounded-lg border-2 px-2.5 py-1 text-xs font-black shadow-nb-sm transition-all hover:translate-x-0.5 hover:-translate-y-0.5 ${
+              isRunningSimulation
+                ? "border-rose-500 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse"
+                : "border-nb-border bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500"
+            }`}
+            title={
+              isRunningSimulation
+                ? "Stop simulation"
+                : "Test flow: Simulate step-by-step execution across nodes"
+            }
+          >
+            {isRunningSimulation ? (
+              <>
+                <Square className="h-3.5 w-3.5 fill-rose-600 text-rose-600" />
+                <span>Stop Test</span>
+              </>
+            ) : (
+              <>
+                <Play className="h-3.5 w-3.5 fill-emerald-600 text-emerald-600" />
+                <span>Test Flow</span>
+              </>
+            )}
+          </button>
+        )}
 
         {onOpenShortcuts && (
           <button
@@ -353,6 +408,19 @@ export function WebFlowToolbar({
           </button>
         )}
 
+        {/* Hidden Import File Input */}
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".json"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f && onImportJSON) onImportJSON(f);
+            if (importInputRef.current) importInputRef.current.value = "";
+          }}
+          className="hidden"
+        />
+
         {/* Human Guide Modal Button */}
         <button
           type="button"
@@ -363,6 +431,19 @@ export function WebFlowToolbar({
           <BookOpen className="h-3.5 w-3.5 text-amber-500" />
           <span className="hidden sm:inline">Guide</span>
         </button>
+
+        {/* Import JSON Button */}
+        {onImportJSON && (
+          <button
+            type="button"
+            onClick={() => importInputRef.current?.click()}
+            className="flex items-center gap-1.5 rounded-xl border-2 border-nb-border bg-nb-card px-2.5 sm:px-3 py-1.5 text-xs font-black text-nb-fg shadow-nb-sm hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
+            title="Import WebFlow from JSON or AI Agent Spec"
+          >
+            <Upload className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="hidden sm:inline">Import</span>
+          </button>
+        )}
 
         {/* AI Assistant Button */}
         {onOpenAICopilot && (
@@ -401,7 +482,12 @@ export function WebFlowToolbar({
           </button>
 
           {isMobileMenuOpen && (
-            <div className="absolute right-0 top-10 z-50 w-52 rounded-2xl border-3 border-nb-border bg-nb-card p-2 shadow-nb-xl space-y-1 text-xs font-bold animate-in fade-in zoom-in-95">
+            <>
+              <div
+                className="fixed inset-0 z-40 bg-transparent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-10 z-50 w-52 rounded-2xl border-3 border-nb-border bg-nb-card p-2 shadow-nb-xl space-y-1 text-xs font-bold animate-in fade-in zoom-in-95">
               {/* Mobile Undo / Redo */}
               <div className="grid grid-cols-2 gap-1 pb-1 border-b border-nb-border/30">
                 <button
@@ -454,6 +540,20 @@ export function WebFlowToolbar({
                 <span>Fit to Viewport</span>
               </button>
 
+              {onImportJSON && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    importInputRef.current?.click();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 rounded-xl p-2 text-left hover:bg-nb-surface-alt text-nb-fg"
+                >
+                  <Upload className="h-4 w-4 text-indigo-500" />
+                  <span>Import JSON</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -472,6 +572,34 @@ export function WebFlowToolbar({
                   </span>
                 )}
               </button>
+
+              {onRunSimulation && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isRunningSimulation) onStopSimulation?.();
+                    else onRunSimulation?.();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between rounded-xl p-2 text-left text-xs font-bold ${
+                    isRunningSimulation
+                      ? "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
+                      : "hover:bg-nb-surface-alt text-nb-fg"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {isRunningSimulation ? (
+                      <Square className="h-4 w-4 fill-rose-600 text-rose-600" />
+                    ) : (
+                      <Play className="h-4 w-4 fill-emerald-600 text-emerald-600" />
+                    )}
+                    <span>{isRunningSimulation ? "Stop Flow Test" : "Test Flow Run"}</span>
+                  </span>
+                  {isRunningSimulation && (
+                    <span className="text-[10px] uppercase font-mono text-rose-500 font-bold">Running</span>
+                  )}
+                </button>
+              )}
 
               {onOpenShortcuts && (
                 <button
@@ -533,6 +661,7 @@ export function WebFlowToolbar({
                 </div>
               )}
             </div>
+          </>
           )}
         </div>
       </div>

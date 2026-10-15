@@ -326,7 +326,9 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
         key={site._id}
         draggable
         onDragStart={(e) => onDragStart(e, "websiteNode", nodeData)}
-        className="group flex items-center justify-between rounded-xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-sm transition-all hover:border-indigo-500 hover:shadow-nb-md cursor-grab active:cursor-grabbing"
+        onClick={() => onAddNode("websiteNode", nodeData)}
+        title="Click to insert on canvas, or drag to position"
+        className="group flex items-center justify-between rounded-xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-sm transition-all duration-200 hover:border-indigo-500 hover:-translate-y-0.5 hover:shadow-nb-md cursor-pointer active:scale-[0.98]"
       >
         <div className="flex items-center gap-2.5 overflow-hidden">
           {site.faviconUrl ? (
@@ -370,8 +372,11 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
 
         <button
           type="button"
-          onClick={() => onAddNode("websiteNode", nodeData)}
-          className="rounded-lg p-1.5 text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddNode("websiteNode", nodeData);
+          }}
+          className="rounded-lg p-1.5 text-nb-muted group-hover:text-white group-hover:bg-indigo-600 transition-colors shrink-0"
           title="Add to canvas"
         >
           <Plus className="h-4 w-4" />
@@ -421,9 +426,16 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
         {/* Tab 1: Flow Blocks */}
         {activeTab === "blocks" && (
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
-            <p className="text-[11px] text-nb-muted font-medium px-1">
-              Drag nodes onto the canvas or click <span className="font-bold">+</span> to insert.
-            </p>
+            {/* Friendly guidance hint */}
+            <div className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 p-2.5 text-xs text-indigo-700 dark:text-indigo-300 transition-colors">
+              <div className="font-bold flex items-center gap-1.5 mb-0.5">
+                <span className="flex size-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                <span>Quick Blocks</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-nb-muted">
+                Click any block to insert it instantly, or drag onto your canvas.
+              </p>
+            </div>
 
             <div className="space-y-2">
               {genericBlocks.map((block) => {
@@ -433,11 +445,13 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
                     key={block.type}
                     draggable
                     onDragStart={(e) => onDragStart(e, block.type, block.defaultData)}
-                    className="group flex items-center justify-between rounded-xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-sm transition-all hover:border-indigo-500 hover:shadow-nb-md cursor-grab active:cursor-grabbing"
+                    onClick={() => onAddNode(block.type, block.defaultData as WebFlowNodeData)}
+                    title="Click to insert on canvas, or drag to position"
+                    className="group flex items-center justify-between rounded-xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-sm transition-all duration-200 hover:border-indigo-500 hover:-translate-y-0.5 hover:shadow-nb-md cursor-pointer active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-lg border border-nb-border shadow-sm shrink-0 ${block.color}`}
+                        className={`flex h-7 w-7 items-center justify-center rounded-lg border border-nb-border shadow-sm shrink-0 transition-transform group-hover:scale-110 ${block.color}`}
                       >
                         <IconComponent className="h-4 w-4" />
                       </div>
@@ -453,8 +467,11 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
 
                     <button
                       type="button"
-                      onClick={() => onAddNode(block.type, block.defaultData as WebFlowNodeData)}
-                      className="rounded-lg p-1.5 text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddNode(block.type, block.defaultData as WebFlowNodeData);
+                      }}
+                      className="rounded-lg p-1.5 text-nb-muted group-hover:text-white group-hover:bg-indigo-600 transition-colors shrink-0"
                       title="Add to canvas"
                     >
                       <Plus className="h-4 w-4" />
@@ -574,7 +591,7 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
                   return (
                     <div
                       key={groupKey}
-                      className="rounded-xl border border-nb-border/40 bg-nb-surface-alt/50 overflow-hidden"
+                      className="rounded-xl border border-nb-border/40 bg-nb-surface-alt overflow-hidden"
                     >
                       {/* Folder Section Header */}
                       <button

@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from "react";
 import {
   Zap,
-  Bookmark,
   GitFork,
   StickyNote,
   Copy,
@@ -63,24 +62,47 @@ export function WebFlowContextMenu({
 }: WebFlowContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicked outside
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const handleDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as globalThis.Node)) {
-        onClose();
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Close when clicked outside (capture-phase so ReactFlow stopPropagation cannot block it)
+  useEffect(() => {
+    const handleOutside = (e: Event) => {
+      const target = e.target;
+      if (!menuRef.current) return;
+      if (target instanceof Node) {
+        if (!menuRef.current.contains(target)) {
+          onCloseRef.current();
+        }
+      } else {
+        onCloseRef.current();
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
 
-    window.addEventListener("mousedown", handleDown);
+    window.addEventListener("pointerdown", handleOutside, true);
+    window.addEventListener("mousedown", handleOutside, true);
+    window.addEventListener("click", handleOutside, true);
+    window.addEventListener("contextmenu", handleOutside, true);
+    window.addEventListener("touchstart", handleOutside, { capture: true, passive: true });
+    window.addEventListener("wheel", handleOutside, { capture: true, passive: true });
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("blur", () => onCloseRef.current());
+
     return () => {
-      window.removeEventListener("mousedown", handleDown);
+      window.removeEventListener("pointerdown", handleOutside, true);
+      window.removeEventListener("mousedown", handleOutside, true);
+      window.removeEventListener("click", handleOutside, true);
+      window.removeEventListener("contextmenu", handleOutside, true);
+      window.removeEventListener("touchstart", handleOutside, { capture: true } as EventListenerOptions);
+      window.removeEventListener("wheel", handleOutside, { capture: true } as EventListenerOptions);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   if (!target) return null;
 
@@ -91,11 +113,36 @@ export function WebFlowContextMenu({
   const clampedY = typeof window !== "undefined" ? Math.max(10, Math.min(target.y, window.innerHeight - menuHeight - 16)) : target.y;
 
   return (
-    <div
-      ref={menuRef}
-      style={{ left: `${clampedX}px`, top: `${clampedY}px` }}
-      className="fixed z-50 w-56 rounded-2xl border-3 border-nb-border bg-nb-card p-1.5 shadow-nb-xl animate-in fade-in zoom-in-95 duration-100 select-none text-xs font-bold text-nb-fg"
-    >
+    <>
+      {/* Invisible backdrop to capture all outside clicks and contextmenus */}
+      <div
+        className="fixed inset-0 z-40 bg-transparent select-none"
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
+      />
+      <div
+        ref={menuRef}
+        style={{
+          left: `${clampedX}px`,
+          top: `${clampedY}px`,
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          color: "var(--nb-fg)",
+          boxShadow: "6px 6px 0 0 var(--nb-shadow)",
+        }}
+        className="fixed z-50 w-56 rounded-2xl border-3 border-nb-border bg-nb-card p-1.5 shadow-nb-xl animate-in fade-in zoom-in-95 duration-100 select-none text-xs font-bold text-nb-fg"
+      >
       {/* 1. CANVAS CONTEXT MENU */}
       {target.type === "canvas" && (
         <div className="space-y-1">
@@ -379,5 +426,6 @@ export function WebFlowContextMenu({
         </div>
       )}
     </div>
+  </>
   );
 }

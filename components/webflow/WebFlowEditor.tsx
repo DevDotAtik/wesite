@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ReactFlowProvider,
   useNodesState,
@@ -29,6 +30,12 @@ import {
   Files,
   Keyboard,
   Sliders,
+  Plus,
+  Trash2,
+  Play,
+  ArrowRight,
+  Sparkles,
+  Upload,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
 import { WebFlowToolbar } from "./WebFlowToolbar";
@@ -62,6 +69,7 @@ interface HistorySnapshot {
 }
 
 function WebFlowEditorContent({ id }: { id: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +81,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
   const [variables, setVariables] = useState<WebFlowVariable[]>([]);
   const [version, setVersion] = useState(1);
   const [isOwner, setIsOwner] = useState(true);
+  const [viewCount, setViewCount] = useState<number>(0);
 
   // React Flow State
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -109,6 +118,18 @@ function WebFlowEditorContent({ id }: { id: string }) {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [styleSettings, setStyleSettings] = useState<CanvasCustomization>(() => loadCanvasStyle());
 
+  // Flow Simulation State
+  const [isRunningSimulation, setIsRunningSimulation] = useState(false);
+  const [simulationStepInfo, setSimulationStepInfo] = useState<{ step: number; total: number; label: string } | null>(null);
+  const simulationTimers = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    const timers = simulationTimers.current;
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, []);
+
   // Mobile View Detection (Restricts to View-Only Diagram)
   const [isMobile, setIsMobile] = useState(false);
 
@@ -142,6 +163,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
         setVariables(flow.variables || []);
         setVersion(flow.version || 1);
         setIsOwner(data.isOwner ?? true);
+        setViewCount(flow.viewCount || 0);
 
         // Populate React Flow
         setNodes((flow.nodes || []) as unknown as Node[]);
@@ -477,6 +499,371 @@ function WebFlowEditorContent({ id }: { id: string }) {
     toast.success("Canvas layout updated");
   }, [nodes, edges, setNodes, fitView, takeSnapshot]);
 
+  // Stop Simulation
+  const handleStopSimulation = useCallback(() => {
+    simulationTimers.current.forEach(clearTimeout);
+    simulationTimers.current = [];
+    setIsRunningSimulation(false);
+    setSimulationStepInfo(null);
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          executionState: undefined,
+        },
+      }))
+    );
+  }, [setNodes]);
+
+  // Run Flow Simulation
+  const handleRunSimulation = useCallback(() => {
+    if (nodes.length === 0) {
+      toast.info("Add some blocks to your canvas first to test your workflow!");
+      return;
+    }
+
+    simulationTimers.current.forEach(clearTimeout);
+    simulationTimers.current = [];
+    setIsRunningSimulation(true);
+
+    // Set all nodes to idle initially
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          executionState: "idle",
+        },
+      }))
+    );
+
+    // Find start nodes or root nodes with no incoming connections
+    const incomingTargetIds = new Set(edges.map((e) => e.target));
+    const startNodes = nodes.filter((n) => {
+      const data = n.data as WebFlowNodeData;
+      return data.kind === "start" || !incomingTargetIds.has(n.id);
+    });
+
+    const orderedSequence: string[] = [];
+    const visited = new Set<string>();
+
+    const traverse = (nodeId: string) => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      orderedSequence.push(nodeId);
+      const outgoing = edges.filter((e) => e.source === nodeId);
+      for (const edge of outgoing) {
+        traverse(edge.target);
+      }
+    };
+
+    if (startNodes.length > 0) {
+      for (const sn of startNodes) {
+        traverse(sn.id);
+      }
+    }
+    for (const n of nodes) {
+      if (!visited.has(n.id)) {
+        traverse(n.id);
+      }
+    }
+
+    const totalSteps = orderedSequence.length;
+    let stepIndex = 0;
+
+    const runNextStep = () => {
+      if (stepIndex >= orderedSequence.length) {
+        setSimulationStepInfo(null);
+        toast.success(`Simulation complete! All ${totalSteps} steps executed.`);
+        const finishTimer = setTimeout(() => {
+          setIsRunningSimulation(false);
+          setNodes((nds) =>
+            nds.map((n) => ({
+              ...n,
+              data: {
+                ...n.data,
+                executionState: undefined,
+              },
+            }))
+          );
+        }, 2200);
+        simulationTimers.current.push(finishTimer);
+        return;
+      }
+
+      const activeNodeId = orderedSequence[stepIndex];
+      const targetNode = nodes.find((n) => n.id === activeNodeId);
+      const nodeLabel = (targetNode?.data as WebFlowNodeData)?.label || `Step ${stepIndex + 1}`;
+
+      setSimulationStepInfo({
+        step: stepIndex + 1,
+        total: totalSteps,
+        label: nodeLabel,
+      });
+
+      // Set node to running
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === activeNodeId) {
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                executionState: "running",
+              },
+            };
+          }
+          return n;
+        })
+      );
+
+      // Transition to success and move next
+      const stepTimer = setTimeout(() => {
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id === activeNodeId) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  executionState: "success",
+                },
+              };
+            }
+            return n;
+          })
+        );
+
+        stepIndex++;
+        const nextTimer = setTimeout(runNextStep, 350);
+        simulationTimers.current.push(nextTimer);
+      }, 700);
+
+      simulationTimers.current.push(stepTimer);
+    };
+
+    runNextStep();
+  }, [nodes, edges, setNodes]);
+
+  // Quick Connect: Add Next Step
+  const handleAddNextStep = useCallback(
+    (sourceNode: WebFlowNode, kind: "action" | "ai" | "website" | "end" = "action") => {
+      takeSnapshot();
+      const newNodeId = `node_${Date.now()}`;
+      const newPos = {
+        x: (sourceNode.position?.x || 200) + 290,
+        y: sourceNode.position?.y || 200,
+      };
+
+      let initialData: WebFlowNodeData;
+      let nodeType: string;
+
+      switch (kind) {
+        case "ai":
+          nodeType = "aiNode";
+          initialData = {
+            label: "AI Processing",
+            kind: "ai",
+            aiModel: "gemini-2.5-flash",
+            systemPrompt: "Analyze input and return structured findings",
+            status: "configured",
+          };
+          break;
+        case "end":
+          nodeType = "outputNode";
+          initialData = {
+            label: "Output Result",
+            kind: "end",
+            endMessage: "Process finished successfully",
+            status: "configured",
+          };
+          break;
+        case "website":
+          nodeType = "websiteNode";
+          initialData = {
+            label: "Web Source",
+            kind: "website",
+            url: "https://google.com",
+            status: "configured",
+          };
+          break;
+        case "action":
+        default:
+          nodeType = "actionNode";
+          initialData = {
+            label: "Next Action Step",
+            kind: "action",
+            actionDescription: "Process step output",
+            status: "configured",
+          };
+          break;
+      }
+
+      const newNode: WebFlowNode = {
+        id: newNodeId,
+        type: nodeType,
+        position: newPos,
+        data: initialData,
+      };
+
+      const newEdge: Edge = {
+        id: `e_${sourceNode.id}_${newNodeId}`,
+        source: sourceNode.id,
+        target: newNodeId,
+        type: "labeledEdge",
+      };
+
+      setNodes((nds) => [...nds, newNode as unknown as Node]);
+      setEdges((eds) => [...eds, newEdge]);
+      setSelectedNode(newNode);
+      setIsRightInspectorOpen(true);
+      toast.success(`Connected new ${initialData.label} step`);
+    },
+    [takeSnapshot, setNodes, setEdges]
+  );
+
+  // Apply Starter Flow (for empty canvas onboarding)
+  const handleApplyStarterFlow = useCallback(
+    (type: "standard" | "ai" | "blank") => {
+      takeSnapshot();
+      let starterNodes: WebFlowNode[] = [];
+      let starterEdges: WebFlowEdge[] = [];
+
+      if (type === "blank") {
+        starterNodes = [
+          {
+            id: "node_start_1",
+            type: "startNode",
+            position: { x: 380, y: 220 },
+            data: {
+              label: "Flow Trigger",
+              kind: "start",
+              triggerType: "manual",
+              status: "configured",
+            },
+          },
+        ];
+      } else if (type === "standard") {
+        starterNodes = [
+          {
+            id: "node_1",
+            type: "startNode",
+            position: { x: 120, y: 220 },
+            data: { label: "Start Workflow", kind: "start", triggerType: "manual", status: "configured" },
+          },
+          {
+            id: "node_2",
+            type: "websiteNode",
+            position: { x: 420, y: 220 },
+            data: { label: "Source Website", kind: "website", url: "https://news.ycombinator.com", status: "configured" },
+          },
+          {
+            id: "node_3",
+            type: "actionNode",
+            position: { x: 740, y: 220 },
+            data: { label: "Extract Headlines", kind: "action", actionDescription: "Scrape top 10 articles and points", status: "configured" },
+          },
+          {
+            id: "node_4",
+            type: "outputNode",
+            position: { x: 1060, y: 220 },
+            data: { label: "Save Digest", kind: "end", endMessage: "Digest compiled and ready", status: "configured" },
+          },
+        ];
+        starterEdges = [
+          { id: "e1-2", source: "node_1", target: "node_2", type: "labeledEdge" },
+          { id: "e2-3", source: "node_2", target: "node_3", type: "labeledEdge" },
+          { id: "e3-4", source: "node_3", target: "node_4", type: "labeledEdge" },
+        ];
+      } else if (type === "ai") {
+        starterNodes = [
+          {
+            id: "node_1",
+            type: "startNode",
+            position: { x: 120, y: 220 },
+            data: { label: "Query Trigger", kind: "start", triggerType: "manual", status: "configured" },
+          },
+          {
+            id: "node_2",
+            type: "websiteNode",
+            position: { x: 420, y: 220 },
+            data: { label: "Research Target", kind: "website", url: "https://wikipedia.org", status: "configured" },
+          },
+          {
+            id: "node_3",
+            type: "aiNode",
+            position: { x: 740, y: 220 },
+            data: {
+              label: "AI Reasoning",
+              kind: "ai",
+              aiModel: "gemini-2.5-flash",
+              systemPrompt: "Synthesize findings into concise executive bullet points",
+              status: "configured",
+            },
+          },
+          {
+            id: "node_4",
+            type: "outputNode",
+            position: { x: 1060, y: 220 },
+            data: { label: "Deliver Insights", kind: "end", endMessage: "Analysis prepared for dispatch", status: "configured" },
+          },
+        ];
+        starterEdges = [
+          { id: "e1-2", source: "node_1", target: "node_2", type: "labeledEdge" },
+          { id: "e2-3", source: "node_2", target: "node_3", type: "labeledEdge" },
+          { id: "e3-4", source: "node_3", target: "node_4", type: "labeledEdge" },
+        ];
+      }
+
+      setNodes(starterNodes as unknown as Node[]);
+      setEdges(starterEdges as unknown as Edge[]);
+      triggerAutosave({
+        nodes: starterNodes as unknown as Node[],
+        edges: starterEdges as unknown as Edge[],
+      });
+      setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
+      toast.success("Starter template loaded on canvas!");
+    },
+    [takeSnapshot, setNodes, setEdges, triggerAutosave, fitView]
+  );
+
+  const handleImportJSON = useCallback(async (file: File) => {
+    const toastId = toast.loading("Importing WebFlow JSON...");
+    try {
+      const text = await file.text();
+      let json: unknown;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error("Invalid JSON: The selected file could not be parsed as JSON.");
+      }
+
+      const res = await fetch("/api/webflows/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          toast.error("Please sign in to import workflows", { id: toastId });
+          router.push("/login?redirect=/webflow");
+          return;
+        }
+        throw new Error(data.error || data.message || "Failed to import workflow");
+      }
+
+      toast.success("WebFlow imported successfully!", { id: toastId });
+      router.push(`/webflow/${data.webflow._id}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to import workflow";
+      toast.error(message, { id: toastId });
+    }
+  }, [router]);
+
   // Command Palette Items
   const paletteCommands: PaletteCommand[] = [
     {
@@ -487,6 +874,32 @@ function WebFlowEditorContent({ id }: { id: string }) {
       icon: <AIIcon className="h-4 w-4 text-amber-500" glow />,
       shortcut: "⌘J",
       onSelect: () => setIsAICopilotOpen(true),
+    },
+    {
+      id: "import-workflow",
+      title: "Import WebFlow JSON",
+      subtitle: "Import a workflow from JSON file or AI agent spec",
+      category: "Actions",
+      icon: <Upload className="h-4 w-4 text-indigo-500" />,
+      onSelect: () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = (e) => {
+          const f = (e.target as HTMLInputElement).files?.[0];
+          if (f) handleImportJSON(f);
+        };
+        input.click();
+      },
+    },
+    {
+      id: "test-flow",
+      title: "Test Flow Simulation",
+      subtitle: "Simulate step-by-step execution animation",
+      category: "Actions",
+      icon: <Play className="h-4 w-4 text-emerald-500" />,
+      shortcut: "⌘↵",
+      onSelect: () => handleRunSimulation(),
     },
     {
       id: "undo",
@@ -743,6 +1156,14 @@ function WebFlowEditorContent({ id }: { id: string }) {
         return;
       }
 
+      // Test Flow Simulation: ⌘Enter
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (isRunningSimulation) handleStopSimulation();
+        else handleRunSimulation();
+        return;
+      }
+
       // Auto-Layout: ⌘L
       if ((e.metaKey || e.ctrlKey) && (e.key === "l" || e.key === "L")) {
         e.preventDefault();
@@ -786,6 +1207,10 @@ function WebFlowEditorContent({ id }: { id: string }) {
     handleDeleteNode,
     selectedNode,
     fitView,
+    isRunningSimulation,
+    handleRunSimulation,
+    handleStopSimulation,
+    isMobile,
   ]);
 
   if (loading) {
@@ -845,6 +1270,11 @@ function WebFlowEditorContent({ id }: { id: string }) {
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onOpenCustomizer={() => setIsCustomizerOpen(true)}
         isReadOnly={isMobile}
+        isRunningSimulation={isRunningSimulation}
+        onRunSimulation={handleRunSimulation}
+        onStopSimulation={handleStopSimulation}
+        viewCount={viewCount}
+        onImportJSON={handleImportJSON}
       />
 
       {/* Main Workspace Area */}
@@ -870,8 +1300,12 @@ function WebFlowEditorContent({ id }: { id: string }) {
             onConnect={onConnect}
             onNodeSelect={(node) => {
               if (isMobile) return;
+              if (contextMenuTarget) setContextMenuTarget(null);
               setSelectedNode(node);
               if (node && !isRightInspectorOpen) setIsRightInspectorOpen(true);
+            }}
+            onPaneClick={() => {
+              if (contextMenuTarget) setContextMenuTarget(null);
             }}
             onAddNodeAtPosition={handleAddNodeAtPosition}
             onPaneContextMenu={(e, flowPos) => {
@@ -905,7 +1339,200 @@ function WebFlowEditorContent({ id }: { id: string }) {
             onNodeDragStop={handleNodeDragStop}
             styleSettings={styleSettings}
             isReadOnly={isMobile}
+            onImportJSON={handleImportJSON}
           />
+
+          {/* Empty Canvas Quick-Start Hub (New User Friendly) */}
+          {nodes.length === 0 && !loading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
+              <div className="pointer-events-auto max-w-xl w-full rounded-3xl border-3 border-nb-border bg-nb-card/95 backdrop-blur-md p-6 sm:p-8 shadow-nb-xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/10 px-3 py-1 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Interactive Workflow Builder
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-nb-fg tracking-tight">
+                    Welcome to WebFlow
+                  </h2>
+                  <p className="text-xs sm:text-sm text-nb-muted max-w-md mx-auto leading-relaxed">
+                    Start with a 1-click blueprint below, or pick blocks from the left sidebar to connect tools into executable visual workflows.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyStarterFlow("standard")}
+                    className="group rounded-2xl border-2 border-nb-border bg-nb-surface p-3.5 shadow-nb-sm hover:border-indigo-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                    title="Load standard trigger ➔ website ➔ action ➔ output flow"
+                  >
+                    <div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border border-nb-border mb-2.5">
+                        <Zap className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-xs font-black text-nb-fg group-hover:text-indigo-600 transition-colors">
+                        Standard Web Flow
+                      </h3>
+                      <p className="text-[11px] text-nb-muted mt-1 leading-snug">
+                        Trigger ➔ Web Source ➔ Extract ➔ Save Output.
+                      </p>
+                    </div>
+                    <span className="mt-3 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                      Load Blueprint <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyStarterFlow("ai")}
+                    className="group rounded-2xl border-2 border-nb-border bg-nb-surface p-3.5 shadow-nb-sm hover:border-amber-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                    title="Load AI agent pipeline with web research and reasoning"
+                  >
+                    <div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 border border-nb-border mb-2.5">
+                        <AIIcon className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-xs font-black text-nb-fg group-hover:text-amber-600 transition-colors">
+                        AI Agent Pipeline
+                      </h3>
+                      <p className="text-[11px] text-nb-muted mt-1 leading-snug">
+                        Query ➔ Research ➔ AI Reasoning ➔ Deliver.
+                      </p>
+                    </div>
+                    <span className="mt-3 text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      Load Blueprint <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyStarterFlow("blank")}
+                    className="group rounded-2xl border-2 border-nb-border bg-nb-surface p-3.5 shadow-nb-sm hover:border-emerald-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                    title="Start fresh with a single trigger block"
+                  >
+                    <div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 border border-nb-border mb-2.5">
+                        <Play className="h-4 w-4 fill-emerald-600 text-emerald-600" />
+                      </div>
+                      <h3 className="text-xs font-black text-nb-fg group-hover:text-emerald-600 transition-colors">
+                        Blank Slate
+                      </h3>
+                      <p className="text-[11px] text-nb-muted mt-1 leading-snug">
+                        Trigger node ready for custom steps and tools.
+                      </p>
+                    </div>
+                    <span className="mt-3 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      Start Empty <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </button>
+                </div>
+
+                <div className="pt-2 border-t border-nb-border/40 flex flex-wrap items-center justify-center gap-4 text-xs text-nb-muted">
+                  <span className="flex items-center gap-1.5">
+                    💡 <strong>Tip:</strong> Click any block in the left sidebar to insert it on canvas
+                  </span>
+                  <span className="hidden sm:inline text-nb-border">•</span>
+                  <label className="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer">
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>Import JSON File</span>
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImportJSON(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Active Flow Simulation Status Pill */}
+          {isRunningSimulation && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-nb-border bg-nb-card/95 backdrop-blur-md px-4 py-2 shadow-nb-lg text-xs font-bold text-nb-fg">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                    {simulationStepInfo ? `Step ${simulationStepInfo.step}/${simulationStepInfo.total}` : "Simulating"}
+                  </span>
+                </div>
+                <div className="h-3.5 w-[1px] bg-nb-border/40" />
+                <span className="truncate max-w-[200px] text-nb-fg font-black">
+                  {simulationStepInfo?.label || "Executing flow..."}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleStopSimulation}
+                  className="rounded-lg border border-nb-border bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 px-2 py-0.5 text-[11px] font-black hover:bg-rose-200 transition-colors"
+                >
+                  Stop
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Floating Selected Node Quick Action Bar */}
+          {!isMobile && selectedNode && (
+            <div className="absolute top-4 right-4 z-30 pointer-events-auto animate-in fade-in slide-in-from-right-2 duration-150">
+              <div className="flex items-center gap-1.5 rounded-2xl border-2 border-nb-border bg-nb-card/95 backdrop-blur-md p-1.5 shadow-nb-lg text-xs font-bold">
+                <span className="px-2 text-[11px] font-black text-nb-muted truncate max-w-[130px]" title={selectedNode.data.label}>
+                  {selectedNode.data.label || "Selected Step"}
+                </span>
+
+                <div className="h-4 w-[1px] bg-nb-border/40 mx-0.5" />
+
+                {/* Add Next Step */}
+                <button
+                  type="button"
+                  onClick={() => handleAddNextStep(selectedNode, "action")}
+                  className="flex items-center gap-1 rounded-xl border border-nb-border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 text-xs font-black shadow-nb-xs hover:bg-indigo-100 hover:-translate-y-0.5 transition-all"
+                  title="Insert next connected Action step"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>+ Next Step</span>
+                </button>
+
+                {/* Add Next AI Step */}
+                <button
+                  type="button"
+                  onClick={() => handleAddNextStep(selectedNode, "ai")}
+                  className="flex items-center gap-1 rounded-xl border border-nb-border bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 text-xs font-black shadow-nb-xs hover:bg-amber-100 hover:-translate-y-0.5 transition-all"
+                  title="Insert next connected AI step"
+                >
+                  <AIIcon className="h-3.5 w-3.5" />
+                  <span>+ AI</span>
+                </button>
+
+                {/* Duplicate */}
+                <button
+                  type="button"
+                  onClick={() => handleDuplicateNode(selectedNode)}
+                  className="p-1 rounded-xl text-nb-muted hover:text-nb-fg hover:bg-nb-surface transition-colors"
+                  title="Duplicate step (⌘D)"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+
+                {/* Delete */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteNode(selectedNode.id)}
+                  className="p-1 rounded-xl text-nb-muted hover:text-rose-600 hover:bg-nb-surface transition-colors"
+                  title="Delete step (Delete)"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Floating Bottom AI Pill (Desktop Only) */}
           {!isMobile && !isAICopilotOpen && (

@@ -172,7 +172,15 @@ export function AddToWebFlowModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-lg rounded-2xl border-3 border-nb-border bg-nb-card p-5 sm:p-6 shadow-nb-xl animate-in fade-in zoom-in-95 duration-150 text-nb-fg">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          color: "var(--nb-fg)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative w-full max-w-lg rounded-2xl border-3 border-nb-border bg-nb-card p-5 sm:p-6 shadow-nb-xl animate-in fade-in zoom-in-95 duration-150 text-nb-fg"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-nb-border pb-3 mb-4">
           <div className="flex items-center gap-2.5">

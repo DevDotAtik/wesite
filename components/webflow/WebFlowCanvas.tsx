@@ -34,8 +34,10 @@ interface WebFlowCanvasProps {
   onNodeContextMenu?: (event: React.MouseEvent, node: WebFlowNode) => void;
   onEdgeContextMenu?: (event: React.MouseEvent, edge: WebFlowEdge) => void;
   onNodeDragStop?: OnNodeDrag<Node>;
+  onPaneClick?: () => void;
   styleSettings?: CanvasCustomization;
   isReadOnly?: boolean;
+  onImportJSON?: (file: File) => void;
 }
 
 export function WebFlowCanvas({
@@ -50,8 +52,10 @@ export function WebFlowCanvas({
   onNodeContextMenu,
   onEdgeContextMenu,
   onNodeDragStop,
+  onPaneClick,
   styleSettings = DEFAULT_CANVAS_STYLE,
   isReadOnly = false,
+  onImportJSON,
 }: WebFlowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
@@ -66,6 +70,15 @@ export function WebFlowCanvas({
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+
+      // Check if user dropped a .json file directly onto canvas
+      if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+        const file = event.dataTransfer.files[0];
+        if (file.name.toLowerCase().endsWith(".json") && onImportJSON) {
+          onImportJSON(file);
+          return;
+        }
+      }
 
       const rawData = event.dataTransfer.getData("application/reactflow");
       if (!rawData) return;
@@ -82,7 +95,7 @@ export function WebFlowCanvas({
         console.error("Failed to parse dropped node", e);
       }
     },
-    [screenToFlowPosition, onAddNodeAtPosition]
+    [screenToFlowPosition, onAddNodeAtPosition, onImportJSON]
   );
 
   // Selection handlers
@@ -95,7 +108,8 @@ export function WebFlowCanvas({
 
   const handlePaneClick = useCallback(() => {
     onNodeSelect(null);
-  }, [onNodeSelect]);
+    onPaneClick?.();
+  }, [onNodeSelect, onPaneClick]);
 
   const handlePaneContextMenu = useCallback(
     (event: React.MouseEvent | MouseEvent) => {

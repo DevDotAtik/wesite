@@ -68,8 +68,8 @@ export function autoLayoutNodes(
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const layoutedNodes: WebFlowNode[] = [];
 
-  const xSpacing = 320;
-  const ySpacing = 180;
+  const xSpacing = 420;
+  const ySpacing = 220;
   const startX = 60;
   const startY = 100;
 

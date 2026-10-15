@@ -32,7 +32,14 @@ export function ValidationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
-      <div className="relative flex flex-col w-full max-w-2xl max-h-[85vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative flex flex-col w-full max-w-2xl max-h-[85vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      >
         {/* Header */}
         <div
           className={`flex items-center justify-between border-b-3 border-nb-border px-6 py-4 text-white ${

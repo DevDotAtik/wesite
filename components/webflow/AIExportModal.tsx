@@ -13,6 +13,7 @@ import {
   FileText,
   Code2,
   Sparkles,
+  Workflow,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
 import {
@@ -38,7 +39,7 @@ interface AIExportModalProps {
   variables?: WebFlowVariable[];
 }
 
-type ExportTab = "json" | "markdown" | "yaml" | "plaintext";
+type ExportTab = "json" | "canvas" | "markdown" | "yaml" | "plaintext";
 
 export function AIExportModal({
   isOpen,
@@ -67,6 +68,19 @@ export function AIExportModal({
       variables,
     });
     const jsonStr = JSON.stringify(aiSpec, null, 2);
+    const canvasStr = JSON.stringify(
+      {
+        name: workflow.name,
+        description: workflow.description,
+        category: workflow.category,
+        version: workflow.version || 1,
+        nodes,
+        edges,
+        variables,
+      },
+      null,
+      2
+    );
     const mdStr = convertToHumanMarkdown({
       name: workflow.name,
       description: workflow.description,
@@ -81,6 +95,7 @@ export function AIExportModal({
     return {
       aiSpec,
       json: jsonStr,
+      canvas: canvasStr,
       markdown: mdStr,
       yaml: yamlStr,
       plaintext: plainStr,
@@ -92,6 +107,8 @@ export function AIExportModal({
   const currentContent =
     activeTab === "json"
       ? exportData.json
+      : activeTab === "canvas"
+      ? exportData.canvas
       : activeTab === "markdown"
       ? exportData.markdown
       : activeTab === "yaml"
@@ -111,12 +128,14 @@ export function AIExportModal({
   const handleDownload = () => {
     const extensions: Record<ExportTab, string> = {
       json: "json",
+      canvas: "json",
       markdown: "md",
       yaml: "yaml",
       plaintext: "txt",
     };
     const mimeTypes: Record<ExportTab, string> = {
       json: "application/json",
+      canvas: "application/json",
       markdown: "text/markdown",
       yaml: "text/yaml",
       plaintext: "text/plain",
@@ -124,7 +143,8 @@ export function AIExportModal({
 
     const ext = extensions[activeTab];
     const mime = mimeTypes[activeTab];
-    const filename = `${workflow.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-agent-spec.${ext}`;
+    const slug = workflow.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const filename = activeTab === "canvas" ? `${slug}-canvas.json` : `${slug}-agent-spec.${ext}`;
 
     const blob = new Blob([currentContent], { type: mime });
     const url = URL.createObjectURL(blob);
@@ -142,7 +162,14 @@ export function AIExportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
-      <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          boxShadow: "10px 10px 0 0 var(--nb-shadow)",
+        }}
+        className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border-3 border-nb-border bg-nb-card shadow-nb-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b-3 border-nb-border bg-indigo-600 px-6 py-4 text-white">
           <div className="flex items-center gap-3">
@@ -258,7 +285,19 @@ export function AIExportModal({
               }`}
             >
               <Code2 className="h-3.5 w-3.5" />
-              JSON (Deterministic)
+              AI Spec (JSON)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("canvas")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all border-2 ${
+                activeTab === "canvas"
+                  ? "border-nb-border bg-indigo-600 text-white shadow-nb-sm"
+                  : "border-transparent text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt"
+              }`}
+            >
+              <Workflow className="h-3.5 w-3.5" />
+              Canvas Graph (JSON)
             </button>
             <button
               type="button"

@@ -29,9 +29,20 @@ export async function GET(request: NextRequest, { params }: Params) {
       return apiError("This WebFlow is private", 403);
     }
 
+    let viewCount = (webflow as { viewCount?: number }).viewCount || 0;
+
     // Atomically increment views if viewed by a non-owner
     if (!isOwner) {
-      await WebFlow.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+      const updated = await WebFlow.findByIdAndUpdate(
+        id,
+        { $inc: { viewCount: 1 } },
+        { new: true, select: "viewCount" }
+      ).lean();
+      if (updated && typeof updated.viewCount === "number") {
+        viewCount = updated.viewCount;
+      } else {
+        viewCount += 1;
+      }
     }
 
     let isLiked = false;
@@ -52,6 +63,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     return json({
       webflow: {
         ...serializeDocument(webflow),
+        viewCount,
         isLiked,
         isBookmarked,
       },

@@ -18,6 +18,9 @@ import {
   Lock,
   LayoutGrid,
   Upload,
+  Zap,
+  Play,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
@@ -75,6 +78,7 @@ interface WebFlowTemplateItem {
     publicFlows: 0,
     totalRemixes: 0,
     totalLikes: 0,
+    totalViews: 0,
     totalNodes: 0,
     mostUsedTool: null as { name: string; count: number } | null,
   });
@@ -99,24 +103,38 @@ interface WebFlowTemplateItem {
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const toastId = toast.loading("Importing WebFlow JSON...");
     try {
-      toast.loading("Importing WebFlow...");
       const text = await file.text();
-      const json = JSON.parse(text);
+      let json: unknown;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error("Invalid JSON: The selected file could not be parsed as JSON.");
+      }
+
       const res = await fetch("/api/webflows/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to import workflow");
-      toast.dismiss();
-      toast.success("WebFlow imported successfully!");
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          toast.error("Please sign in to import workflows", { id: toastId });
+          router.push("/login?redirect=/webflow");
+          return;
+        }
+        throw new Error(data.error || data.message || "Failed to import workflow");
+      }
+
+      toast.success("WebFlow imported successfully!", { id: toastId });
       router.push(`/webflow/${data.webflow._id}`);
     } catch (err: unknown) {
-      toast.dismiss();
       const message = err instanceof Error ? err.message : "Invalid WebFlow JSON file";
-      toast.error(message);
+      toast.error(message, { id: toastId });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -237,6 +255,121 @@ interface WebFlowTemplateItem {
       toast.error(message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  // Quick Start Flow Handler
+  const handleQuickStartFlow = async (type: "standard" | "ai" | "blank") => {
+    try {
+      toast.loading("Creating starter WebFlow...", { id: "quick-starter" });
+      let starterNodes: unknown[] = [];
+      let starterEdges: unknown[] = [];
+      let name = "My WebFlow";
+      let description = "Visual multi-step automation workflow";
+
+      if (type === "standard") {
+        name = "Web Research & Extract";
+        description = "Scrape headlines and extract structured information";
+        starterNodes = [
+          {
+            id: "node_1",
+            type: "startNode",
+            position: { x: 120, y: 220 },
+            data: { label: "Start Workflow", kind: "start", triggerType: "manual", status: "configured" },
+          },
+          {
+            id: "node_2",
+            type: "websiteNode",
+            position: { x: 420, y: 220 },
+            data: { label: "Source Website", kind: "website", url: "https://news.ycombinator.com", status: "configured" },
+          },
+          {
+            id: "node_3",
+            type: "actionNode",
+            position: { x: 740, y: 220 },
+            data: { label: "Extract Headlines", kind: "action", actionDescription: "Scrape top articles and summaries", status: "configured" },
+          },
+          {
+            id: "node_4",
+            type: "outputNode",
+            position: { x: 1060, y: 220 },
+            data: { label: "Save Digest", kind: "end", endMessage: "Digest compiled successfully", status: "configured" },
+          },
+        ];
+        starterEdges = [
+          { id: "e1-2", source: "node_1", target: "node_2", type: "labeledEdge" },
+          { id: "e2-3", source: "node_2", target: "node_3", type: "labeledEdge" },
+          { id: "e3-4", source: "node_3", target: "node_4", type: "labeledEdge" },
+        ];
+      } else if (type === "ai") {
+        name = "AI Research Pipeline";
+        description = "Automated web target research with AI analysis and synthesis";
+        starterNodes = [
+          {
+            id: "node_1",
+            type: "startNode",
+            position: { x: 120, y: 220 },
+            data: { label: "Query Trigger", kind: "start", triggerType: "manual", status: "configured" },
+          },
+          {
+            id: "node_2",
+            type: "websiteNode",
+            position: { x: 420, y: 220 },
+            data: { label: "Research Target", kind: "website", url: "https://wikipedia.org", status: "configured" },
+          },
+          {
+            id: "node_3",
+            type: "aiNode",
+            position: { x: 740, y: 220 },
+            data: {
+              label: "AI Reasoning",
+              kind: "ai",
+              aiModel: "gemini-2.5-flash",
+              systemPrompt: "Synthesize findings into concise executive bullet points",
+              status: "configured",
+            },
+          },
+          {
+            id: "node_4",
+            type: "outputNode",
+            position: { x: 1060, y: 220 },
+            data: { label: "Deliver Insights", kind: "end", endMessage: "Analysis prepared for dispatch", status: "configured" },
+          },
+        ];
+        starterEdges = [
+          { id: "e1-2", source: "node_1", target: "node_2", type: "labeledEdge" },
+          { id: "e2-3", source: "node_2", target: "node_3", type: "labeledEdge" },
+          { id: "e3-4", source: "node_3", target: "node_4", type: "labeledEdge" },
+        ];
+      } else {
+        name = "Untitled WebFlow";
+        description = "New visual workflow";
+      }
+
+      const res = await fetch("/api/webflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          category: "Productivity",
+          visibility: "private",
+          nodes: starterNodes,
+          edges: starterEdges,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create workflow");
+      }
+
+      const data = await res.json();
+      toast.success("Starter WebFlow created!", { id: "quick-starter" });
+      router.push(`/webflow/${data.webflow._id}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not create workflow";
+      toast.error(message, { id: "quick-starter" });
     }
   };
 
@@ -419,10 +552,16 @@ interface WebFlowTemplateItem {
           </div>
 
           {/* Stats Bar */}
-          <div className="relative z-10 mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-white/15 text-xs font-mono">
+          <div className="relative z-10 mt-8 grid grid-cols-2 sm:grid-cols-5 gap-3 pt-6 border-t border-white/15 text-xs font-mono">
             <div className="rounded-xl bg-white/5 p-3 border border-white/10">
               <span className="block text-[11px] text-indigo-200 font-sans">My WebFlows</span>
               <span className="text-xl font-black text-white">{stats.totalFlows}</span>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3 border border-white/10">
+              <span className="block text-[11px] text-indigo-200 font-sans flex items-center gap-1">
+                <Eye className="h-3 w-3 text-indigo-300" /> Total Views
+              </span>
+              <span className="text-xl font-black text-indigo-200">{stats.totalViews}</span>
             </div>
             <div className="rounded-xl bg-white/5 p-3 border border-white/10">
               <span className="block text-[11px] text-indigo-200 font-sans">Nodes Connected</span>
@@ -435,6 +574,51 @@ interface WebFlowTemplateItem {
             <div className="rounded-xl bg-white/5 p-3 border border-white/10">
               <span className="block text-[11px] text-indigo-200 font-sans">Workflow Upvotes</span>
               <span className="text-xl font-black text-amber-300">{stats.totalLikes}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Beginner Onboarding: 3-Step Walkthrough Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-sm hover:-translate-y-0.5 transition-all">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border border-nb-border font-black text-xs shrink-0">
+              1
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-nb-fg flex items-center gap-1.5">
+                Pick Your Tools & Steps
+              </h4>
+              <p className="text-[11px] text-nb-muted mt-0.5 leading-snug">
+                Click or drag saved websites, actions, and AI reasoning blocks onto your canvas.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-sm hover:-translate-y-0.5 transition-all">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 border border-nb-border font-black text-xs shrink-0">
+              2
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-nb-fg flex items-center gap-1.5">
+                Connect Flow with 1-Click
+              </h4>
+              <p className="text-[11px] text-nb-muted mt-0.5 leading-snug">
+                Click &ldquo;+ Next Step&rdquo; to instantly chain actions, or drag between glowing node handles.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-sm hover:-translate-y-0.5 transition-all">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 border border-nb-border font-black text-xs shrink-0">
+              3
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-nb-fg flex items-center gap-1.5">
+                Simulate & Export to AI
+              </h4>
+              <p className="text-[11px] text-nb-muted mt-0.5 leading-snug">
+                Hit &ldquo;Test Flow&rdquo; to watch animated execution, then export deterministic prompts for AI agents.
+              </p>
             </div>
           </div>
         </div>
@@ -524,30 +708,108 @@ interface WebFlowTemplateItem {
             {activeTab === "my-flows" && (
               <>
                 {filteredMyFlows.length === 0 ? (
-                  <div className="rounded-3xl border-3 border-dashed border-nb-border/60 bg-nb-card/50 p-12 text-center space-y-4">
+                  <div className="rounded-3xl border-3 border-dashed border-nb-border/60 bg-nb-card/50 p-6 sm:p-10 text-center space-y-6">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border-2 border-nb-border shadow-nb-sm">
                       <Workflow className="h-7 w-7" />
                     </div>
-                    <div className="space-y-1 max-w-sm mx-auto">
-                      <h3 className="text-lg font-black text-nb-fg">No WebFlows yet</h3>
-                      <p className="text-xs text-nb-muted">
-                        Design your first visual workflow from your saved tools or clone a starter template.
+                    <div className="space-y-1 max-w-md mx-auto">
+                      <h3 className="text-xl font-black text-nb-fg">Start Your First WebFlow</h3>
+                      <p className="text-xs text-nb-muted leading-relaxed">
+                        Choose a 1-click starter blueprint below, or start fresh with a blank canvas to link your saved tools into deterministic agent pipelines.
                       </p>
                     </div>
-                    <div className="flex items-center justify-center gap-3">
+
+                    {/* 3 Quick-Starter Blueprint Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 max-w-3xl mx-auto text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStartFlow("standard")}
+                        className="group rounded-2xl border-2 border-nb-border bg-nb-card p-4 shadow-nb-sm hover:border-indigo-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                        title="Create standard trigger ➔ website ➔ action ➔ output flow"
+                      >
+                        <div>
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border border-nb-border mb-3">
+                            <Zap className="h-4 w-4" />
+                          </div>
+                          <h4 className="text-sm font-black text-nb-fg group-hover:text-indigo-600 transition-colors">
+                            Standard Web Flow
+                          </h4>
+                          <p className="text-xs text-nb-muted mt-1 leading-snug">
+                            Start Trigger ➔ Web Source ➔ Extract Action ➔ Save Digest.
+                          </p>
+                        </div>
+                        <span className="mt-4 text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                          Use Blueprint <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStartFlow("ai")}
+                        className="group rounded-2xl border-2 border-nb-border bg-nb-card p-4 shadow-nb-sm hover:border-amber-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                        title="Create AI agent pipeline with web research and reasoning"
+                      >
+                        <div>
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 border border-nb-border mb-3">
+                            <AIIcon className="h-4 w-4" glow />
+                          </div>
+                          <h4 className="text-sm font-black text-nb-fg group-hover:text-amber-600 transition-colors">
+                            AI Agent Pipeline
+                          </h4>
+                          <p className="text-xs text-nb-muted mt-1 leading-snug">
+                            Query Input ➔ Research Target ➔ AI Reasoning ➔ Result.
+                          </p>
+                        </div>
+                        <span className="mt-4 text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          Use Blueprint <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStartFlow("blank")}
+                        className="group rounded-2xl border-2 border-nb-border bg-nb-card p-4 shadow-nb-sm hover:border-emerald-500 hover:-translate-y-1 hover:shadow-nb-md transition-all flex flex-col justify-between"
+                        title="Start with a blank canvas"
+                      >
+                        <div>
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 border border-nb-border mb-3">
+                            <Play className="h-4 w-4 fill-emerald-600 text-emerald-600" />
+                          </div>
+                          <h4 className="text-sm font-black text-nb-fg group-hover:text-emerald-600 transition-colors">
+                            Blank Slate
+                          </h4>
+                          <p className="text-xs text-nb-muted mt-1 leading-snug">
+                            Start empty and build custom nodes & tool chains freely.
+                          </p>
+                        </div>
+                        <span className="mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          Create Blank <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </button>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-1.5 rounded-xl border-2 border-nb-border bg-nb-card px-4 py-2 text-xs font-bold text-nb-fg shadow-nb-sm hover:bg-nb-surface-alt transition-colors"
+                      >
+                        <Upload className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>Import Workflow JSON</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => setIsCreateOpen(true)}
-                        className="rounded-xl border-2 border-nb-border bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-nb-sm"
+                        className="rounded-xl border-2 border-nb-border bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-nb-sm hover:bg-indigo-700 transition-colors"
                       >
-                        Create Blank Flow
+                        Custom Setup Dialog
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveTab("templates")}
-                        className="rounded-xl border-2 border-nb-border bg-nb-card px-4 py-2 text-xs font-bold text-nb-fg shadow-nb-sm hover:bg-nb-surface-alt"
+                        className="rounded-xl border-2 border-nb-border bg-nb-card px-4 py-2 text-xs font-bold text-nb-fg shadow-nb-sm hover:bg-nb-surface-alt transition-colors"
                       >
-                        Use a Template
+                        Browse Community Templates
                       </button>
                     </div>
                   </div>
@@ -567,6 +829,11 @@ interface WebFlowTemplateItem {
                                 {flow.category}
                               </span>
                               <div className="flex items-center gap-1.5 text-xs text-nb-muted">
+                                <span className="flex items-center gap-1 text-[11px] font-mono text-nb-muted font-bold" title={`${flow.viewCount || 0} total views`}>
+                                  <Eye className="h-3 w-3 text-indigo-500" />
+                                  <span>{flow.viewCount || 0}</span>
+                                </span>
+                                <span className="text-nb-border/40">•</span>
                                 {flow.visibility === "public" ? (
                                   <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
                                     <Globe className="h-3 w-3" /> Public
@@ -580,14 +847,14 @@ interface WebFlowTemplateItem {
                             </div>
 
                             {/* Title & Description */}
-                            <div>
+                            <div className="min-w-0">
                               <Link
                                 href={`/webflow/${flow._id}`}
-                                className="text-base font-black text-nb-fg tracking-tight hover:underline line-clamp-1"
+                                className="text-base font-black text-nb-fg tracking-tight hover:underline break-words line-clamp-2"
                               >
                                 {flow.name}
                               </Link>
-                              <p className="mt-1 text-xs text-nb-muted line-clamp-2 leading-relaxed">
+                              <p className="mt-1 text-xs text-nb-muted break-words line-clamp-4 leading-relaxed">
                                 {flow.description || "No description provided."}
                               </p>
                             </div>
@@ -600,6 +867,11 @@ interface WebFlowTemplateItem {
                               <span>•</span>
                               <span>
                                 <strong className="text-indigo-600 dark:text-indigo-400">{websiteCount}</strong> tools
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1 font-bold text-nb-fg" title={`${flow.viewCount || 0} viewers have seen this workflow`}>
+                                <Eye className="h-3 w-3 text-indigo-500" />
+                                <span>{flow.viewCount || 0} {flow.viewCount === 1 ? "view" : "views"}</span>
                               </span>
                               {flow.forkCount && flow.forkCount > 0 ? (
                                 <>
@@ -684,14 +956,14 @@ interface WebFlowTemplateItem {
                               </span>
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                               <Link
                                 href={`/webflow/${flow._id}`}
-                                className="text-base font-black text-nb-fg tracking-tight hover:underline line-clamp-1"
+                                className="text-base font-black text-nb-fg tracking-tight hover:underline break-words line-clamp-2"
                               >
                                 {flow.name}
                               </Link>
-                              <p className="mt-1 text-xs text-nb-muted line-clamp-2 leading-relaxed">
+                              <p className="mt-1 text-xs text-nb-muted break-words line-clamp-4 leading-relaxed">
                                 {flow.description || "Community curated workflow."}
                               </p>
                             </div>
@@ -703,6 +975,11 @@ interface WebFlowTemplateItem {
                               <span>•</span>
                               <span>
                                 <strong className="text-indigo-600 dark:text-indigo-400">{websiteCount}</strong> tools
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1 font-bold text-nb-fg" title={`${flow.viewCount || 0} views`}>
+                                <Eye className="h-3 w-3 text-indigo-500" />
+                                <span>{flow.viewCount || 0} {flow.viewCount === 1 ? "view" : "views"}</span>
                               </span>
                             </div>
                           </div>

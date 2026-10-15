@@ -15,14 +15,15 @@ export const ConditionNode = memo(({ data, selected }: NodeProps) => {
     customBorderColor,
   } = nodeData;
 
-  const customStyle: React.CSSProperties = {};
-  if (typeof customBg === "string" && customBg) customStyle.backgroundColor = customBg;
-  if (typeof customBorderColor === "string" && customBorderColor) customStyle.borderColor = customBorderColor;
+  const customStyle: React.CSSProperties = {
+    backgroundColor: typeof customBg === "string" && customBg ? customBg : "var(--nb-card)",
+    borderColor: typeof customBorderColor === "string" && customBorderColor ? customBorderColor : "var(--nb-border)",
+  };
 
   return (
     <div
       style={customStyle}
-      className={`relative min-w-[240px] max-w-[280px] rounded-xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-md transition-all duration-150 ${
+      className={`relative w-auto min-w-[240px] max-w-[420px] rounded-xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-md transition-all duration-150 ${
         selected
           ? "ring-3 ring-violet-500 shadow-nb-lg -translate-y-0.5"
           : "hover:border-violet-400"
@@ -37,12 +38,12 @@ export const ConditionNode = memo(({ data, selected }: NodeProps) => {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 border-b-2 border-nb-border pb-2">
-        <div className="flex items-center gap-2 overflow-hidden">
+      <div className="flex items-start justify-between gap-2 border-b-2 border-nb-border pb-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex h-5 w-5 items-center justify-center rounded bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-400 border border-violet-400 dark:border-violet-700 shrink-0">
             <GitFork className="h-3 w-3" />
           </div>
-          <span className="truncate text-xs font-black tracking-tight text-nb-fg">
+          <span className="break-words text-xs font-black tracking-tight text-nb-fg leading-tight">
             {label || "Condition"}
           </span>
         </div>
@@ -52,13 +53,13 @@ export const ConditionNode = memo(({ data, selected }: NodeProps) => {
       </div>
 
       {/* Condition Expression */}
-      <div className="mt-2 rounded bg-nb-surface-alt p-2 font-mono text-[11px] font-bold text-nb-fg border border-nb-border">
+      <div className="mt-2 rounded bg-nb-surface-alt p-2 font-mono text-[11px] font-bold text-nb-fg border border-nb-border break-words leading-relaxed">
         <span className="text-violet-600 dark:text-violet-400">IF </span>
-        <span className="break-all">{conditionExpression || "expression === true"}</span>
+        <span>{conditionExpression || "expression === true"}</span>
       </div>
 
       {description && (
-        <div className="mt-1 text-[11px] text-nb-muted line-clamp-2">
+        <div className="mt-1 text-[11px] text-nb-muted break-words leading-relaxed">
           {description}
         </div>
       )}

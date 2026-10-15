@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   X,
-  ArrowRight,
-  Zap,
   Settings2,
   Key,
   Check,
@@ -220,12 +218,23 @@ export function AICopilotModal({
 
       {/* Slide-Up Bottom Drawer (Docked to bottom of screen like ChatGPT) */}
       <div
+        style={{
+          backgroundColor: "var(--nb-card)",
+          borderColor: "var(--nb-border)",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.4), 8px 8px 0 0 var(--nb-shadow)",
+        }}
         className={`fixed bottom-0 inset-x-0 z-50 md:bottom-2 md:left-1/2 md:-translate-x-1/2 md:w-[880px] md:max-w-[95vw] rounded-t-2xl md:rounded-2xl border-3 border-nb-border bg-nb-card shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ease-out animate-in slide-in-from-bottom-8 ${
           isExpanded ? "h-[85vh] max-h-[700px]" : "h-[460px] max-h-[85vh]"
         }`}
       >
         {/* Top Grip Bar & Header */}
-        <div className="flex items-center justify-between border-b-3 border-nb-border bg-nb-surface px-4 py-3 shrink-0">
+        <div
+          style={{
+            backgroundColor: "var(--nb-surface)",
+            borderColor: "var(--nb-border)",
+          }}
+          className="flex items-center justify-between border-b-3 border-nb-border bg-nb-surface px-4 py-3 shrink-0"
+        >
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400 text-black font-black border-2 border-nb-border shadow-nb-xs shrink-0">
               <AIIcon className="h-5 w-5" glow />
@@ -283,7 +292,13 @@ export function AICopilotModal({
 
         {/* Collapsible Settings Drawer */}
         {showSettings && (
-          <div className="bg-nb-surface-alt border-b-2 border-nb-border p-3.5 space-y-3 shrink-0 animate-in slide-in-from-top-2 duration-150">
+          <div
+            style={{
+              backgroundColor: "var(--nb-surface-alt)",
+              borderColor: "var(--nb-border)",
+            }}
+            className="bg-nb-surface-alt border-b-2 border-nb-border p-3.5 space-y-3 shrink-0 animate-in slide-in-from-top-2 duration-150"
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wider text-nb-fg flex items-center gap-1.5">
                 <Key className="h-3.5 w-3.5 text-indigo-500" /> AI Engine Configuration
@@ -355,7 +370,10 @@ export function AICopilotModal({
         )}
 
         {/* Content Body */}
-        <div className="flex-1 flex flex-col p-4 overflow-y-auto space-y-3 bg-nb-card">
+        <div
+          style={{ backgroundColor: "var(--nb-card)" }}
+          className="flex-1 flex flex-col p-4 overflow-y-auto space-y-3 bg-nb-card"
+        >
           {/* Quick Suggestions Chips Carousel (ChatGPT-style) */}
           <div className="space-y-1.5 shrink-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-nb-muted">
@@ -367,6 +385,10 @@ export function AICopilotModal({
                   key={sug.title}
                   type="button"
                   onClick={() => setPrompt(sug.prompt)}
+                  style={{
+                    backgroundColor: "var(--nb-surface)",
+                    color: "var(--nb-fg)",
+                  }}
                   className="flex items-center gap-1.5 rounded-xl border-2 border-nb-border/40 bg-nb-surface px-2.5 py-1 text-xs font-bold text-nb-fg hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 shrink-0 transition-all shadow-nb-xs"
                 >
                   <Sparkles className="h-3 w-3 text-amber-500 shrink-0" />
@@ -380,7 +402,13 @@ export function AICopilotModal({
           </div>
 
           {/* Prompt Area (ChatGPT Style Input Container) */}
-          <div className="flex-1 flex flex-col rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-600 transition-all">
+          <div
+            style={{
+              backgroundColor: "var(--nb-surface)",
+              borderColor: "var(--nb-border)",
+            }}
+            className="flex-1 flex flex-col rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-600 transition-all"
+          >
             <textarea
               ref={textareaRef}
               rows={isExpanded ? 8 : 4}

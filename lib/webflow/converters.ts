@@ -35,10 +35,13 @@ export type AIAgentExport = {
     };
     action: string;
     purpose: string;
-    inputs: Array<{ name: string; type?: string; description?: string }>;
-    outputs: Array<{ name: string; type?: string; description?: string }>;
+    inputs: Array<{ id?: string; name: string; type?: string; description?: string }>;
+    outputs: Array<{ id?: string; name: string; type?: string; description?: string }>;
     instructions: string[];
     condition_expression?: string;
+    position?: { x: number; y: number };
+    customBg?: string;
+    customBorderColor?: string;
     next_steps: Array<{ target_id: string; condition_branch?: string; label?: string }>;
     success_criteria?: string;
     failure_handling?: string;
@@ -61,6 +64,10 @@ export type AIAgentExport = {
     source_node: string;
     description: string;
   }>;
+  graph?: {
+    nodes: WebFlowNode[];
+    edges: WebFlowEdge[];
+  };
   constraints: string[];
   failure_handling: string[];
 };
@@ -196,17 +203,22 @@ export function convertToAIAgentFormat(params: {
         action: node.data.action || node.data.description || "Execute step",
         purpose: node.data.description || node.data.actionDescription || node.data.label,
         inputs: (node.data.inputs || []).map((p) => ({
+          id: p.id,
           name: p.name,
           type: p.type,
           description: p.description,
         })),
         outputs: (node.data.outputs || []).map((p) => ({
+          id: p.id,
           name: p.name,
           type: p.type,
           description: p.description,
         })),
         instructions: instructions.length > 0 ? instructions : [node.data.action || "Perform action"],
         condition_expression: node.data.conditionExpression,
+        position: node.position,
+        customBg: typeof node.data.customBg === "string" ? node.data.customBg : undefined,
+        customBorderColor: typeof node.data.customBorderColor === "string" ? node.data.customBorderColor : undefined,
         next_steps: nextEdges.map((e) => ({
           target_id: e.target,
           condition_branch: e.data?.conditionBranch,
@@ -257,6 +269,10 @@ export function convertToAIAgentFormat(params: {
     })),
     conditions,
     outputs: workflowOutputs,
+    graph: {
+      nodes,
+      edges,
+    },
     constraints: [
       "Follow node sequences in order unless branching condition directs otherwise.",
       "Check input validation before submitting data to websites.",

@@ -23,4 +23,18 @@ export const nodeTypes: NodeTypes = {
   delayNode: DelayNode,
   transformNode: TransformNode,
   noteNode: NoteNode,
+
+  // Short kind aliases for maximum resilience when importing external formats
+  website: WebsiteNode,
+  action: ActionNode,
+  condition: ConditionNode,
+  input: InputNode,
+  output: OutputNode,
+  ai: AINode,
+  start: StartNode,
+  end: EndNode,
+  delay: DelayNode,
+  transform: TransformNode,
+  note: NoteNode,
 };
+
