@@ -57,6 +57,11 @@ interface WebFlowToolbarProps {
   onStopSimulation?: () => void;
   viewCount?: number;
   onImportJSON?: (file: File) => void;
+  isRemix?: boolean;
+  originalAuthorName?: string;
+  originalWorkflowName?: string;
+  forkedFromId?: string | null;
+  remixNote?: string;
 }
 
 export function WebFlowToolbar({
@@ -89,6 +94,11 @@ export function WebFlowToolbar({
   onStopSimulation,
   viewCount = 0,
   onImportJSON,
+  isRemix = false,
+  originalAuthorName,
+  originalWorkflowName,
+  forkedFromId,
+  remixNote,
 }: WebFlowToolbarProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(workflowName);
@@ -225,6 +235,17 @@ export function WebFlowToolbar({
               >
                 <Eye className="h-3 w-3 text-indigo-500" />
                 <span>{viewCount} {viewCount === 1 ? "view" : "views"}</span>
+              </span>
+            )}
+
+            {/* Community Remix Attribution Pill */}
+            {(isRemix || forkedFromId) && (
+              <span
+                className="hidden xl:inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 text-[10px] font-black text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0"
+                title={`Derived from "${originalWorkflowName || "Original"}" by @${originalAuthorName || "Creator"}`}
+              >
+                <GitFork className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                <span>Remix of {originalWorkflowName || "Original"}</span>
               </span>
             )}
           </div>

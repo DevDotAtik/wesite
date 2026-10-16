@@ -10,6 +10,12 @@ export type AIAgentExport = {
     category: string;
     generated_at: string;
     created_with: string;
+    provenance?: {
+      type: string;
+      originalAuthor?: string;
+      originalWorkflow?: string;
+      remixEnhancement?: string;
+    };
   };
   inputs: Array<{
     name: string;
@@ -141,6 +147,10 @@ export function convertToAIAgentFormat(params: {
   nodes: WebFlowNode[];
   edges: WebFlowEdge[];
   variables?: WebFlowVariable[];
+  isRemix?: boolean;
+  originalAuthorName?: string;
+  originalWorkflowName?: string;
+  remixNote?: string;
 }): AIAgentExport {
   const { name, description = "", category = "Productivity", nodes, edges, variables = [] } = params;
 
@@ -252,6 +262,14 @@ export function convertToAIAgentFormat(params: {
       category,
       generated_at: new Date().toISOString(),
       created_with: "Wesite WebFlow Platform",
+      provenance: params.isRemix
+        ? {
+            type: "Community Remix",
+            originalAuthor: params.originalAuthorName || "Original Creator",
+            originalWorkflow: params.originalWorkflowName || "Original Workflow",
+            remixEnhancement: params.remixNote || "Community evolution",
+          }
+        : undefined,
     },
     inputs: workflowInputs,
     variables: variables.map((v) => ({
@@ -295,8 +313,23 @@ export function convertToHumanMarkdown(params: {
   nodes: WebFlowNode[];
   edges: WebFlowEdge[];
   variables?: WebFlowVariable[];
+  isRemix?: boolean;
+  originalAuthorName?: string;
+  originalWorkflowName?: string;
+  remixNote?: string;
 }): string {
-  const { name, description = "", category = "Productivity", nodes, edges, variables = [] } = params;
+  const {
+    name,
+    description = "",
+    category = "Productivity",
+    nodes,
+    edges,
+    variables = [],
+    isRemix,
+    originalAuthorName,
+    originalWorkflowName,
+    remixNote,
+  } = params;
   const orderedNodes = getOrderedNodes(nodes, edges);
 
   const websiteNodes = nodes.filter((n) => n.data.kind === "website" && n.data.websiteUrl);
@@ -305,6 +338,13 @@ export function convertToHumanMarkdown(params: {
   const lines: string[] = [];
 
   lines.push(`# ${name}`);
+  if (isRemix) {
+    lines.push(`\n> 🔀 **Community Remix**: Original concept and foundation created by @${originalAuthorName || "Original Creator"} ("${originalWorkflowName || "Original Workflow"}")`);
+    if (remixNote) {
+      lines.push(`> **Enhancements in this Remix**: ${remixNote}`);
+    }
+    lines.push("");
+  }
   if (description) {
     lines.push(`\n> ${description}\n`);
   }

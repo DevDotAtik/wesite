@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { apiError, escapeRegex, json, parseBody, parsePagination, requireUser, serializeDocument } from "@/lib/api";
+import { apiError, escapeRegex, isValidObjectId, json, parseBody, parsePagination, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { webflowCreateSchema } from "@/lib/validators/webflow-schemas";
 import WebFlow from "@/models/WebFlow";
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category");
     const search = searchParams.get("search")?.trim();
     const websiteId = searchParams.get("websiteId");
+    const forkedFromId = searchParams.get("forkedFromId");
     const { limit, page } = parsePagination(searchParams, 24, 60);
 
     const query: Record<string, unknown> = {};
@@ -60,6 +61,10 @@ export async function GET(request: NextRequest) {
 
     if (websiteId) {
       query["nodes.data.websiteId"] = websiteId;
+    }
+
+    if (forkedFromId && isValidObjectId(forkedFromId)) {
+      query.forkedFromId = forkedFromId;
     }
 
     if (search) {

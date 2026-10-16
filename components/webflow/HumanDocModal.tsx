@@ -22,6 +22,10 @@ interface HumanDocModalProps {
     description?: string;
     category?: string;
     version?: number;
+    isRemix?: boolean;
+    originalAuthorName?: string;
+    originalWorkflowName?: string;
+    remixNote?: string;
   };
   nodes: WebFlowNode[];
   edges: WebFlowEdge[];
@@ -47,6 +51,10 @@ export function HumanDocModal({
       nodes,
       edges,
       variables,
+      isRemix: workflow.isRemix,
+      originalAuthorName: workflow.originalAuthorName,
+      originalWorkflowName: workflow.originalWorkflowName,
+      remixNote: workflow.remixNote,
     });
   }, [workflow, nodes, edges, variables]);
 

@@ -63,12 +63,28 @@ export async function GET(request: NextRequest, { params }: Params) {
       });
     }
 
+    let originalWebflow: { _id: string; name: string; authorName: string; visibility: string } | null = null;
+    if (webflow.forkedFromId) {
+      const orig = await WebFlow.findById(webflow.forkedFromId)
+        .select("name authorName visibility")
+        .lean();
+      if (orig) {
+        originalWebflow = {
+          _id: orig._id.toString(),
+          name: orig.name,
+          authorName: orig.authorName || "Creator",
+          visibility: orig.visibility,
+        };
+      }
+    }
+
     return json({
       webflow: {
         ...serializeDocument(webflow),
         viewCount,
         isLiked,
         isBookmarked,
+        originalWebflow,
       },
       isOwner,
     });
@@ -96,6 +112,36 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       return apiError("WebFlow not found or access denied", 404);
     }
 
+    // Anti-misuse check for publishing community remixes
+    if (data.visibility === "public" && (webflow.isRemix || webflow.forkedFromId)) {
+      const initialSnapshot = webflow.versions?.[0]?.snapshot;
+      const currentNodes = data.nodes ?? webflow.nodes ?? [];
+      const currentEdges = data.edges ?? webflow.edges ?? [];
+      const remixNote = data.remixNote !== undefined ? data.remixNote.trim() : (webflow.remixNote || "").trim();
+
+      const initialNodeCount = initialSnapshot?.nodes?.length ?? 0;
+      const initialEdgeCount = initialSnapshot?.edges?.length ?? 0;
+
+      const isStructurallyIdentical =
+        currentNodes.length === initialNodeCount &&
+        currentEdges.length === initialEdgeCount &&
+        JSON.stringify(currentNodes.map((n) => ({ id: n.id, kind: n.data?.kind, action: n.data?.action }))) ===
+          JSON.stringify(
+            (initialSnapshot?.nodes || []).map((n: { id?: string; data?: { kind?: string; action?: string } }) => ({
+              id: n.id,
+              kind: n.data?.kind,
+              action: n.data?.action,
+            })),
+          );
+
+      if (isStructurallyIdentical && !remixNote) {
+        return apiError(
+          "To publish a remix to the community, please add your thoughts or improvements (new nodes/tools) and explain your enhancement in the remix note.",
+          400,
+        );
+      }
+    }
+
     if (data.name !== undefined) webflow.name = data.name;
     if (data.description !== undefined) webflow.description = data.description;
     if (data.category !== undefined) webflow.category = data.category;
@@ -106,6 +152,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (data.edges !== undefined) webflow.edges = data.edges as unknown as typeof webflow.edges;
     if (data.variables !== undefined) webflow.variables = data.variables as unknown as typeof webflow.variables;
     if (data.viewport !== undefined) webflow.viewport = data.viewport;
+    if (data.remixNote !== undefined) webflow.remixNote = data.remixNote;
 
     // Handle manual or important version creation
     if (data.saveVersionNote) {

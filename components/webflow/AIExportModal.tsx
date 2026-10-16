@@ -33,6 +33,10 @@ interface AIExportModalProps {
     description?: string;
     category?: string;
     version?: number;
+    isRemix?: boolean;
+    originalAuthorName?: string;
+    originalWorkflowName?: string;
+    remixNote?: string;
   };
   nodes: WebFlowNode[];
   edges: WebFlowEdge[];
@@ -66,6 +70,10 @@ export function AIExportModal({
       nodes,
       edges,
       variables,
+      isRemix: workflow.isRemix,
+      originalAuthorName: workflow.originalAuthorName,
+      originalWorkflowName: workflow.originalWorkflowName,
+      remixNote: workflow.remixNote,
     });
     const jsonStr = JSON.stringify(aiSpec, null, 2);
     const canvasStr = JSON.stringify(
@@ -74,6 +82,10 @@ export function AIExportModal({
         description: workflow.description,
         category: workflow.category,
         version: workflow.version || 1,
+        isRemix: workflow.isRemix,
+        originalAuthorName: workflow.originalAuthorName,
+        originalWorkflowName: workflow.originalWorkflowName,
+        remixNote: workflow.remixNote,
         nodes,
         edges,
         variables,
@@ -88,6 +100,10 @@ export function AIExportModal({
       nodes,
       edges,
       variables,
+      isRemix: workflow.isRemix,
+      originalAuthorName: workflow.originalAuthorName,
+      originalWorkflowName: workflow.originalWorkflowName,
+      remixNote: workflow.remixNote,
     });
     const yamlStr = convertToYAML(aiSpec);
     const plainStr = convertToPlainText(mdStr);

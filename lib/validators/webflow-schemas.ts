@@ -129,6 +129,7 @@ export const webflowUpdateSchema = z.object({
     })
     .optional(),
   saveVersionNote: z.string().max(200).optional(),
+  remixNote: z.string().max(1000).optional(),
 });
 
 export const webflowAddWebsiteSchema = z.object({

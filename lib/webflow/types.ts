@@ -141,6 +141,11 @@ export type WebFlowItem = {
   version: number;
   versions?: WebFlowVersion[];
   forkedFromId?: string | null;
+  originalAuthorId?: string | null;
+  originalAuthorName?: string;
+  originalWorkflowName?: string;
+  isRemix?: boolean;
+  remixNote?: string;
   forkCount?: number;
   likeCount?: number;
   viewCount?: number;

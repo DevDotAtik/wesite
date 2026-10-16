@@ -36,6 +36,8 @@ import {
   ArrowRight,
   Sparkles,
   Upload,
+  GitFork,
+  ExternalLink,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
 import { fetchWithAuth } from "@/lib/auth-client";
@@ -48,6 +50,7 @@ import { AICopilotModal } from "./AICopilotModal";
 import { WebFlowCommandPalette, type PaletteCommand } from "./WebFlowCommandPalette";
 import { HumanDocModal } from "./HumanDocModal";
 import { ValidationModal } from "./ValidationModal";
+import { PublishRemixModal } from "./PublishRemixModal";
 import { WebFlowContextMenu, type ContextMenuTarget } from "./WebFlowContextMenu";
 import { WebFlowShortcutsModal } from "./WebFlowShortcutsModal";
 import { WebFlowCustomizerModal } from "./WebFlowCustomizerModal";
@@ -83,6 +86,12 @@ function WebFlowEditorContent({ id }: { id: string }) {
   const [version, setVersion] = useState(1);
   const [isOwner, setIsOwner] = useState(true);
   const [viewCount, setViewCount] = useState<number>(0);
+  const [isRemix, setIsRemix] = useState(false);
+  const [forkedFromId, setForkedFromId] = useState<string | null>(null);
+  const [originalAuthorName, setOriginalAuthorName] = useState("");
+  const [originalWorkflowName, setOriginalWorkflowName] = useState("");
+  const [remixNote, setRemixNote] = useState("");
+  const [isPublishRemixOpen, setIsPublishRemixOpen] = useState(false);
 
   // React Flow State
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -165,6 +174,19 @@ function WebFlowEditorContent({ id }: { id: string }) {
         setVersion(flow.version || 1);
         setIsOwner(data.isOwner ?? true);
         setViewCount(flow.viewCount || 0);
+        setIsRemix(Boolean(flow.isRemix || flow.forkedFromId));
+        setForkedFromId(flow.forkedFromId || null);
+        setOriginalAuthorName(
+          flow.originalAuthorName ||
+            (data.webflow?.originalWebflow?.authorName as string) ||
+            "",
+        );
+        setOriginalWorkflowName(
+          flow.originalWorkflowName ||
+            (data.webflow?.originalWebflow?.name as string) ||
+            "",
+        );
+        setRemixNote(flow.remixNote || "");
 
         // Populate React Flow
         setNodes((flow.nodes || []) as unknown as Node[]);
@@ -206,6 +228,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
       nodes?: Node[];
       edges?: Edge[];
       variables?: WebFlowVariable[];
+      remixNote?: string;
     }) => {
       if (!isOwner) return;
 
@@ -225,6 +248,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
             nodes: overrides?.nodes ?? nodes,
             edges: overrides?.edges ?? edges,
             variables: overrides?.variables ?? variables,
+            remixNote: overrides?.remixNote ?? remixNote,
           };
 
           const res = await fetchWithAuth(`/api/webflows/${id}`, {
@@ -233,15 +257,19 @@ function WebFlowEditorContent({ id }: { id: string }) {
             body: JSON.stringify(payload),
           });
 
-          if (!res.ok) throw new Error("Autosave failed");
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || errData.message || "Autosave failed");
+          }
           setSaveStatus("saved");
-        } catch {
+        } catch (err) {
           setSaveStatus("unsaved");
-          toast.error("Failed to save changes");
+          const msg = err instanceof Error ? err.message : "Failed to save changes";
+          toast.error(msg);
         }
       }, 1200);
     },
-    [id, isOwner, workflowName, workflowDescription, workflowCategory, visibility, nodes, edges, variables]
+    [id, isOwner, workflowName, workflowDescription, workflowCategory, visibility, nodes, edges, variables, remixNote]
   );
 
   // Watch for changes after initial load
@@ -1258,9 +1286,18 @@ function WebFlowEditorContent({ id }: { id: string }) {
         onValidate={() => setIsValidationOpen(true)}
         visibility={visibility}
         onChangeVisibility={(v) => {
+          if ((isRemix || forkedFromId) && v === "public") {
+            setIsPublishRemixOpen(true);
+            return;
+          }
           setVisibility(v);
           triggerAutosave({ visibility: v });
         }}
+        isRemix={isRemix}
+        originalAuthorName={originalAuthorName}
+        originalWorkflowName={originalWorkflowName}
+        forkedFromId={forkedFromId}
+        remixNote={remixNote}
         validationWarningCount={warningCount}
         validationErrorCount={errorCount}
         isOwner={isOwner}
@@ -1277,6 +1314,50 @@ function WebFlowEditorContent({ id }: { id: string }) {
         viewCount={viewCount}
         onImportJSON={handleImportJSON}
       />
+
+      {/* Community Remix Attribution Banner */}
+      {(isRemix || forkedFromId) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 px-3 sm:px-4 py-2 text-xs shadow-nb-xs z-20 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 text-amber-950 dark:text-amber-200">
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-400 text-black px-2 py-0.5 text-[10px] font-black uppercase shadow-nb-xs border border-black shrink-0">
+              <GitFork className="h-3 w-3" /> Community Remix
+            </span>
+            <span className="font-semibold text-xs">
+              Original concept & foundation by{" "}
+              <strong className="font-black text-black dark:text-white">
+                @{originalAuthorName || "Original Creator"}
+              </strong>{" "}
+              ({originalWorkflowName || "Original"})
+            </span>
+            {remixNote && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-200/60 dark:bg-amber-900/60 rounded px-2 py-0.5 border border-amber-300/40">
+                <span>💡 Enhancement:</span> <em>{remixNote}</em>
+              </span>
+            )}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setIsPublishRemixOpen(true)}
+                className="text-[11px] font-bold text-amber-900 dark:text-amber-300 underline hover:text-black dark:hover:text-white transition-colors"
+              >
+                {remixNote ? "Edit Note" : "Add Note"}
+              </button>
+            )}
+          </div>
+          {forkedFromId && (
+            <Link
+              href={`/webflow/${forkedFromId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-black text-indigo-700 dark:text-indigo-400 hover:underline shrink-0"
+              title="Open original creator's canonical WebFlow"
+            >
+              <span>View Original Canvas</span>
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Main Workspace Area */}
       <div className="relative flex flex-1 overflow-hidden">
@@ -1619,6 +1700,10 @@ function WebFlowEditorContent({ id }: { id: string }) {
               description: workflowDescription,
               category: workflowCategory,
               version,
+              isRemix,
+              originalAuthorName,
+              originalWorkflowName,
+              remixNote,
             }}
             nodes={nodes as unknown as WebFlowNode[]}
             edges={edges as unknown as WebFlowEdge[]}
@@ -1633,6 +1718,10 @@ function WebFlowEditorContent({ id }: { id: string }) {
               description: workflowDescription,
               category: workflowCategory,
               version,
+              isRemix,
+              originalAuthorName,
+              originalWorkflowName,
+              remixNote,
             }}
             nodes={nodes as unknown as WebFlowNode[]}
             edges={edges as unknown as WebFlowEdge[]}
@@ -1677,6 +1766,21 @@ function WebFlowEditorContent({ id }: { id: string }) {
             onClose={() => setIsCustomizerOpen(false)}
             styleSettings={styleSettings}
             onUpdateStyle={setStyleSettings}
+          />
+
+          <PublishRemixModal
+            isOpen={isPublishRemixOpen}
+            onClose={() => setIsPublishRemixOpen(false)}
+            originalWorkflowName={originalWorkflowName}
+            originalAuthorName={originalAuthorName}
+            currentRemixNote={remixNote}
+            onConfirmPublish={(note) => {
+              setRemixNote(note);
+              setVisibility("public");
+              setIsPublishRemixOpen(false);
+              triggerAutosave({ visibility: "public", remixNote: note });
+              toast.success("Published to Community Explore! Original creator is credited.");
+            }}
           />
         </>
       )}

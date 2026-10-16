@@ -22,6 +22,7 @@ import {
   Play,
   Eye,
   UserCircle,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
@@ -895,9 +896,16 @@ interface WebFlowTemplateItem {
                           <div className="space-y-3">
                             {/* Badges Header */}
                             <div className="flex items-center justify-between gap-2">
-                              <span className="rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold border border-indigo-300 dark:border-indigo-800">
-                                {flow.category}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold border border-indigo-300 dark:border-indigo-800">
+                                  {flow.category}
+                                </span>
+                                {(flow.isRemix || flow.forkedFromId) && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-400 text-black px-1.5 py-0.5 text-[9px] font-black uppercase shadow-nb-xs border border-black">
+                                    <GitFork className="h-2.5 w-2.5" /> Remix
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-1.5 text-xs text-nb-muted">
                                 <span className="flex items-center gap-1 text-[11px] font-mono text-nb-muted font-bold" title={`${flow.viewCount || 0} total views`}>
                                   <Eye className="h-3 w-3 text-indigo-500" />
@@ -916,6 +924,28 @@ interface WebFlowTemplateItem {
                               </div>
                             </div>
 
+                            {/* Remix Attribution Lineage (if remixed) */}
+                            {(flow.isRemix || flow.forkedFromId) && (
+                              <div className="flex flex-wrap items-center justify-between gap-1 rounded-xl border border-amber-300/80 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 p-2 text-[11px]">
+                                <div className="flex items-center gap-1 text-amber-900 dark:text-amber-200 font-semibold truncate">
+                                  <GitFork className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                  <span className="truncate">
+                                    Remix of <strong>{flow.originalWorkflowName || "Original"}</strong> by @{flow.originalAuthorName || "Creator"}
+                                  </span>
+                                </div>
+                                {flow.forkedFromId && (
+                                  <Link
+                                    href={`/webflow/${flow.forkedFromId}`}
+                                    className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 flex items-center gap-0.5"
+                                    title="View original foundation"
+                                  >
+                                    <span>Original</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </Link>
+                                )}
+                              </div>
+                            )}
+
                             {/* Title & Description */}
                             <div className="min-w-0">
                               <Link
@@ -927,6 +957,12 @@ interface WebFlowTemplateItem {
                               <p className="mt-1 text-xs text-nb-muted break-words line-clamp-4 leading-relaxed">
                                 {flow.description || "No description provided."}
                               </p>
+                              {flow.remixNote && (
+                                <div className="mt-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 p-2 text-[11px] text-indigo-950 dark:text-indigo-200">
+                                  <span className="font-black text-indigo-600 dark:text-indigo-400">💡 Enhancement: </span>
+                                  <span className="italic">{flow.remixNote}</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* Node & Tool Counters */}
@@ -1018,13 +1054,42 @@ interface WebFlowTemplateItem {
                         >
                           <div className="space-y-3">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold border border-indigo-300 dark:border-indigo-800">
-                                {flow.category}
-                              </span>
-                              <span className="text-[11px] text-nb-muted font-mono">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold border border-indigo-300 dark:border-indigo-800">
+                                  {flow.category}
+                                </span>
+                                {(flow.isRemix || flow.forkedFromId) && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-400 text-black px-1.5 py-0.5 text-[9px] font-black uppercase shadow-nb-xs border border-black">
+                                    <GitFork className="h-2.5 w-2.5" /> Remix
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-nb-muted font-mono truncate max-w-[140px]" title={`Creator: ${flow.authorName}`}>
                                 by {flow.authorName || "Community"}
                               </span>
                             </div>
+
+                            {/* Community Remix Attribution Lineage */}
+                            {(flow.isRemix || flow.forkedFromId) && (
+                              <div className="flex flex-wrap items-center justify-between gap-1 rounded-xl border border-amber-300/80 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 p-2 text-[11px]">
+                                <div className="flex items-center gap-1 text-amber-900 dark:text-amber-200 font-semibold truncate">
+                                  <GitFork className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                  <span className="truncate">
+                                    Evolution of <strong>{flow.originalWorkflowName || "Original"}</strong> by @{flow.originalAuthorName || "Creator"}
+                                  </span>
+                                </div>
+                                {flow.forkedFromId && (
+                                  <Link
+                                    href={`/webflow/${flow.forkedFromId}`}
+                                    className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 flex items-center gap-0.5"
+                                    title="View original foundation"
+                                  >
+                                    <span>Original</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </Link>
+                                )}
+                              </div>
+                            )}
 
                             <div className="min-w-0">
                               <Link
@@ -1036,6 +1101,12 @@ interface WebFlowTemplateItem {
                               <p className="mt-1 text-xs text-nb-muted break-words line-clamp-4 leading-relaxed">
                                 {flow.description || "Community curated workflow."}
                               </p>
+                              {flow.remixNote && (
+                                <div className="mt-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 p-2 text-[11px] text-indigo-950 dark:text-indigo-200">
+                                  <span className="font-black text-indigo-600 dark:text-indigo-400">💡 Enhancement: </span>
+                                  <span className="italic">{flow.remixNote}</span>
+                                </div>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-3 text-xs font-mono text-nb-muted border-t border-nb-border/20 pt-2.5">
@@ -1051,6 +1122,14 @@ interface WebFlowTemplateItem {
                                 <Eye className="h-3 w-3 text-indigo-500" />
                                 <span>{flow.viewCount || 0} {flow.viewCount === 1 ? "view" : "views"}</span>
                               </span>
+                              {flow.forkCount && flow.forkCount > 0 ? (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold" title={`${flow.forkCount} remixes`}>
+                                    <GitFork className="h-3 w-3" /> {flow.forkCount}
+                                  </span>
+                                </>
+                              ) : null}
                             </div>
                           </div>
 
