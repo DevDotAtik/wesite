@@ -38,29 +38,40 @@ export function verifyAuthToken(token: string) {
 }
 
 export async function getAuthUser(request: NextRequest) {
-  let token = request.cookies.get(AUTH_COOKIE)?.value;
-
-  if (!token) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      token = authHeader.slice(7);
+  // 1. Try Bearer token from Authorization header first (explicit client auth)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const headerToken = authHeader.slice(7).trim();
+    if (headerToken) {
+      try {
+        const payload = verifyAuthToken(headerToken);
+        await connectToDatabase();
+        const user = await User.findById(payload.userId)
+          .select("-passwordHash -resetTokenHash -twoFactorSecret -twoFactorRecoveryCodes")
+          .lean();
+        if (user) return user;
+      } catch {
+        // Fall through to cookie check
+      }
     }
   }
 
-  if (!token) {
-    return null;
+  // 2. Fallback to HTTP-only cookie
+  const cookieToken = request.cookies.get(AUTH_COOKIE)?.value;
+  if (cookieToken) {
+    try {
+      const payload = verifyAuthToken(cookieToken);
+      await connectToDatabase();
+      const user = await User.findById(payload.userId)
+        .select("-passwordHash -resetTokenHash -twoFactorSecret -twoFactorRecoveryCodes")
+        .lean();
+      if (user) return user;
+    } catch {
+      return null;
+    }
   }
 
-  try {
-    const payload = verifyAuthToken(token);
-    await connectToDatabase();
-    const user = await User.findById(payload.userId)
-      .select("-passwordHash -resetTokenHash -twoFactorSecret -twoFactorRecoveryCodes")
-      .lean();
-    return user;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export function isSecureContext(request?: NextRequest): boolean {

@@ -38,6 +38,7 @@ import {
   Upload,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
+import { fetchWithAuth } from "@/lib/auth-client";
 import { WebFlowToolbar } from "./WebFlowToolbar";
 import { WebFlowSidebar } from "./WebFlowSidebar";
 import { WebFlowCanvas } from "./WebFlowCanvas";
@@ -149,7 +150,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
     async function loadWorkflow() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/webflows/${id}`);
+        const res = await fetchWithAuth(`/api/webflows/${id}`);
         if (!res.ok) {
           throw new Error("Failed to load workflow");
         }
@@ -226,7 +227,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
             variables: overrides?.variables ?? variables,
           };
 
-          const res = await fetch(`/api/webflows/${id}`, {
+          const res = await fetchWithAuth(`/api/webflows/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -839,7 +840,7 @@ function WebFlowEditorContent({ id }: { id: string }) {
         throw new Error("Invalid JSON: The selected file could not be parsed as JSON.");
       }
 
-      const res = await fetch("/api/webflows/import", {
+      const res = await fetchWithAuth("/api/webflows/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),

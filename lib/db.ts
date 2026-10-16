@@ -26,9 +26,12 @@ export async function connectToDatabase() {
     throw new Error("MONGODB_URI is not configured");
   }
 
+  const dbName = process.env.MONGODB_DB;
+
   if (!cache.promise) {
     cache.promise = mongoose.connect(uri, {
       bufferCommands: false,
+      ...(dbName ? { dbName } : {}),
     });
   }
 

@@ -7,6 +7,9 @@ import Website from "@/models/Website";
 import WebFlowInteraction from "@/models/WebFlowInteraction";
 import { BUILT_IN_TEMPLATES } from "@/lib/webflow/templates";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();

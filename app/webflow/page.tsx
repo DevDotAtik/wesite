@@ -21,12 +21,14 @@ import {
   Zap,
   Play,
   Eye,
+  UserCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
 import { AIExportModal } from "@/components/webflow/AIExportModal";
 import { AICopilotModal } from "@/components/webflow/AICopilotModal";
 import { AIIcon } from "@/components/webflow/AIIcon";
+import { fetchWithAuth } from "@/lib/auth-client";
 import type {
   WebFlowCategory,
   WebFlowVisibility,
@@ -73,6 +75,8 @@ interface WebFlowTemplateItem {
   const [myFlows, setMyFlows] = useState<WebFlowItem[]>([]);
   const [exploreFlows, setExploreFlows] = useState<WebFlowItem[]>([]);
   const [templates, setTemplates] = useState<WebFlowTemplateItem[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ _id: string; email: string; name: string } | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [stats, setStats] = useState({
     totalFlows: 0,
     publicFlows: 0,
@@ -113,7 +117,7 @@ interface WebFlowTemplateItem {
         throw new Error("Invalid JSON: The selected file could not be parsed as JSON.");
       }
 
-      const res = await fetch("/api/webflows/import", {
+      const res = await fetchWithAuth("/api/webflows/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),
@@ -142,7 +146,7 @@ interface WebFlowTemplateItem {
 
   const refreshStats = async () => {
     try {
-      const res = await fetch("/api/webflows/stats");
+      const res = await fetchWithAuth("/api/webflows/stats");
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);
@@ -154,7 +158,7 @@ interface WebFlowTemplateItem {
 
   const refreshMyFlows = async () => {
     try {
-      const res = await fetch("/api/webflows?scope=my&limit=100");
+      const res = await fetchWithAuth("/api/webflows?scope=my&limit=100");
       if (res.ok) {
         const data = await res.json();
         setMyFlows(data.webflows || []);
@@ -168,13 +172,25 @@ interface WebFlowTemplateItem {
     let ignore = false;
     const run = async () => {
       try {
-        const res = await fetch("/api/webflows/stats");
-        if (res.ok) {
-          const data = await res.json();
+        const [statsRes, meRes] = await Promise.all([
+          fetchWithAuth("/api/webflows/stats"),
+          fetchWithAuth("/api/auth/me"),
+        ]);
+
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          if (!ignore) setCurrentUser(meData.user || null);
+        } else {
+          if (!ignore) setCurrentUser(null);
+        }
+        if (!ignore) setAuthChecked(true);
+
+        if (statsRes.ok) {
+          const data = await statsRes.json();
           if (!ignore) setStats(data.stats);
         }
       } catch {
-        // ignore
+        if (!ignore) setAuthChecked(true);
       }
     };
     run();
@@ -191,21 +207,26 @@ interface WebFlowTemplateItem {
       setLoading(true);
       try {
         if (activeTab === "my-flows") {
-          const res = await fetch("/api/webflows?scope=my&limit=100");
+          const res = await fetchWithAuth("/api/webflows?scope=my&limit=100");
           if (res.ok) {
             const data = await res.json();
             if (!ignore) setMyFlows(data.webflows || []);
+          } else if (res.status === 401) {
+            if (!ignore) {
+              setMyFlows([]);
+              setCurrentUser(null);
+            }
           }
         } else if (activeTab === "explore") {
           const catParam = selectedCategory !== "All" ? `&category=${selectedCategory}` : "";
           const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
-          const res = await fetch(`/api/webflows?scope=explore&limit=50${catParam}${searchParam}`);
+          const res = await fetchWithAuth(`/api/webflows?scope=explore&limit=50${catParam}${searchParam}`);
           if (res.ok) {
             const data = await res.json();
             if (!ignore) setExploreFlows(data.webflows || []);
           }
         } else if (activeTab === "templates") {
-          const res = await fetch("/api/webflows/templates");
+          const res = await fetchWithAuth("/api/webflows/templates");
           if (res.ok) {
             const data = await res.json();
             if (!ignore) setTemplates(data.templates || []);
@@ -230,7 +251,7 @@ interface WebFlowTemplateItem {
 
     try {
       setCreating(true);
-      const res = await fetch("/api/webflows", {
+      const res = await fetchWithAuth("/api/webflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -242,6 +263,11 @@ interface WebFlowTemplateItem {
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          toast.error("Please sign in to create workflows");
+          router.push("/login?redirect=/webflow");
+          return;
+        }
         const err = await res.json();
         throw new Error(err.message || "Failed to create workflow");
       }
@@ -346,7 +372,7 @@ interface WebFlowTemplateItem {
         description = "New visual workflow";
       }
 
-      const res = await fetch("/api/webflows", {
+      const res = await fetchWithAuth("/api/webflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -360,6 +386,11 @@ interface WebFlowTemplateItem {
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          toast.error("Please sign in to create workflows", { id: "quick-starter" });
+          router.push("/login?redirect=/webflow");
+          return;
+        }
         const err = await res.json();
         throw new Error(err.message || "Failed to create workflow");
       }
@@ -377,7 +408,7 @@ interface WebFlowTemplateItem {
   const handleUseTemplate = async (templateId: string) => {
     try {
       toast.loading("Instantiating template...", { id: "template-clone" });
-      const res = await fetch("/api/webflows/templates", {
+      const res = await fetchWithAuth("/api/webflows/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateId, templateKey: templateId }),
@@ -406,7 +437,7 @@ interface WebFlowTemplateItem {
   const handleRemix = async (flowId: string) => {
     try {
       toast.loading("Remixing workflow...", { id: "flow-remix" });
-      const res = await fetch(`/api/webflows/${flowId}/remix`, { method: "POST" });
+      const res = await fetchWithAuth(`/api/webflows/${flowId}/remix`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -429,7 +460,7 @@ interface WebFlowTemplateItem {
   // Like Toggle
   const handleLike = async (flowId: string) => {
     try {
-      const res = await fetch(`/api/webflows/${flowId}/like`, { method: "POST" });
+      const res = await fetchWithAuth(`/api/webflows/${flowId}/like`, { method: "POST" });
       if (!res.ok) return;
       const data = await res.json();
       setExploreFlows((flows) =>
@@ -448,7 +479,7 @@ interface WebFlowTemplateItem {
   const handleDelete = async (flowId: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
-      const res = await fetch(`/api/webflows/${flowId}`, { method: "DELETE" });
+      const res = await fetchWithAuth(`/api/webflows/${flowId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       toast.success("Workflow deleted");
       setMyFlows((flows) => flows.filter((f) => f._id !== flowId));
@@ -462,7 +493,7 @@ interface WebFlowTemplateItem {
   // Duplicate Flow
   const handleDuplicate = async (flowId: string) => {
     try {
-      const res = await fetch(`/api/webflows/${flowId}/duplicate`, { method: "POST" });
+      const res = await fetchWithAuth(`/api/webflows/${flowId}/duplicate`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to duplicate");
       await res.json();
       toast.success("Workflow duplicated!");
@@ -495,9 +526,25 @@ interface WebFlowTemplateItem {
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/20 px-3 py-1 text-xs font-mono font-bold text-indigo-300">
-                <Workflow className="h-3.5 w-3.5" />
-                Visual Tool Orchestration & Multi-Step Workflows
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/20 px-3 py-1 text-xs font-mono font-bold text-indigo-300">
+                  <Workflow className="h-3.5 w-3.5" />
+                  Visual Tool Orchestration
+                </div>
+                {currentUser ? (
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-xs font-mono font-bold text-emerald-300">
+                    <UserCircle className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Account: {currentUser.email}</span>
+                  </div>
+                ) : authChecked ? (
+                  <Link
+                    href="/login?redirect=/webflow"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-amber-500/25 px-3 py-1 text-xs font-bold text-amber-200 hover:bg-amber-500/40 transition-all"
+                  >
+                    <Lock className="h-3.5 w-3.5 text-amber-300" />
+                    <span>Guest Mode • Sign In</span>
+                  </Link>
+                ) : null}
               </div>
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
                 Turn your saved websites into visual, executable workflows.
@@ -707,6 +754,29 @@ interface WebFlowTemplateItem {
             {/* TAB 1: MY FLOWS */}
             {activeTab === "my-flows" && (
               <>
+                {!currentUser && authChecked && (
+                  <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 dark:bg-amber-950/40 p-5 shadow-nb-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-black shadow-nb-xs shrink-0 font-black">
+                        <Lock className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-nb-fg">Not Signed In</h4>
+                        <p className="text-xs text-nb-muted mt-0.5">
+                          You are currently viewing WebFlow as a guest. Sign in to access your personal workflows.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/login?redirect=/webflow"
+                      className="shrink-0 flex items-center gap-2 rounded-xl border-2 border-nb-border bg-amber-500 text-black px-4 py-2 text-xs font-black shadow-nb-sm hover:translate-x-0.5 hover:-translate-y-0.5 transition-all"
+                    >
+                      <span>Sign In</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+
                 {filteredMyFlows.length === 0 ? (
                   <div className="rounded-3xl border-3 border-dashed border-nb-border/60 bg-nb-card/50 p-6 sm:p-10 text-center space-y-6">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border-2 border-nb-border shadow-nb-sm">

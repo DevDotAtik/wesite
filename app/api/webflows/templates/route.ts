@@ -4,6 +4,9 @@ import { connectToDatabase } from "@/lib/db";
 import WebFlow from "@/models/WebFlow";
 import { BUILT_IN_TEMPLATES } from "@/lib/webflow/templates";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   return json({ templates: BUILT_IN_TEMPLATES });
 }

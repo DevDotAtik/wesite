@@ -4,8 +4,17 @@ import { NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
 import { getAuthUser } from "@/lib/auth";
 
-export function json(data: unknown, status = 200) {
-  return NextResponse.json(data, { status });
+export function json(data: unknown, status = 200, headers?: HeadersInit) {
+  const defaultHeaders: Record<string, string> = {
+    "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
+  };
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      ...defaultHeaders,
+      ...(headers ? (headers as Record<string, string>) : {}),
+    },
+  });
 }
 
 export function apiError(message: string, status = 400, details?: unknown) {

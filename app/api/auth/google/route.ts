@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     resetTokenExpiresAt: undefined,
   });
 
-  const response = NextResponse.json({ user: safeUser });
+  const response = NextResponse.json({ token, user: safeUser });
   response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));
   return response;
 }

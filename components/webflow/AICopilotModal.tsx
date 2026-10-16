@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AIIcon } from "./AIIcon";
+import { fetchWithAuth } from "@/lib/auth-client";
 import type { WebFlowNode, WebFlowEdge } from "@/lib/webflow/types";
 
 interface AICopilotModalProps {
@@ -138,7 +139,7 @@ export function AICopilotModal({
           : "Analyzing canvas topology and inserting steps..."
       );
 
-      const res = await fetch("/api/webflows/ai-generate", {
+      const res = await fetchWithAuth("/api/webflows/ai-generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -169,7 +170,7 @@ export function AICopilotModal({
         onClose();
       } else {
         // Create in DB and navigate to the new workflow editor
-        const createRes = await fetch("/api/webflows", {
+        const createRes = await fetchWithAuth("/api/webflows", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

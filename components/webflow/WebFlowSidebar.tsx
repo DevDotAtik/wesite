@@ -25,6 +25,7 @@ import {
   Filter,
 } from "lucide-react";
 import { AIIcon } from "./AIIcon";
+import { fetchWithAuth } from "@/lib/auth-client";
 import type { WebFlowNodeKind, WebFlowNodeData } from "@/lib/webflow/types";
 
 interface SavedFolder {
@@ -69,8 +70,8 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
         setLoadingWebsites(true);
         try {
           const [sitesRes, foldersRes] = await Promise.all([
-            fetch("/api/websites?limit=100"),
-            fetch("/api/folders"),
+            fetchWithAuth("/api/websites?limit=100"),
+            fetchWithAuth("/api/folders"),
           ]);
 
           if (sitesRes.ok) {

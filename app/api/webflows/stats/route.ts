@@ -3,6 +3,9 @@ import { apiError, json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import WebFlow from "@/models/WebFlow";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   try {
     const { user, response } = await requireUser(request);

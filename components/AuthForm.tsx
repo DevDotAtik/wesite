@@ -134,6 +134,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      if (payload?.token) {
+        try {
+          localStorage.setItem("wesite_token", payload.token);
+        } catch {}
+      }
+
       toast.success("Signed in with Google");
       window.location.href = "/dashboard";
     } catch {

@@ -9,6 +9,9 @@ type Params = {
   params: Promise<{ id: string }>;
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;

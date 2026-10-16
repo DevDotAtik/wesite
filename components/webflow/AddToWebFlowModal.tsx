@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { fetchWithAuth } from "@/lib/auth-client";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 
 interface WebFlowListItem {
@@ -73,7 +74,7 @@ export function AddToWebFlowModal({
         if (ignore) return;
         setLoadingFlows(true);
         try {
-          const res = await fetch("/api/webflows?scope=my&limit=40");
+          const res = await fetchWithAuth("/api/webflows?scope=my&limit=40");
           if (!res.ok) throw new Error();
           const data = await res.json();
           if (!ignore) setFlows(data.webflows || []);
@@ -98,7 +99,7 @@ export function AddToWebFlowModal({
 
     try {
       setLoading(true);
-      const res = await fetch("/api/webflows", {
+      const res = await fetchWithAuth("/api/webflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,7 +134,7 @@ export function AddToWebFlowModal({
   const handleAddToExisting = async (flowId: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/webflows/${flowId}/add-website`, {
+      const res = await fetchWithAuth(`/api/webflows/${flowId}/add-website`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
