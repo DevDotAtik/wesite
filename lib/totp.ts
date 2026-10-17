@@ -129,14 +129,23 @@ export function verifyAndConsumeRecoveryCode(
   inputCode: string,
 ): { valid: boolean; remainingCodes: string[] } {
   const inputHash = hashRecoveryCode(inputCode);
-  const index = storedHashedCodes.indexOf(inputHash);
+  const inputBuffer = Buffer.from(inputHash, "hex");
 
-  if (index === -1) {
+  let matchIndex = -1;
+  for (let i = 0; i < storedHashedCodes.length; i++) {
+    const storedBuffer = Buffer.from(storedHashedCodes[i], "hex");
+    if (storedBuffer.length === inputBuffer.length && crypto.timingSafeEqual(storedBuffer, inputBuffer)) {
+      matchIndex = i;
+      break;
+    }
+  }
+
+  if (matchIndex === -1) {
     return { valid: false, remainingCodes: storedHashedCodes };
   }
 
   const remainingCodes = [...storedHashedCodes];
-  remainingCodes.splice(index, 1);
+  remainingCodes.splice(matchIndex, 1);
   return { valid: true, remainingCodes };
 }
 

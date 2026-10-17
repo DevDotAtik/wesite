@@ -11,8 +11,12 @@ import {
 } from "@/lib/totp";
 import User from "@/models/User";
 import { seedDefaultWebsitesForUser } from "@/lib/default-websites";
+import { enforceRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  const rateLimitError = enforceRateLimit(request, "register", 15, 900);
+  if (rateLimitError) return rateLimitError;
+
   try {
     const { data, error } = await parseBody(request, registerSchema);
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiError, json, parseBody, requireUser, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
-import { hashPassword, verifyPassword } from "@/lib/auth";
+import { hashPassword, sanitizeUser, verifyPassword } from "@/lib/auth";
 import { profilePatchSchema } from "@/lib/validators/schemas";
 import User from "@/models/User";
 import Website from "@/models/Website";
@@ -9,6 +9,8 @@ import Visit from "@/models/Visit";
 import Folder from "@/models/Folder";
 import Todo from "@/models/Todo";
 import Monitor from "@/models/Monitor";
+import WebFlow from "@/models/WebFlow";
+import WebFlowInteraction from "@/models/WebFlowInteraction";
 
 export async function GET(request: NextRequest) {
   const { user, response } = await requireUser(request);
@@ -76,7 +78,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   await user.save();
-  return json({ user: serializeDocument({ ...user.toObject(), passwordHash: undefined }) });
+  return json({ user: serializeDocument(sanitizeUser(user)) });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -95,6 +97,8 @@ export async function DELETE(request: NextRequest) {
     Folder.deleteMany({ userId }),
     Todo.deleteMany({ userId }),
     Monitor.deleteMany({ userId }),
+    WebFlow.deleteMany({ userId }),
+    WebFlowInteraction.deleteMany({ userId }),
     User.findByIdAndDelete(userId),
   ]);
 

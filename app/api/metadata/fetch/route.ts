@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { apiError, json, parseBody, requireUser } from "@/lib/api";
 import { scrapeMetadata } from "@/lib/scrapeMetadata";
 import { metadataFetchSchema } from "@/lib/validators/schemas";
+import { isSafePublicUrl } from "@/lib/ssrf";
 
 const lastRequests = new Map<string, number>();
 
@@ -20,28 +21,9 @@ export async function POST(request: NextRequest) {
     return error;
   }
 
-  let hostname = "";
-
-  try {
-    hostname = new URL(/^https?:\/\//i.test(data.url) ? data.url : `https://${data.url}`).hostname.toLowerCase();
-  } catch {
-    return apiError("Invalid URL", 422);
-  }
-
-  // Block server-side requests to private networks and cloud metadata.
-  if (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname.endsWith(".local") ||
-    hostname.endsWith(".internal") ||
-    hostname === "169.254.169.254" ||
-    hostname === "metadata.google.internal" ||
-    hostname.startsWith("10.") ||
-    hostname.startsWith("192.168.") ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
-    hostname === "::1"
-  ) {
-    return apiError("That URL cannot be fetched", 422);
+  const safety = await isSafePublicUrl(data.url);
+  if (!safety.safe) {
+    return apiError("That URL cannot be fetched: " + (safety.reason || "Unsafe target"), 422);
   }
 
   const key = String(auth.user._id);

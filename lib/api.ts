@@ -18,7 +18,17 @@ export function json(data: unknown, status = 200, headers?: HeadersInit) {
 }
 
 export function apiError(message: string, status = 400, details?: unknown) {
-  return json({ error: message, details }, status);
+  const safeMessage =
+    status >= 500 && process.env.NODE_ENV === "production"
+      ? "An unexpected error occurred. Please try again later."
+      : message;
+  return json(
+    {
+      error: safeMessage,
+      details: status >= 500 && process.env.NODE_ENV === "production" ? undefined : details,
+    },
+    status,
+  );
 }
 
 export async function parseBody<T>(request: Request, schema: ZodSchema<T>) {

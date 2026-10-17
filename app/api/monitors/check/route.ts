@@ -3,6 +3,7 @@ import { json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import Monitor from "@/models/Monitor";
 import { createHash } from "crypto";
+import { isSafePublicUrl } from "@/lib/ssrf";
 
 const USER_AGENT = "Mozilla/5.0 (compatible; WesiteMonitor/1.0)";
 
@@ -50,6 +51,12 @@ export async function POST(request: NextRequest) {
     }
 
     checked++;
+    const safety = await isSafePublicUrl(monitor.url);
+    if (!safety.safe) {
+      await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+      continue;
+    }
+
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 10000);

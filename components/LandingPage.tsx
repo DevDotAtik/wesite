@@ -41,7 +41,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
 
           <nav className="hidden items-center gap-2 text-sm font-semibold md:flex">
             <a href="#features" className="nb-btn nb-btn-ghost nb-btn-sm">Features</a>
-            <a href="#pricing" className="nb-btn nb-btn-ghost nb-btn-sm">Pricing</a>
+            <Link href="/webflow" className="nb-btn nb-btn-ghost nb-btn-sm">WebFlow</Link>
             <a href="#how-it-works" className="nb-btn nb-btn-ghost nb-btn-sm">How it Works</a>
             <a href="#field-guide" className="nb-btn nb-btn-ghost nb-btn-sm">Field Guide</a>
           </nav>
@@ -419,78 +419,6 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 7. Pricing Section */}
-      <section id="pricing" className="py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <span className="zine-kicker">Pricing</span>
-            <h2 className="mt-4 text-balance text-4xl font-extrabold sm:text-5xl" style={{ color: "var(--nb-fg)" }}>
-              Simple, transparent pricing
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm" style={{ color: "var(--nb-muted)" }}>
-              Get full access to all curation tools with our generous free tier.
-            </p>
-          </div>
-
-          <div className="mt-14 mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
-            {/* Free Plan */}
-            <div className="nb-card-static p-8" style={{ background: "var(--nb-surface)" }}>
-              <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Free Starter</h3>
-              <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>Perfect for individual bookmarking</p>
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$0</span>
-                <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ forever</span>
-              </div>
-              <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
-                {[
-                  "Up to 500 bookmarks saved",
-                  "4 View modes (Grid, Masonry, List, Headlines)",
-                  "Nested collections & custom icons",
-                  "Command Palette (Cmd+K)",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 shrink-0" style={{ color: "var(--nb-success)" }} />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register" className="nb-btn nb-btn-surface mt-8 block w-full text-center">
-                Get Started Free
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="nb-card-static p-8 relative" style={{ background: "var(--nb-card)", borderWidth: "4px" }}>
-              <div className="nb-tag nb-tag-primary absolute -top-4 right-6">
-                Most Popular
-              </div>
-              <h3 className="text-xl font-bold" style={{ color: "var(--nb-fg)" }}>Pro Workspace</h3>
-              <p className="mt-1 text-xs" style={{ color: "var(--nb-muted)" }}>For power users and researchers</p>
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold tabular-nums" style={{ color: "var(--nb-fg)" }}>$4.99</span>
-                <span className="text-xs" style={{ color: "var(--nb-muted)" }}>/ month</span>
-              </div>
-              <ul className="mt-6 space-y-3 text-xs font-semibold" style={{ color: "var(--nb-fg)" }}>
-                {[
-                  "Unlimited bookmarks & collections",
-                  "Automatic full-page metadata scraping",
-                  "Batch Operations & tag management",
-                  "Priority backup & JSON export",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 shrink-0" style={{ color: "var(--nb-primary)" }} />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register" className="nb-btn nb-btn-primary mt-8 block w-full text-center">
-                Start 14-Day Free Trial
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* 7. CTA Banner */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -525,7 +453,7 @@ export default function LandingPage({ onLaunchDemo }: LandingPageProps) {
             </div>
             <div className="flex flex-wrap gap-4 text-xs font-semibold" style={{ color: "var(--nb-muted)" }}>
               <a href="#features" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Features</a>
-              <a href="#pricing" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Pricing</a>
+              <Link href="/webflow" className="transition-colors" style={{ color: "var(--nb-fg)" }}>WebFlow</Link>
               <Link href="/login" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Sign In</Link>
               <Link href="/register" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Register</Link>
               <Link href="/privacy" className="transition-colors" style={{ color: "var(--nb-fg)" }}>Privacy</Link>

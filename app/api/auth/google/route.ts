@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
-import { authCookieOptions, AUTH_COOKIE, signAuthToken } from "@/lib/auth";
+import { authCookieOptions, AUTH_COOKIE, sanitizeUser, signAuthToken } from "@/lib/auth";
 import { apiError, parseBody, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { googleAuthSchema } from "@/lib/validators/schemas";
@@ -106,12 +106,7 @@ export async function POST(request: NextRequest) {
   }
 
   const token = signAuthToken({ userId: user._id.toString(), email: user.email });
-  const safeUser = serializeDocument({
-    ...user.toObject(),
-    passwordHash: undefined,
-    resetTokenHash: undefined,
-    resetTokenExpiresAt: undefined,
-  });
+  const safeUser = serializeDocument(sanitizeUser(user));
 
   const response = NextResponse.json({ token, user: safeUser });
   response.cookies.set(AUTH_COOKIE, token, authCookieOptions(request));

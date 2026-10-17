@@ -4,8 +4,12 @@ import { json, parseBody } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { forgotPasswordSchema } from "@/lib/validators/schemas";
 import User from "@/models/User";
+import { enforceRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  const rateLimitError = enforceRateLimit(request, "forgot_password", 5, 600);
+  if (rateLimitError) return rateLimitError;
+
   const { data, error } = await parseBody(request, forgotPasswordSchema);
 
   if (error) {

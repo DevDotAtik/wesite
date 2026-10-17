@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { isSafePublicUrl } from "./ssrf";
 
 export type WebsiteMetadata = {
   url: string;
@@ -62,6 +63,11 @@ async function verifyFavicon(url: string) {
     return false;
   }
 
+  const safety = await isSafePublicUrl(url);
+  if (!safety.safe) {
+    return false;
+  }
+
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
@@ -78,6 +84,22 @@ async function verifyFavicon(url: string) {
 }
 
 export async function scrapeMetadata(rawUrl: string): Promise<WebsiteMetadata> {
+  const safety = await isSafePublicUrl(rawUrl);
+  if (!safety.safe) {
+    const trimmed = rawUrl.trim();
+    return {
+      url: trimmed,
+      normalizedUrl: trimmed,
+      domain: trimmed,
+      title: trimmed,
+      description: "",
+      faviconUrl: fallbackAvatar(trimmed),
+      ogImageUrl: "",
+      scrapeStatus: "fallback",
+      error: `Blocked target: ${safety.reason}`,
+    };
+  }
+
   let normalizedUrl = "";
   let parsed: URL;
 

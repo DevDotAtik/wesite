@@ -95,3 +95,23 @@ export function authCookieOptions(request?: NextRequest) {
     maxAge: 60 * 60 * 24 * 30,
   };
 }
+
+/**
+ * Remove sensitive credentials from a user document before returning to client.
+ */
+export function sanitizeUser(user: unknown): Record<string, unknown> {
+  if (!user || typeof user !== "object") return {};
+
+  const doc = user as Record<string, unknown> & { toObject?: () => Record<string, unknown> };
+  const userObj: Record<string, unknown> =
+    typeof doc.toObject === "function" ? doc.toObject() : { ...doc };
+
+  delete userObj.passwordHash;
+  delete userObj.resetTokenHash;
+  delete userObj.resetTokenExpiresAt;
+  delete userObj.twoFactorSecret;
+  delete userObj.twoFactorRecoveryCodes;
+
+  return userObj;
+}
+

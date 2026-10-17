@@ -11,8 +11,12 @@ import {
   verifyTwoFactorCode,
 } from "@/lib/totp";
 import User from "@/models/User";
+import { enforceRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  const rateLimitError = enforceRateLimit(request, "verify_2fa", 5, 60);
+  if (rateLimitError) return rateLimitError;
+
   try {
     const { data, error } = await parseBody(request, login2faSchema);
 

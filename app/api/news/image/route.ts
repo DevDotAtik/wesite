@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { json } from "@/lib/api";
+import { isSafePublicUrl } from "@/lib/ssrf";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,9 @@ const imageCache = new Map<string, string | null>();
 
 export async function resolveArticleImage(url: string): Promise<string | null> {
   if (!url) return null;
+  const safety = await isSafePublicUrl(url);
+  if (!safety.safe) return null;
+
   if (imageCache.has(url)) {
     return imageCache.get(url) ?? null;
   }

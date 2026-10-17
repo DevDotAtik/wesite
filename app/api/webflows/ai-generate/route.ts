@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiError, json, requireUser } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/rateLimit";
 import Website from "@/models/Website";
 import type {
   WebFlowNode,
@@ -260,6 +261,9 @@ export async function POST(request: NextRequest) {
   try {
     const { user, response } = await requireUser(request);
     if (response) return response;
+
+    const rateLimitError = enforceRateLimit(request, "ai_generate", 20, 60);
+    if (rateLimitError) return rateLimitError;
 
     const body = await request.json().catch(() => null);
     if (!body || !body.prompt || typeof body.prompt !== "string") {
