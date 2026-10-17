@@ -10,6 +10,7 @@ import {
   verifyTwoFactorCode,
 } from "@/lib/totp";
 import User from "@/models/User";
+import { seedDefaultWebsitesForUser } from "@/lib/default-websites";
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,6 +100,8 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return apiError("Could not create user account", 500);
     }
+
+    await seedDefaultWebsitesForUser(user._id);
 
     const token = signAuthToken({ userId: user._id.toString(), email: user.email });
     const response = NextResponse.json(

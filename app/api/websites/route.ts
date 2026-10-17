@@ -5,6 +5,7 @@ import { normalizeUrl, scrapeMetadata } from "@/lib/scrapeMetadata";
 import { websiteCreateSchema } from "@/lib/validators/schemas";
 import Website from "@/models/Website";
 import Folder from "@/models/Folder";
+import { seedDefaultWebsitesForUser } from "@/lib/default-websites";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -58,10 +59,23 @@ export async function GET(request: NextRequest) {
       sortOrder = { isFavorite: -1, lastVisitedAt: -1, createdAt: -1 };
     }
 
-    const [websites, total] = await Promise.all([
+    let [websites, total] = await Promise.all([
       Website.find(query).sort(sortOrder).skip((page - 1) * limit).limit(limit).lean(),
       Website.countDocuments(query),
     ]);
+
+    // If user has 0 saved websites (e.g. newly registered or clean account),
+    // automatically seed the 5 starter websites with working images so cards are immediately visible.
+    if (total === 0 && !search && !folderId && !tag && !favorite && trashed !== "true") {
+      const everCount = await Website.countDocuments({ userId: auth.user._id });
+      if (everCount === 0) {
+        await seedDefaultWebsitesForUser(auth.user._id);
+        [websites, total] = await Promise.all([
+          Website.find(query).sort(sortOrder).skip((page - 1) * limit).limit(limit).lean(),
+          Website.countDocuments(query),
+        ]);
+      }
+    }
 
     return json({ websites: serializeDocument(websites), pagination: { page, limit, total } });
 }

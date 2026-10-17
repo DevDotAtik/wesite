@@ -6,6 +6,7 @@ import { apiError, parseBody, serializeDocument } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { googleAuthSchema } from "@/lib/validators/schemas";
 import User from "@/models/User";
+import { seedDefaultWebsitesForUser } from "@/lib/default-websites";
 
 function getGoogleClientId() {
   const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -98,6 +99,7 @@ export async function POST(request: NextRequest) {
       avatarUrl,
       googleAvatarUrl: avatarUrl,
     });
+    await seedDefaultWebsitesForUser(user._id);
   } else if (user.googleAvatarUrl !== avatarUrl && avatarUrl) {
     user.googleAvatarUrl = avatarUrl;
     await user.save();

@@ -27,6 +27,7 @@ import {
 import { AIIcon } from "./AIIcon";
 import { fetchWithAuth } from "@/lib/auth-client";
 import type { WebFlowNodeKind, WebFlowNodeData } from "@/lib/webflow/types";
+import { DEFAULT_PREADDED_WEBSITES } from "@/lib/default-websites-data";
 
 interface SavedFolder {
   _id: string;
@@ -76,7 +77,40 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
 
           if (sitesRes.ok) {
             const data = await sitesRes.json();
-            if (!ignore) setWebsites(data.websites || []);
+            const loaded = data.websites || [];
+            if (!ignore) {
+              if (loaded.length > 0) {
+                setWebsites(loaded);
+              } else {
+                setWebsites(
+                  DEFAULT_PREADDED_WEBSITES.map((s) => ({
+                    _id: s.id,
+                    title: s.title,
+                    url: s.url,
+                    domain: s.domain,
+                    faviconUrl: s.faviconUrl,
+                    ogImageUrl: s.ogImageUrl,
+                    description: s.description,
+                    tags: s.tags,
+                  })),
+                );
+              }
+            }
+          } else {
+            if (!ignore) {
+              setWebsites(
+                DEFAULT_PREADDED_WEBSITES.map((s) => ({
+                  _id: s.id,
+                  title: s.title,
+                  url: s.url,
+                  domain: s.domain,
+                  faviconUrl: s.faviconUrl,
+                  ogImageUrl: s.ogImageUrl,
+                  description: s.description,
+                  tags: s.tags,
+                })),
+              );
+            }
           }
 
           if (foldersRes.ok) {
@@ -85,7 +119,18 @@ export function WebFlowSidebar({ onAddNode, isOpen, onToggle }: WebFlowSidebarPr
           }
         } catch {
           if (!ignore) {
-            setWebsites([]);
+            setWebsites(
+              DEFAULT_PREADDED_WEBSITES.map((s) => ({
+                _id: s.id,
+                title: s.title,
+                url: s.url,
+                domain: s.domain,
+                faviconUrl: s.faviconUrl,
+                ogImageUrl: s.ogImageUrl,
+                description: s.description,
+                tags: s.tags,
+              })),
+            );
             setFolders([]);
           }
         } finally {
