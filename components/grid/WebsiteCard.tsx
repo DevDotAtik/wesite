@@ -9,12 +9,14 @@ import {
   Pencil,
   RotateCcw,
   Share2,
+  SquareCheckBig,
   Star,
   Trash2,
   Workflow,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AddToWebFlowModal } from "@/components/webflow/AddToWebFlowModal";
+import { AddToTodoModal } from "@/components/todo/AddToTodoModal";
 
 export type WebsiteItem = {
   _id: string;
@@ -152,6 +154,7 @@ export default function WebsiteCard({
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isWebFlowModalOpen, setIsWebFlowModalOpen] = useState(false);
+  const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
 
   // Automatic landing page screenshot URL with fallback to ogImageUrl
@@ -322,6 +325,18 @@ export default function WebsiteCard({
           >
             <Workflow className="size-3.5 text-purple-500" />
             <span>Add to WebFlow</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              setIsTodoModalOpen(true);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[var(--nb-surface-alt)] text-[var(--nb-fg)]"
+          >
+            <SquareCheckBig className="size-3.5 text-emerald-500" />
+            <span>Add to Todo</span>
           </button>
           {onSelect && (
             <button
@@ -570,6 +585,18 @@ export default function WebsiteCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsTodoModalOpen(true);
+                }}
+                className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-500/10 dark:text-emerald-400"
+                title="Add to Todo"
+                aria-label="Add to Todo"
+              >
+                <SquareCheckBig className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
                   setIsWebFlowModalOpen(true);
                 }}
                 className="nb-btn nb-btn-surface nb-btn-icon size-7.5 sm:size-8.5 border-2 text-indigo-600 hover:border-indigo-500 hover:bg-indigo-500/10"
@@ -716,8 +743,8 @@ export default function WebsiteCard({
             </button>
           )}
 
-          {/* Single 3-Dots Action Menu Trigger (Visible on mobile, hover on desktop) */}
-          <div className="absolute top-2.5 right-2.5 z-20">
+          {/* Single 3-Dots Action Menu Trigger (Visible on mobile only, hidden on laptop/desktop view) */}
+          <div className="absolute top-2.5 right-2.5 z-20 sm:hidden">
             <button
               type="button"
               onClick={(e) => {
@@ -726,9 +753,7 @@ export default function WebsiteCard({
               }}
               aria-label="More options"
               title="More options"
-              className={`flex size-7 items-center justify-center rounded-lg border-2 border-[var(--nb-border)] bg-[var(--nb-card)] text-[var(--nb-fg)] hover:bg-[var(--nb-surface-alt)] shadow-xs transition-transform active:scale-95 ${
-                menuOpen ? "opacity-100" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-              }`}
+              className="flex size-7 items-center justify-center rounded-lg border-2 border-[var(--nb-border)] bg-[var(--nb-card)] text-[var(--nb-fg)] hover:bg-[var(--nb-surface-alt)] shadow-xs transition-transform active:scale-95"
             >
               <MoreVertical className="size-4" />
             </button>
@@ -907,8 +932,20 @@ export default function WebsiteCard({
                 </button>
               </div>
 
-              {/* Right Action Buttons: WebFlow, Open, Delete */}
+              {/* Right Action Buttons: Todo, WebFlow, Open, Delete */}
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsTodoModalOpen(true);
+                  }}
+                  className="nb-btn nb-btn-surface nb-btn-icon size-8 border-2 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-500/10 dark:text-emerald-400 transition-all"
+                  title="Add to Todo"
+                  aria-label="Add to Todo"
+                >
+                  <SquareCheckBig className="size-3.5 sm:size-4" />
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -955,6 +992,12 @@ export default function WebsiteCard({
     <AddToWebFlowModal
       isOpen={isWebFlowModalOpen}
       onClose={() => setIsWebFlowModalOpen(false)}
+      website={website}
+    />
+
+    <AddToTodoModal
+      isOpen={isTodoModalOpen}
+      onClose={() => setIsTodoModalOpen(false)}
       website={website}
     />
   </>
