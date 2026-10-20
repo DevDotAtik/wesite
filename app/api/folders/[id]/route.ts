@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { folderPatchSchema } from "@/lib/validators/schemas";
 import Folder from "@/models/Folder";
 import Website from "@/models/Website";
+import Todo from "@/models/Todo";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -93,6 +94,7 @@ export async function DELETE(request: NextRequest, context: Context) {
   }
 
   await Folder.updateMany({ userId: auth.user._id, parentFolderId: id }, { $set: { parentFolderId: folder.parentFolderId } });
+  await Todo.updateMany({ userId: auth.user._id, folderId: id }, { $set: { folderId: folder.parentFolderId } });
   await Folder.deleteOne({ _id: id, userId: auth.user._id });
 
   return json({ ok: true });

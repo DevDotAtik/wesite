@@ -16,9 +16,13 @@ import {
   Trash2,
   ListTodo,
   FileText,
+  Folder,
+  ChevronDown,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/lib/auth-client";
+import { buildGoogleCalendarUrl } from "@/lib/googleCalendar";
 import type { WebsiteItem } from "@/components/grid/WebsiteCard";
 
 interface ExistingTodo {
@@ -48,8 +52,11 @@ export function AddToTodoModal({
 
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [folderId, setFolderId] = useState<string>("unassigned");
+  const [folders, setFolders] = useState<Array<{ _id: string; name: string; color?: string; icon?: string }>>([]);
   const [dueDateOption, setDueDateOption] = useState<"none" | "today" | "tomorrow" | "3days" | "week">("today");
   const [customDueDate, setCustomDueDate] = useState("");
+  const [syncGoogleCalendar, setSyncGoogleCalendar] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,8 +70,10 @@ export function AddToTodoModal({
       const siteName = website.title?.trim() || website.domain || "website";
       setTitle(`Review ${siteName}`);
       setNotes("");
+      setFolderId(website.folderId ? String(website.folderId) : "unassigned");
       setDueDateOption("today");
       setCustomDueDate("");
+      setSyncGoogleCalendar(false);
       setShowNotes(false);
 
       // Focus input after modal mount
@@ -73,16 +82,27 @@ export function AddToTodoModal({
         inputRef.current?.select();
       }, 50);
 
-      // Fetch existing todos for this website
+      // Fetch existing todos and folders in parallel
       let ignore = false;
-      const loadExisting = async () => {
+      const loadData = async () => {
         setLoadingExisting(true);
         try {
-          const res = await fetchWithAuth(`/api/todos?websiteId=${website._id}&status=all`);
-          if (res.ok) {
-            const data = await res.json();
+          const [todosRes, foldersRes] = await Promise.all([
+            fetchWithAuth(`/api/todos?websiteId=${website._id}&status=all`),
+            fetchWithAuth("/api/folders"),
+          ]);
+
+          if (todosRes.ok) {
+            const data = await todosRes.json();
             if (!ignore) {
               setExistingTodos(data.todos || []);
+            }
+          }
+
+          if (foldersRes.ok) {
+            const data = await foldersRes.json();
+            if (!ignore) {
+              setFolders(data.flatFolders || data.folders || []);
             }
           }
         } catch {
@@ -92,7 +112,7 @@ export function AddToTodoModal({
         }
       };
 
-      loadExisting();
+      loadData();
 
       return () => {
         ignore = true;
@@ -169,6 +189,7 @@ export function AddToTodoModal({
           title: title.trim(),
           notes: notes.trim(),
           websiteId: website._id,
+          folderId: folderId === "unassigned" ? null : folderId,
           dueAt,
         }),
       });
@@ -178,8 +199,26 @@ export function AddToTodoModal({
         throw new Error(err.error || "Failed to create task");
       }
 
+      // If user enabled Google Calendar sync and there's a due date, open Google Calendar with 2-hour alert
+      if (syncGoogleCalendar && dueAt) {
+        const gcalUrl = buildGoogleCalendarUrl({
+          title: title.trim(),
+          dueAt,
+          notes: notes.trim(),
+          website: {
+            title: website.title,
+            domain: website.domain,
+            url: website.url,
+          },
+          folder: folders.find((f) => f._id === folderId),
+        });
+        window.open(gcalUrl, "_blank", "noopener,noreferrer");
+      }
+
       toast.success("Task added to Todo!", {
-        description: `"${title.trim()}" linked to ${website.title || website.domain}`,
+        description: `"${title.trim()}" linked to ${website.title || website.domain}${
+          syncGoogleCalendar && dueAt ? " & synced to Google Calendar with 2h alert" : ""
+        }`,
         action: {
           label: "Open Todo",
           onClick: () => router.push("/todo"),
@@ -347,6 +386,31 @@ export function AddToTodoModal({
             />
           </div>
 
+          {/* Folder Selector */}
+          <div>
+            <label className="flex items-center gap-1.5 text-[11px] font-black text-nb-fg mb-1">
+              <Folder className="h-3.5 w-3.5 text-indigo-500" />
+              <span>Folder (optional):</span>
+            </label>
+            <div className="relative">
+              <select
+                value={folderId}
+                onChange={(e) => setFolderId(e.target.value)}
+                className="w-full appearance-none rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-bold text-nb-fg focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-nb-xs pr-8"
+              >
+                <option value="unassigned">📁 No Folder (Unassigned)</option>
+                {folders.map((f) => (
+                  <option key={f._id} value={f._id}>
+                    📁 {f.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-nb-muted">
+                <ChevronDown className="h-4 w-4" />
+              </div>
+            </div>
+          </div>
+
           {/* Due Date Shortcut Options */}
           <div>
             <label className="flex items-center justify-between text-[11px] font-black text-nb-fg mb-1.5">
@@ -410,9 +474,34 @@ export function AddToTodoModal({
                 </button>
               </div>
             )}
+
+            {/* Google Calendar 2-Hour Alert Sync Option */}
+            {(dueDateOption !== "none" || customDueDate) && (
+              <div className="mt-2 flex items-center justify-between rounded-xl border border-nb-border/40 bg-indigo-500/10 p-2">
+                <label
+                  htmlFor="sync-gcal"
+                  className="flex items-center gap-2 text-[11px] font-bold text-nb-fg cursor-pointer select-none"
+                >
+                  <input
+                    id="sync-gcal"
+                    type="checkbox"
+                    checked={syncGoogleCalendar}
+                    onChange={(e) => setSyncGoogleCalendar(e.target.checked)}
+                    className="rounded border-nb-border text-indigo-600 focus:ring-indigo-500 size-3.5 cursor-pointer"
+                  />
+                  <span className="flex items-center gap-1">
+                    <span>📅 Sync to Google Calendar</span>
+                    <span className="rounded bg-indigo-500/20 px-1 py-0.2 text-[9px] font-black text-indigo-600 dark:text-indigo-400">
+                      2h alert
+                    </span>
+                  </span>
+                </label>
+                <Bell className="size-3.5 text-indigo-500" />
+              </div>
+            )}
           </div>
 
-          {/* Optional Notes Toggle */}
+          {/* Multiline Notes (Newlines Preserved) */}
           <div>
             {!showNotes && !notes ? (
               <button
@@ -421,14 +510,14 @@ export function AddToTodoModal({
                 className="flex items-center gap-1.5 text-[11px] font-bold text-nb-muted hover:text-nb-fg transition-colors"
               >
                 <Plus className="h-3 w-3" />
-                <span>Add notes / details (optional)</span>
+                <span>Add notes / multi-line checklist (optional)</span>
               </button>
             ) : (
               <div>
                 <label className="flex items-center justify-between text-xs font-black text-nb-fg mb-1">
                   <span className="flex items-center gap-1">
                     <FileText className="h-3 w-3 text-nb-muted" />
-                    Notes:
+                    Notes / Description:
                   </span>
                   <button
                     type="button"
@@ -442,12 +531,15 @@ export function AddToTodoModal({
                   </button>
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Check PR #42 or read section 3"
-                  className="w-full rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-medium text-nb-fg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none shadow-nb-xs"
+                  placeholder={"Type notes or details here...\n• Step 1\n• Step 2\nLine breaks will be preserved."}
+                  className="w-full rounded-xl border-2 border-nb-border bg-nb-surface px-3 py-2 text-xs font-medium text-nb-fg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y shadow-nb-xs leading-relaxed"
                 />
+                <p className="mt-1 text-[10px] text-nb-muted">
+                  ✨ Line breaks and formatting are preserved exactly as typed.
+                </p>
               </div>
             )}
           </div>
@@ -510,35 +602,68 @@ export function AddToTodoModal({
                 return (
                   <div
                     key={todo._id}
-                    className={`flex items-center justify-between rounded-lg border p-2 text-xs transition-colors ${
+                    className={`rounded-lg border p-2 text-xs transition-colors ${
                       isCompleted
                         ? "border-emerald-500/20 bg-emerald-500/5 text-nb-muted"
                         : "border-nb-border/40 bg-nb-surface text-nb-fg"
                     }`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => toggleExistingTodo(todo._id, isCompleted)}
-                      className="flex items-center gap-2 text-left flex-1 min-w-0"
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      ) : (
-                        <Circle className="h-3.5 w-3.5 text-nb-muted shrink-0" />
-                      )}
-                      <span className={`truncate font-bold ${isCompleted ? "line-through opacity-70" : ""}`}>
-                        {todo.title}
-                      </span>
-                    </button>
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => toggleExistingTodo(todo._id, isCompleted)}
+                        className="flex items-center gap-2 text-left flex-1 min-w-0"
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                          <Circle className="h-3.5 w-3.5 text-nb-muted shrink-0" />
+                        )}
+                        <span className={`truncate font-bold ${isCompleted ? "line-through opacity-70" : ""}`}>
+                          {todo.title}
+                        </span>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => deleteExistingTodo(todo._id)}
-                      className="p-1 text-nb-muted hover:text-rose-500 transition-colors shrink-0 ml-1.5"
-                      title="Delete task"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                      <div className="flex items-center gap-1 shrink-0 ml-1.5">
+                        {todo.dueAt && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const gcalUrl = buildGoogleCalendarUrl({
+                                title: todo.title,
+                                dueAt: todo.dueAt!,
+                                notes: todo.notes,
+                                website: {
+                                  title: website.title,
+                                  domain: website.domain,
+                                  url: website.url,
+                                },
+                              });
+                              window.open(gcalUrl, "_blank", "noopener,noreferrer");
+                            }}
+                            className="p-1 text-nb-muted hover:text-indigo-500 transition-colors"
+                            title="Add to Google Calendar (2-hour alert)"
+                          >
+                            <Calendar className="h-3 w-3" />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => deleteExistingTodo(todo._id)}
+                          className="p-1 text-nb-muted hover:text-rose-500 transition-colors"
+                          title="Delete task"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {todo.notes && (
+                      <p className="mt-1 pl-5.5 text-[11px] font-normal text-nb-muted whitespace-pre-wrap break-words leading-relaxed border-l-2 border-nb-border/20 ml-1">
+                        {todo.notes}
+                      </p>
+                    )}
                   </div>
                 );
               })}

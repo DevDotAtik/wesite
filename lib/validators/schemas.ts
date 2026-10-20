@@ -97,7 +97,8 @@ export const websitePatchSchema = z.object({
 
 export const todoCreateSchema = z.object({
   title: z.string().min(1).max(240),
-  notes: z.string().max(3000).optional(),
+  notes: z.string().max(5000).optional(),
+  folderId: objectIdSchema.nullish(),
   websiteId: objectIdSchema.nullish(),
   dueAt: z.string().datetime().nullish(),
 });

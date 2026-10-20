@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { todoPatchSchema } from "@/lib/validators/schemas";
 import Todo from "@/models/Todo";
 import Website from "@/models/Website";
+import Folder from "@/models/Folder";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -24,6 +25,15 @@ export async function PATCH(request: NextRequest, context: Context) {
 
   if (data.title !== undefined) $set.title = data.title;
   if (data.notes !== undefined) $set.notes = data.notes;
+  if (data.folderId !== undefined) {
+    if (data.folderId) {
+      const folder = await Folder.findOne({ _id: data.folderId, userId: auth.user._id }).select("_id").lean();
+      if (!folder) {
+        return apiError("Folder not found", 404);
+      }
+    }
+    $set.folderId = data.folderId ?? null;
+  }
   if (data.websiteId !== undefined) {
     if (data.websiteId) {
       const website = await Website.findOne({ _id: data.websiteId, userId: auth.user._id }).select("_id").lean();
@@ -40,7 +50,10 @@ export async function PATCH(request: NextRequest, context: Context) {
     { _id: id, userId: auth.user._id },
     { $set },
     { new: true },
-  ).populate("websiteId", "title domain url faviconUrl folderId").lean();
+  )
+    .populate("websiteId", "title domain url faviconUrl folderId")
+    .populate("folderId", "name color icon")
+    .lean();
 
   if (!todo) return apiError("Todo not found", 404);
 
