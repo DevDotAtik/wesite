@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -21,6 +21,11 @@ interface VisitsLineChartProps {
 
 export default function VisitsLineChart({ data }: VisitsLineChartProps) {
   const [chartType, setChartType] = useState<"area" | "bar">("area");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -96,7 +101,12 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
 
       {/* Main Chart */}
       <div className="w-full min-w-0 max-w-full h-[240px] sm:h-[270px] overflow-hidden">
-        <ResponsiveContainer width="100%" height="100%">
+        {!isMounted ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          </div>
+        ) : (
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           {chartType === "area" ? (
             <AreaChart data={data} margin={{ left: -15, right: 10, top: 12, bottom: 0 }}>
               <defs>
@@ -122,6 +132,7 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
                 minTickGap={18}
               />
               <YAxis
+                domain={[0, (dataMax: number) => Math.max(dataMax || 0, 5)]}
                 tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
                 tickLine={false}
                 axisLine={false}
@@ -192,6 +203,7 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
                 minTickGap={14}
               />
               <YAxis
+                domain={[0, (dataMax: number) => Math.max(dataMax || 0, 5)]}
                 tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
                 tickLine={false}
                 axisLine={false}
@@ -235,6 +247,7 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
             </BarChart>
           )}
         </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

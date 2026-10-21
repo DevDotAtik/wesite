@@ -10,25 +10,40 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
-  const [folders, rows] = await Promise.all([
-    Folder.find({ userId: auth.user._id, parentFolderId: null }).select("name color icon").lean(),
+  const [folders, rows, unassignedCount] = await Promise.all([
+    Folder.find({ userId: auth.user._id }).select("name color icon").lean(),
     Website.aggregate([
-      { $match: { userId: auth.user._id, isTrashed: false } },
+      { $match: { userId: auth.user._id, isTrashed: false, folderId: { $ne: null } } },
       { $group: { _id: "$folderId", value: { $sum: 1 } } },
     ]),
+    Website.countDocuments({ userId: auth.user._id, isTrashed: false, folderId: null }),
   ]);
-  const folderMap = new Map(
-    folders.map((folder) => [String(folder._id), { name: folder.name, color: folder.color || "#6366f1" }]),
-  );
-  const data = rows.map((row) => {
-    const found = row._id ? folderMap.get(String(row._id)) : null;
-    return {
-      id: row._id ? String(row._id) : "unsorted",
-      name: found?.name ?? (row._id ? "Nested folder" : "Unassigned"),
-      color: found?.color ?? "#94a3b8",
-      value: row.value,
-    };
-  });
+
+  const countMap = new Map<string, number>();
+  for (const row of rows) {
+    if (row._id) countMap.set(String(row._id), row.value);
+  }
+
+  const data: Array<{ id: string; name: string; color: string; value: number }> = [];
+
+  for (const f of folders) {
+    const val = countMap.get(String(f._id)) || 0;
+    data.push({
+      id: String(f._id),
+      name: f.name,
+      color: f.color || "#6366f1",
+      value: val,
+    });
+  }
+
+  if (unassignedCount > 0 || data.length === 0) {
+    data.push({
+      id: "unsorted",
+      name: "Direct Bookmarks",
+      color: "#94a3b8",
+      value: unassignedCount,
+    });
+  }
 
   return json({ data });
 }

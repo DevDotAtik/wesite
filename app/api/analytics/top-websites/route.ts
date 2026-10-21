@@ -13,12 +13,21 @@ export async function GET(request: NextRequest) {
   const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
   const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 5), 30) : 10;
 
-  const websites = await Website.find({ userId: auth.user._id, isTrashed: false, visitCount: { $gt: 0 } })
+  let websites = await Website.find({ userId: auth.user._id, isTrashed: false, visitCount: { $gt: 0 } })
     .sort({ visitCount: -1 })
     .limit(limit)
     .select("title domain url visitCount faviconUrl folderId")
     .populate("folderId", "name color")
     .lean();
+
+  if (websites.length === 0) {
+    websites = await Website.find({ userId: auth.user._id, isTrashed: false })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select("title domain url visitCount faviconUrl folderId")
+      .populate("folderId", "name color")
+      .lean();
+  }
 
   return json({ websites: serializeDocument(websites) });
 }

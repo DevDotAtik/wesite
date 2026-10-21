@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Folder, PieChart as PieChartIcon, BarChart2 } from "lucide-react";
 
@@ -9,6 +9,7 @@ export type FolderDistributionItem = {
   name: string;
   value: number;
   color?: string;
+  isPlaceholder?: boolean;
 };
 
 interface FolderDistributionPieChartProps {
@@ -29,9 +30,22 @@ const fallbackColors = [
 export default function FolderDistributionPieChart({ data }: FolderDistributionPieChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [viewType, setViewType] = useState<"donut" | "bars">("donut");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const total = useMemo(() => {
-    return (data || []).reduce((acc, curr) => acc + curr.value, 0);
+    return (data || []).reduce((acc, curr) => acc + (curr.isPlaceholder ? 0 : curr.value), 0);
+  }, [data]);
+
+  const pieData = useMemo(() => {
+    const sum = (data || []).reduce((acc, curr) => acc + curr.value, 0);
+    if (sum === 0 && data && data.length > 0) {
+      return data.map((d) => ({ ...d, value: 1, isPlaceholder: true }));
+    }
+    return data || [];
   }, [data]);
 
   const activeItem = useMemo(() => {
@@ -93,10 +107,13 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Donut Chart with Dynamic Center Content */}
           <div className="relative w-full sm:w-1/2 h-[220px] flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            {!isMounted ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+            ) : (
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
               <PieChart>
                 <Pie
-                  data={data}
+                  data={pieData}
                   innerRadius={55}
                   outerRadius={85}
                   dataKey="value"
@@ -107,7 +124,7 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
                   onMouseEnter={(_, index) => setActiveIndex(index)}
                   onMouseLeave={() => setActiveIndex(null)}
                 >
-                  {data.map((entry, index) => (
+                  {pieData.map((entry, index) => (
                     <Cell
                       key={`cell-${entry.name}-${index}`}
                       fill={entry.color || fallbackColors[index % fallbackColors.length]}
@@ -133,7 +150,7 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
                             style={{ backgroundColor: item.color || "#6366f1" }}
                           />
                           <span className="font-bold text-sm">
-                            {item.value} sites ({pct}%)
+                            {item.isPlaceholder ? "0 sites (Empty)" : `${item.value} sites (${pct}%)`}
                           </span>
                         </div>
                       </div>
@@ -142,6 +159,7 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
                 />
               </PieChart>
             </ResponsiveContainer>
+            )}
 
             {/* Centered Dynamic KPI */}
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">

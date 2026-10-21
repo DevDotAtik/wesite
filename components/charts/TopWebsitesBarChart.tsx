@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -28,6 +28,11 @@ interface TopWebsitesBarChartProps {
 export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) {
   const [viewMode, setViewMode] = useState<"leaderboard" | "chart">("leaderboard");
   const [limit, setLimit] = useState<5 | 10>(5);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const displayData = useMemo(() => {
     return (data || []).slice(0, limit);
@@ -200,27 +205,33 @@ export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) 
         </div>
       ) : (
         <div className="w-full min-w-0 max-w-full h-[240px] sm:h-[270px] overflow-hidden">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={displayData} margin={{ left: -15, right: 8, top: 10, bottom: 0 }}>
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
-                tickLine={false}
-                axisLine={{ stroke: "var(--nb-border)", strokeWidth: 1.5 }}
-                tickFormatter={(value: string) => {
-                  if (!value) return "";
-                  return value.length > 8 ? `${value.slice(0, 8)}…` : value;
-                }}
-                minTickGap={10}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-                stroke="var(--nb-border)"
-                width={28}
-              />
+          {!isMounted ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+              <BarChart data={displayData} margin={{ left: -15, right: 8, top: 10, bottom: 0 }}>
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "var(--nb-border)", strokeWidth: 1.5 }}
+                  tickFormatter={(value: string) => {
+                    if (!value) return "";
+                    return value.length > 8 ? `${value.slice(0, 8)}…` : value;
+                  }}
+                  minTickGap={10}
+                />
+                <YAxis
+                  domain={[0, (dataMax: number) => Math.max(dataMax || 0, 5)]}
+                  tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                  stroke="var(--nb-border)"
+                  width={28}
+                />
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
@@ -250,6 +261,7 @@ export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) 
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          )}
         </div>
       )}
     </div>
