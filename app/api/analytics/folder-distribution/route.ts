@@ -11,17 +11,24 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
   const [folders, rows] = await Promise.all([
-    Folder.find({ userId: auth.user._id, parentFolderId: null }).lean(),
+    Folder.find({ userId: auth.user._id, parentFolderId: null }).select("name color icon").lean(),
     Website.aggregate([
       { $match: { userId: auth.user._id, isTrashed: false } },
       { $group: { _id: "$folderId", value: { $sum: 1 } } },
     ]),
   ]);
-  const folderNames = new Map(folders.map((folder) => [String(folder._id), folder.name]));
-  const data = rows.map((row) => ({
-    name: row._id ? folderNames.get(String(row._id)) ?? "Nested folder" : "Unsorted",
-    value: row.value,
-  }));
+  const folderMap = new Map(
+    folders.map((folder) => [String(folder._id), { name: folder.name, color: folder.color || "#6366f1" }]),
+  );
+  const data = rows.map((row) => {
+    const found = row._id ? folderMap.get(String(row._id)) : null;
+    return {
+      id: row._id ? String(row._id) : "unsorted",
+      name: found?.name ?? (row._id ? "Nested folder" : "Unassigned"),
+      color: found?.color ?? "#94a3b8",
+      value: row.value,
+    };
+  });
 
   return json({ data });
 }

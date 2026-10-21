@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   await connectToDatabase();
   const range = request.nextUrl.searchParams.get("range") ?? "30d";
-  const days = range === "7d" ? 7 : 30;
+  const days = range === "7d" ? 7 : range === "14d" ? 14 : range === "90d" ? 90 : 30;
   const tzOffset = parseTzOffset(request.nextUrl.searchParams.get("tz"));
   const start = startOfLocalDayUtc(Date.now(), tzOffset) - (days - 1) * 86_400_000;
 

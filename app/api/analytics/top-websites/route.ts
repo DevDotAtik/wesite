@@ -9,10 +9,15 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   await connectToDatabase();
+  const searchParams = request.nextUrl.searchParams;
+  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 5), 30) : 10;
+
   const websites = await Website.find({ userId: auth.user._id, isTrashed: false, visitCount: { $gt: 0 } })
     .sort({ visitCount: -1 })
-    .limit(10)
-    .select("title domain visitCount faviconUrl")
+    .limit(limit)
+    .select("title domain url visitCount faviconUrl folderId")
+    .populate("folderId", "name color")
     .lean();
 
   return json({ websites: serializeDocument(websites) });
