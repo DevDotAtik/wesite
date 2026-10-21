@@ -7,6 +7,7 @@ import {
   BellRing,
   Calendar,
   CalendarDays,
+  CalendarHeart,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -253,8 +254,8 @@ export default function TodoPage() {
     setLoading(true);
     try {
       const [todosRes, websitesRes, foldersRes] = await Promise.all([
-        fetchWithAuth("/api/todos?status=all&limit=200"),
-        fetchWithAuth("/api/websites?limit=200&sort=smart"),
+        fetchWithAuth("/api/todos?status=all&limit=300"),
+        fetchWithAuth("/api/websites?limit=500&sort=smart"),
         fetchWithAuth("/api/folders"),
       ]);
 
@@ -491,6 +492,88 @@ export default function TodoPage() {
     });
   }, [todos, filter, selectedFolderId, searchQuery, sortBy]);
 
+  // Top folder filter selection: syncs filter view and pre-sets create form folder
+  const handleFolderFilterSelect = (folderId: string) => {
+    setSelectedFolderId(folderId);
+    if (folderId !== "all") {
+      setForm((cur) => {
+        const nextFolderId = folderId;
+        const currentSite = websites.find((w) => w._id === cur.websiteId);
+        const matches =
+          nextFolderId === "unassigned"
+            ? !currentSite?.folderId
+            : currentSite && String(currentSite.folderId || "") === String(nextFolderId);
+
+        return {
+          ...cur,
+          folderId: nextFolderId,
+          websiteId: matches ? cur.websiteId : "unassigned",
+        };
+      });
+    }
+  };
+
+  // Filter websites available for create form based strictly on chosen folder
+  const availableWebsitesForCreate = useMemo(() => {
+    if (form.folderId && form.folderId !== "unassigned") {
+      return websites.filter((w) => String(w.folderId || "") === String(form.folderId));
+    }
+    // "unassigned" -> only show websites that don't belong to any folder
+    return websites.filter((w) => !w.folderId);
+  }, [websites, form.folderId]);
+
+  // Handle changing folder in create form
+  const handleFormFolderChange = (newFolderId: string) => {
+    setForm((cur) => {
+      const currentSite = websites.find((w) => w._id === cur.websiteId);
+      const matches =
+        newFolderId === "unassigned"
+          ? !currentSite?.folderId
+          : currentSite && String(currentSite.folderId || "") === String(newFolderId);
+
+      return {
+        ...cur,
+        folderId: newFolderId,
+        websiteId: matches ? cur.websiteId : "unassigned",
+      };
+    });
+  };
+
+  // Filter websites available for inline edit form based strictly on chosen edit folder
+  const availableWebsitesForEdit = useMemo(() => {
+    let list: TodoWebsite[] = [];
+    if (editForm.folderId && editForm.folderId !== "unassigned") {
+      list = websites.filter((w) => String(w.folderId || "") === String(editForm.folderId));
+    } else {
+      list = websites.filter((w) => !w.folderId);
+    }
+    // Keep currently assigned website if already set so it's not lost
+    if (editForm.websiteId && editForm.websiteId !== "unassigned") {
+      const existing = websites.find((w) => w._id === editForm.websiteId);
+      if (existing && !list.some((w) => w._id === existing._id)) {
+        list = [existing, ...list];
+      }
+    }
+    return list;
+  }, [websites, editForm.folderId, editForm.websiteId]);
+
+  // Handle changing folder in inline edit form
+  const handleEditFolderChange = (newFolderId: string) => {
+    setEditForm((cur) => {
+      const currentSite = websites.find((w) => w._id === cur.websiteId);
+      const matches =
+        newFolderId === "unassigned"
+          ? !currentSite?.folderId
+          : currentSite && String(currentSite.folderId || "") === String(newFolderId);
+
+      return {
+        ...cur,
+        folderId: newFolderId,
+        websiteId: matches ? cur.websiteId : "unassigned",
+      };
+    });
+  };
+
   // Handle website selection change in create form:
   // Automatically inherit the website's folder if available
   const handleWebsiteChange = (siteId: string) => {
@@ -499,17 +582,11 @@ export default function TodoPage() {
       return;
     }
     const foundSite = websites.find((w) => w._id === siteId);
-    setForm((cur) => {
-      const nextFolderId =
-        foundSite?.folderId && cur.folderId === "unassigned"
-          ? String(foundSite.folderId)
-          : cur.folderId;
-      return {
-        ...cur,
-        websiteId: siteId,
-        folderId: nextFolderId,
-      };
-    });
+    setForm((cur) => ({
+      ...cur,
+      websiteId: siteId,
+      folderId: foundSite?.folderId ? String(foundSite.folderId) : cur.folderId,
+    }));
   };
 
   // Quick action title suggestions
@@ -836,7 +913,7 @@ export default function TodoPage() {
                 className="flex size-11 items-center justify-center rounded-2xl border-2 border-nb-border shadow-nb-sm"
                 style={{ background: "var(--nb-primary)", color: "var(--nb-primary-fg)" }}
               >
-                <Clock3 className="size-6" />
+                <CalendarHeart className="size-6" />
               </span>
               <div>
                 <div className="flex items-center gap-2">
@@ -1105,7 +1182,7 @@ export default function TodoPage() {
               {selectedFolderId !== "all" && (
                 <button
                   type="button"
-                  onClick={() => setSelectedFolderId("all")}
+                  onClick={() => handleFolderFilterSelect("all")}
                   className="text-[11px] font-bold text-indigo-500 hover:underline"
                 >
                   Clear folder filter
@@ -1116,7 +1193,7 @@ export default function TodoPage() {
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
               <button
                 type="button"
-                onClick={() => setSelectedFolderId("all")}
+                onClick={() => handleFolderFilterSelect("all")}
                 className={`flex shrink-0 items-center gap-2 rounded-xl border-2 border-nb-border px-3 py-1.5 text-xs font-bold transition-all ${
                   selectedFolderId === "all"
                     ? "bg-indigo-600 text-white shadow-nb-xs font-black"
@@ -1140,7 +1217,7 @@ export default function TodoPage() {
                   <button
                     key={folder._id}
                     type="button"
-                    onClick={() => setSelectedFolderId(folder._id)}
+                    onClick={() => handleFolderFilterSelect(folder._id)}
                     className={`flex shrink-0 items-center gap-2 rounded-xl border-2 border-nb-border px-3 py-1.5 text-xs font-bold transition-all ${
                       isSelected
                         ? "shadow-nb-xs font-black"
@@ -1173,7 +1250,7 @@ export default function TodoPage() {
 
               <button
                 type="button"
-                onClick={() => setSelectedFolderId("unassigned")}
+                onClick={() => handleFolderFilterSelect("unassigned")}
                 className={`flex shrink-0 items-center gap-2 rounded-xl border-2 border-nb-border px-3 py-1.5 text-xs font-bold transition-all ${
                   selectedFolderId === "unassigned"
                     ? "bg-zinc-700 text-white shadow-nb-xs font-black"
@@ -1265,7 +1342,7 @@ export default function TodoPage() {
                   <div className="relative">
                     <select
                       value={form.folderId}
-                      onChange={(e) => setForm((cur) => ({ ...cur, folderId: e.target.value }))}
+                      onChange={(e) => handleFormFolderChange(e.target.value)}
                       className="nb-input w-full pr-8 font-bold appearance-none"
                     >
                       <option value="unassigned">📂 No Folder (Unassigned)</option>
@@ -1281,12 +1358,17 @@ export default function TodoPage() {
                   </div>
                 </div>
 
-                {/* Website Selection */}
+                {/* Website Selection (Filtered to Selected Folder Only) */}
                 <div>
-                  <label className="flex items-center gap-1 text-xs font-black mb-1" style={{ color: "var(--nb-fg)" }}>
-                    <Globe className="size-3.5 text-emerald-500" />
-                    <span>Linked Website:</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="flex items-center gap-1 text-xs font-black" style={{ color: "var(--nb-fg)" }}>
+                      <Globe className="size-3.5 text-emerald-500" />
+                      <span>Linked Website:</span>
+                    </label>
+                    <span className="text-[10px] font-bold text-nb-muted font-mono">
+                      {availableWebsitesForCreate.length} in folder
+                    </span>
+                  </div>
                   <div className="relative">
                     <select
                       value={form.websiteId}
@@ -1294,7 +1376,7 @@ export default function TodoPage() {
                       className="nb-input w-full pr-8 font-bold appearance-none"
                     >
                       <option value="unassigned">🌐 No Website (General Task)</option>
-                      {websites.map((w) => (
+                      {availableWebsitesForCreate.map((w) => (
                         <option key={w._id} value={w._id}>
                           {w.title || w.domain}
                         </option>
@@ -1304,6 +1386,11 @@ export default function TodoPage() {
                       <ChevronDown className="size-4" />
                     </div>
                   </div>
+                  {availableWebsitesForCreate.length === 0 && (
+                    <p className="mt-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                      ⚠️ No websites in this folder yet.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1370,10 +1457,10 @@ export default function TodoPage() {
                   </span>
                 </div>
                 <textarea
-                  rows={3}
+                  rows={10}
                   value={form.notes}
                   onChange={(e) => setForm((cur) => ({ ...cur, notes: e.target.value }))}
-                  placeholder={`Type detailed notes, instructions, or a checklist...\n• Item 1\n• Item 2\n\nLine breaks, bullet points, and blank lines will be preserved exactly as entered.`}
+                  placeholder={`Type detailed notes, instructions, or a checklist...\n• Item 1\n• Item 2`}
                   className="nb-input w-full font-medium leading-relaxed resize-y"
                   style={{ minHeight: "5.5rem" }}
                 />
@@ -1542,7 +1629,7 @@ export default function TodoPage() {
                           <label className="block text-xs font-black mb-1">Folder</label>
                           <select
                             value={editForm.folderId}
-                            onChange={(e) => setEditForm((cur) => ({ ...cur, folderId: e.target.value }))}
+                            onChange={(e) => handleEditFolderChange(e.target.value)}
                             className="nb-input w-full font-bold"
                           >
                             <option value="unassigned">📂 No Folder (Unassigned)</option>
@@ -1555,14 +1642,19 @@ export default function TodoPage() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-black mb-1">Linked Website</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-black">Linked Website</label>
+                            <span className="text-[10px] font-bold text-nb-muted">
+                              {availableWebsitesForEdit.length} in folder
+                            </span>
+                          </div>
                           <select
                             value={editForm.websiteId}
                             onChange={(e) => setEditForm((cur) => ({ ...cur, websiteId: e.target.value }))}
                             className="nb-input w-full font-bold"
                           >
                             <option value="unassigned">🌐 No Website</option>
-                            {websites.map((w) => (
+                            {availableWebsitesForEdit.map((w) => (
                               <option key={w._id} value={w._id}>
                                 {w.title || w.domain}
                               </option>
