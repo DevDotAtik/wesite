@@ -17,9 +17,10 @@ import { BarChart3, LineChart, TrendingUp, Zap } from "lucide-react";
 
 interface VisitsLineChartProps {
   data: { date: string; visits: number }[];
+  height?: number;
 }
 
-export default function VisitsLineChart({ data }: VisitsLineChartProps) {
+export default function VisitsLineChart({ data, height = 240 }: VisitsLineChartProps) {
   const [chartType, setChartType] = useState<"area" | "bar">("area");
   const [isMounted, setIsMounted] = useState(false);
 
@@ -60,10 +61,14 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
             <span className="font-bold text-nb-muted">Avg:</span>
             <span className="font-black text-nb-fg">{stats.average}/day</span>
           </div>
-          {stats.peak.visits > 0 && (
+          {stats.peak.visits > 0 ? (
             <div className="hidden md:flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
               <Zap className="size-3" />
               <span>Peak: {stats.peak.visits} on {stats.peak.date.slice(5)}</span>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-1 text-[11px] font-medium text-nb-muted">
+              <span>Ready to record traffic</span>
             </div>
           )}
         </div>
@@ -73,7 +78,7 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
           <button
             type="button"
             onClick={() => setChartType("area")}
-            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold transition-all cursor-pointer ${
               chartType === "area"
                 ? "bg-[var(--nb-primary)] text-white font-black"
                 : "text-nb-muted hover:text-nb-fg"
@@ -86,7 +91,7 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
           <button
             type="button"
             onClick={() => setChartType("bar")}
-            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold transition-all cursor-pointer ${
               chartType === "bar"
                 ? "bg-[var(--nb-primary)] text-white font-black"
                 : "text-nb-muted hover:text-nb-fg"
@@ -100,13 +105,16 @@ export default function VisitsLineChart({ data }: VisitsLineChartProps) {
       </div>
 
       {/* Main Chart */}
-      <div className="w-full min-w-0 max-w-full h-[240px] sm:h-[270px] overflow-hidden">
+      <div
+        className="w-full min-w-0 max-w-full overflow-hidden relative"
+        style={{ height: `${height}px`, minHeight: `${height}px` }}
+      >
         {!isMounted ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
           </div>
         ) : (
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+        <ResponsiveContainer width="100%" height={height}>
           {chartType === "area" ? (
             <AreaChart data={data} margin={{ left: -15, right: 10, top: 12, bottom: 0 }}>
               <defs>

@@ -193,3 +193,30 @@ export async function POST(request: NextRequest) {
     return apiError((err as Error).message || "Could not create WebFlow", 500);
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { user, response } = await requireUser(request);
+    if (response) return response;
+
+    const body = await request.json().catch(() => ({}));
+    if (!Array.isArray(body?.ids) || body.ids.length === 0) {
+      return apiError("No workflow IDs provided for batch deletion", 400);
+    }
+
+    const validIds = body.ids.filter((id: unknown) => typeof id === "string" && isValidObjectId(id as string));
+    if (validIds.length === 0) {
+      return apiError("Invalid workflow IDs", 400);
+    }
+
+    await connectToDatabase();
+    const result = await WebFlow.deleteMany({ _id: { $in: validIds }, userId: user._id });
+    await WebFlowInteraction.deleteMany({ webFlowId: { $in: validIds } });
+
+    return json({ ok: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error("DELETE /api/webflows batch exception:", err);
+    return apiError((err as Error).message || "Could not delete workflows", 500);
+  }
+}
+

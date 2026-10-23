@@ -44,80 +44,92 @@ export async function POST(request: NextRequest) {
   let checked = 0;
   let changed = 0;
 
-  for (const monitor of monitors) {
-    const intervalMs = intervalToMs(monitor.interval);
-    if (monitor.lastCheckedAt && (now.getTime() - monitor.lastCheckedAt.getTime()) < intervalMs) {
-      continue;
-    }
+  const dueMonitors = monitors.filter((m) => {
+    const intervalMs = intervalToMs(m.interval);
+    return !m.lastCheckedAt || (now.getTime() - m.lastCheckedAt.getTime()) >= intervalMs;
+  });
 
-    checked++;
-    const safety = await isSafePublicUrl(monitor.url);
-    if (!safety.safe) {
-      await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
-      continue;
-    }
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < dueMonitors.length; i += BATCH_SIZE) {
+    const chunk = dueMonitors.slice(i, i + BATCH_SIZE);
+    await Promise.allSettled(
+      chunk.map(async (monitor) => {
+        checked++;
+        const safety = await isSafePublicUrl(monitor.url);
+        if (!safety.safe) {
+          await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+          return;
+        }
 
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 10000);
-      const response = await fetch(monitor.url, {
-        signal: controller.signal,
-        headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
-        redirect: "follow",
-      });
-      clearTimeout(timer);
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 8000);
+          const response = await fetch(monitor.url, {
+            signal: controller.signal,
+            headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
+            redirect: "follow",
+          });
+          clearTimeout(timer);
 
-      if (!response.ok) {
-        await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
-        continue;
-      }
+          if (!response.ok) {
+            await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+            return;
+          }
 
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("text/html")) {
-        await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
-        continue;
-      }
+          const contentType = response.headers.get("content-type") || "";
+          if (!contentType.includes("text/html")) {
+            await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+            return;
+          }
 
-      const html = await response.text();
-      const { title, description, hash } = extractContent(html);
-      const hasChanged = monitor.lastContentHash && hash !== monitor.lastContentHash;
+          const contentLength = Number(response.headers.get("content-length") ?? 0);
+          if (Number.isFinite(contentLength) && contentLength > 2_000_000) {
+            await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+            return;
+          }
 
-      if (hasChanged) {
-        changed++;
-        await Monitor.findByIdAndUpdate(monitor._id, {
-          $set: {
-            lastCheckedAt: now,
-            lastContentHash: hash,
-            lastTitle: title || monitor.lastTitle,
-            lastDescription: description || monitor.lastDescription,
-          },
-          $inc: { changeCount: 1 },
-          $push: {
-            changes: {
-              $each: [{
-                detectedAt: now,
-                title,
-                description,
-                httpStatus: response.status,
-                contentHash: hash,
-              }],
-              $slice: -100,
-            },
-          },
-        });
-      } else {
-        await Monitor.findByIdAndUpdate(monitor._id, {
-          $set: {
-            lastCheckedAt: now,
-            lastContentHash: hash,
-            lastTitle: title || monitor.lastTitle,
-            lastDescription: description || monitor.lastDescription,
-          },
-        });
-      }
-    } catch {
-      await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
-    }
+          const html = await response.text();
+          const { title, description, hash } = extractContent(html);
+          const hasChanged = monitor.lastContentHash && hash !== monitor.lastContentHash;
+
+          if (hasChanged) {
+            changed++;
+            await Monitor.findByIdAndUpdate(monitor._id, {
+              $set: {
+                lastCheckedAt: now,
+                lastContentHash: hash,
+                lastTitle: title || monitor.lastTitle,
+                lastDescription: description || monitor.lastDescription,
+              },
+              $inc: { changeCount: 1 },
+              $push: {
+                changes: {
+                  $each: [{
+                    detectedAt: now,
+                    title,
+                    description,
+                    httpStatus: response.status,
+                    contentHash: hash,
+                  }],
+                  $slice: -100,
+                },
+              },
+            });
+          } else {
+            await Monitor.findByIdAndUpdate(monitor._id, {
+              $set: {
+                lastCheckedAt: now,
+                lastContentHash: hash,
+                lastTitle: title || monitor.lastTitle,
+                lastDescription: description || monitor.lastDescription,
+              },
+            });
+          }
+        } catch {
+          await Monitor.findByIdAndUpdate(monitor._id, { lastCheckedAt: now });
+        }
+      })
+    );
   }
 
   return json({ checked, changed, total: monitors.length });

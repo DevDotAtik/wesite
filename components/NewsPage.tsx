@@ -363,6 +363,7 @@ function SpotlightHero({
                 }}
                 className="nb-btn nb-btn-ghost nb-btn-sm text-xs"
                 title={copied ? "Copied!" : "Share link"}
+                aria-label="Share article link"
               >
                 {copied ? <Check className="size-3.5 text-emerald-500 nb-pop-in" /> : <Share2 className="size-3.5" />}
               </button>
@@ -487,6 +488,7 @@ function DailyDevCard({
             }}
             className="nb-btn nb-btn-ghost nb-btn-sm text-[11px] h-7 px-2"
             title={copied ? "Copied!" : "Share"}
+            aria-label="Share article link"
           >
             {copied ? <Check className="size-3 text-emerald-500 nb-pop-in" /> : <Share2 className="size-3" />}
           </button>

@@ -173,9 +173,42 @@ export default function SettingsPage() {
               </div>
             </aside>
 
+            {/* Mobile User Profile & Sign Out Bar */}
+            {user && (
+              <div
+                className="flex items-center justify-between p-3.5 border-b-2 lg:hidden bg-nb-surface"
+                style={{ borderColor: "var(--nb-border)" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveSection("profile")}
+                  className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer"
+                >
+                  <SidebarAvatar user={user} />
+                  <div className="min-w-0">
+                    <span className="block truncate text-sm font-black text-nb-fg">
+                      {user.name}
+                    </span>
+                    <span className="block truncate text-[11px] font-mono text-nb-muted">
+                      {user.email}
+                    </span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex items-center gap-1.5 rounded-xl border-2 border-nb-border bg-nb-card px-2.5 py-1.5 text-xs font-black text-rose-600 shadow-nb-xs hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                  title="Sign out"
+                >
+                  <LogOut className="size-3.5" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            )}
+
             {/* Tabs — mobile */}
-            <div className="scrollbar-none overflow-x-auto border-b-3 lg:hidden" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
-              <div className="flex gap-1 p-2" role="tablist" aria-label="Settings sections">
+            <div className="scrollbar-none overflow-x-auto border-b-2 sm:border-b-3 lg:hidden" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface-alt)" }}>
+              <div className="flex gap-1.5 p-2 sm:p-2.5" role="tablist" aria-label="Settings sections">
                 {sections.map((section) => {
                   const Icon = section.icon;
                   const active = activeSection === section.id;
@@ -186,18 +219,14 @@ export default function SettingsPage() {
                       role="tab"
                       aria-selected={active}
                       onClick={() => setActiveSection(section.id)}
-                      className={`flex shrink-0 items-center gap-1.5 rounded-xl border-3 px-3 py-2 text-xs font-bold whitespace-nowrap ${
-                        active ? "nb-btn-primary" : ""
+                      className={`flex shrink-0 items-center gap-1.5 rounded-xl border-2 px-3 sm:px-3.5 py-2 text-xs font-bold whitespace-nowrap min-h-[38px] transition-all cursor-pointer ${
+                        active
+                          ? "border-nb-border bg-indigo-600 text-white shadow-nb-xs font-black"
+                          : "border-nb-border/40 bg-nb-surface text-nb-fg hover:border-indigo-400"
                       }`}
-                      style={{
-                        borderColor: "var(--nb-border)",
-                        background: active ? "var(--nb-primary)" : "var(--nb-surface)",
-                        color: active ? "var(--nb-primary-fg)" : "var(--nb-fg)",
-                        boxShadow: active ? "var(--nb-shadow-sm)" : undefined,
-                      }}
                     >
                       <Icon className="size-3.5" />
-                      {section.label}
+                      <span>{section.label}</span>
                     </button>
                   );
                 })}

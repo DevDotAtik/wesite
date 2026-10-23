@@ -1,10 +1,20 @@
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 import { apiError, invalidIdResponse, isValidObjectId, json, parseBody, parsePagination, requireUser, serializeDocument, escapeRegex } from "@/lib/api";
 import { connectToDatabase } from "@/lib/db";
 import { todoCreateSchema } from "@/lib/validators/schemas";
 import Todo from "@/models/Todo";
 import Website from "@/models/Website";
 import Folder from "@/models/Folder";
+
+const batchDeleteSchema = z.object({
+  ids: z.array(z.string()).min(1),
+});
+
+const batchUpdateSchema = z.object({
+  ids: z.array(z.string()).min(1),
+  complete: z.boolean(),
+});
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -120,4 +130,59 @@ export async function POST(request: NextRequest) {
     .lean();
 
   return json({ todo: serializeDocument(todo) }, 201);
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
+
+  const { data, error } = await parseBody(request, batchDeleteSchema);
+  if (error) return error;
+
+  await connectToDatabase();
+  const validIds = data.ids.filter(isValidObjectId);
+  if (validIds.length === 0) {
+    return apiError("No valid task IDs provided", 400);
+  }
+
+  const result = await Todo.deleteMany({
+    _id: { $in: validIds },
+    userId: auth.user._id,
+  });
+
+  return json({
+    success: true,
+    deletedCount: result.deletedCount,
+  });
+}
+
+export async function PATCH(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
+
+  const { data, error } = await parseBody(request, batchUpdateSchema);
+  if (error) return error;
+
+  await connectToDatabase();
+  const validIds = data.ids.filter(isValidObjectId);
+  if (validIds.length === 0) {
+    return apiError("No valid task IDs provided", 400);
+  }
+
+  const result = await Todo.updateMany(
+    {
+      _id: { $in: validIds },
+      userId: auth.user._id,
+    },
+    {
+      $set: {
+        completedAt: data.complete ? new Date() : null,
+      },
+    }
+  );
+
+  return json({
+    success: true,
+    modifiedCount: result.modifiedCount,
+  });
 }

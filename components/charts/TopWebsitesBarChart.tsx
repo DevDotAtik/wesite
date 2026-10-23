@@ -23,10 +23,11 @@ export type TopWebsiteItem = {
 
 interface TopWebsitesBarChartProps {
   data: TopWebsiteItem[];
+  height?: number;
 }
 
-export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) {
-  const [viewMode, setViewMode] = useState<"leaderboard" | "chart">("leaderboard");
+export default function TopWebsitesBarChart({ data, height = 240 }: TopWebsitesBarChartProps) {
+  const [viewMode, setViewMode] = useState<"leaderboard" | "chart">("chart");
   const [limit, setLimit] = useState<5 | 10>(5);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -34,23 +35,42 @@ export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) 
     setIsMounted(true);
   }, []);
 
+  const hasData = Boolean(data && data.length > 0);
+
   const displayData = useMemo(() => {
-    return (data || []).slice(0, limit);
-  }, [data, limit]);
+    if (!hasData) return [];
+    return data.slice(0, limit);
+  }, [data, limit, hasData]);
 
   const maxVisits = useMemo(() => {
-    if (!data || data.length === 0) return 1;
+    if (!hasData) return 1;
     return Math.max(...data.map((d) => d.visits), 1);
-  }, [data]);
+  }, [data, hasData]);
 
   const totalVisits = useMemo(() => {
-    return (data || []).reduce((acc, curr) => acc + curr.visits, 0);
-  }, [data]);
+    if (!hasData) return 0;
+    return data.reduce((acc, curr) => acc + curr.visits, 0);
+  }, [data, hasData]);
 
-  if (!data || data.length === 0) {
+  // Chart data with display-friendly fallbacks when visits are zero
+  const chartData = useMemo(() => {
+    return displayData.map((d) => ({
+      ...d,
+      chartVisits: totalVisits === 0 ? 0.05 : d.visits,
+    }));
+  }, [displayData, totalVisits]);
+
+  if (!hasData) {
     return (
-      <div className="w-full h-[240px] flex items-center justify-center text-xs font-bold text-nb-muted">
-        No website visit data recorded yet. Browse your saved websites to see activity here!
+      <div
+        className="w-full flex flex-col items-center justify-center p-6 text-center rounded-xl border-2 border-dashed border-nb-border/40 bg-nb-surface"
+        style={{ height: `${height}px`, minHeight: `${height}px` }}
+      >
+        <Trophy className="size-8 text-nb-muted mb-2 opacity-50" />
+        <p className="text-xs font-black text-nb-fg">No Bookmark Visits Logged Yet</p>
+        <p className="text-[11px] text-nb-muted max-w-xs mt-1">
+          Open bookmarks from your dashboard to track daily visit rankings and leaderboard metrics!
+        </p>
       </div>
     );
   }
@@ -204,14 +224,22 @@ export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) 
           })}
         </div>
       ) : (
-        <div className="w-full min-w-0 max-w-full h-[240px] sm:h-[270px] overflow-hidden">
+        <div
+          className="w-full min-w-0 max-w-full overflow-hidden relative"
+          style={{ height: `${height}px`, minHeight: `${height}px` }}
+        >
+          {totalVisits === 0 && (
+            <div className="absolute top-1 right-2 z-10 rounded-md border border-nb-border/40 bg-nb-surface/90 px-2 py-0.5 text-[10px] font-mono font-bold text-nb-muted shadow-nb-xs backdrop-blur-sm">
+              0 visits recorded yet
+            </div>
+          )}
           {!isMounted ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-              <BarChart data={displayData} margin={{ left: -15, right: 8, top: 10, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={height}>
+              <BarChart data={chartData} margin={{ left: -15, right: 8, top: 10, bottom: 0 }}>
                 <XAxis
                   dataKey="name"
                   tick={{ fontSize: 10, fontFamily: "Space Grotesk", fontWeight: 600, fill: "var(--nb-muted)" }}
@@ -251,11 +279,12 @@ export default function TopWebsitesBarChart({ data }: TopWebsitesBarChartProps) 
                   );
                 }}
               />
-              <Bar dataKey="visits" fill="var(--nb-primary)" radius={[6, 6, 0, 0]}>
-                {displayData.map((_, index) => (
+              <Bar dataKey="chartVisits" fill="var(--nb-primary)" radius={[6, 6, 0, 0]}>
+                {chartData.map((_, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={index === 0 ? "var(--nb-primary)" : index === 1 ? "var(--nb-secondary)" : "var(--nb-accent)"}
+                    opacity={totalVisits === 0 ? 0.35 : 1}
                   />
                 ))}
               </Bar>

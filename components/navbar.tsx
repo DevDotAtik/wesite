@@ -49,8 +49,8 @@ export default function Navbar({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b-3" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
-      <div className="flex h-14 w-full items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b-3 max-w-full overflow-x-clip" style={{ borderColor: "var(--nb-border)", background: "var(--nb-surface)" }}>
+      <div className="flex h-14 w-full max-w-full items-center justify-between gap-2 px-3 sm:px-4 lg:px-6">
         {/* Logo (Always on left) */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Logo className="size-7 sm:size-8" />
@@ -73,21 +73,21 @@ export default function Navbar({
             return (
               <Link
                 key={link.href}
-                className={`nb-btn nb-btn-sm text-xs px-2 xl:px-2.5 ${isActive ? "nb-btn-primary" : "nb-btn-ghost"}`}
+                className={`nb-btn nb-btn-sm text-xs px-2 2xl:px-2.5 ${isActive ? "nb-btn-primary" : "nb-btn-ghost"}`}
                 href={link.href}
                 title={link.label}
               >
                 <link.icon className="size-3.5" />
-                <span className="hidden xl:inline">{link.label}</span>
+                <span className="hidden 2xl:inline">{link.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Search (Desktop) */}
-          <div className="relative hidden w-full max-w-xs lg:max-w-sm xl:max-w-md sm:flex sm:items-center">
+          <div className="relative hidden w-36 lg:w-48 xl:w-64 max-w-xs sm:flex sm:items-center">
             <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
               <Search className="size-4 shrink-0 text-[var(--nb-muted)]" />
             </div>

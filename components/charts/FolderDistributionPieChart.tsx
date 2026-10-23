@@ -14,6 +14,7 @@ export type FolderDistributionItem = {
 
 interface FolderDistributionPieChartProps {
   data: FolderDistributionItem[];
+  height?: number;
 }
 
 const fallbackColors = [
@@ -27,7 +28,7 @@ const fallbackColors = [
   "#f97316",
 ];
 
-export default function FolderDistributionPieChart({ data }: FolderDistributionPieChartProps) {
+export default function FolderDistributionPieChart({ data, height = 220 }: FolderDistributionPieChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [viewType, setViewType] = useState<"donut" | "bars">("donut");
   const [isMounted, setIsMounted] = useState(false);
@@ -57,8 +58,15 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
 
   if (!data || data.length === 0) {
     return (
-      <div className="w-full h-[240px] flex items-center justify-center text-xs font-bold text-nb-muted">
-        No folder distribution data yet. Create folders to organize your bookmarks!
+      <div
+        className="w-full flex flex-col items-center justify-center p-6 text-center rounded-xl border-2 border-dashed border-nb-border/40 bg-nb-surface"
+        style={{ height: `${height}px`, minHeight: `${height}px` }}
+      >
+        <Folder className="size-8 text-nb-muted mb-2 opacity-50" />
+        <p className="text-xs font-black text-nb-fg">No Categories Created</p>
+        <p className="text-[11px] text-nb-muted max-w-xs mt-1">
+          Create folders to organize your bookmarks and view breakdown analytics here!
+        </p>
       </div>
     );
   }
@@ -106,11 +114,14 @@ export default function FolderDistributionPieChart({ data }: FolderDistributionP
       {viewType === "donut" ? (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Donut Chart with Dynamic Center Content */}
-          <div className="relative w-full sm:w-1/2 h-[220px] flex items-center justify-center">
+          <div
+            className="relative w-full sm:w-1/2 flex items-center justify-center overflow-hidden"
+            style={{ height: `${height}px`, minHeight: `${height}px` }}
+          >
             {!isMounted ? (
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
             ) : (
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <ResponsiveContainer width="100%" height={height}>
               <PieChart>
                 <Pie
                   data={pieData}

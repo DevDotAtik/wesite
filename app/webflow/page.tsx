@@ -42,6 +42,9 @@ import {
   ArrowUpRight,
   CheckCircle2,
   AlertCircle,
+  MoreVertical,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
@@ -118,6 +121,11 @@ export default function WebFlowHubPage() {
   // Guide toggle
   const [guideDismissed, setGuideDismissed] = useState(false);
 
+  // Multi-selection & 3-dots Menu state
+  const [selectedFlowIds, setSelectedFlowIds] = useState<Set<string>>(new Set());
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+  const [openMenuFlowId, setOpenMenuFlowId] = useState<string | null>(null);
+
   // Data states
   const [myFlows, setMyFlows] = useState<WebFlowItem[]>([]);
   const [exploreFlows, setExploreFlows] = useState<WebFlowItem[]>([]);
@@ -163,7 +171,7 @@ export default function WebFlowHubPage() {
   // File import ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcut listener: Cmd/Ctrl + K opens AI copilot, Esc closes preview
+  // Keyboard shortcut listener: Cmd/Ctrl + K opens AI copilot, Esc closes preview/menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -172,11 +180,29 @@ export default function WebFlowHubPage() {
       } else if (e.key === "Escape") {
         setPreviewFlow(null);
         setIsCreateOpen(false);
+        setOpenMenuFlowId(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Close 3-dots dropdown on outside click or touch
+  useEffect(() => {
+    if (!openMenuFlowId) return;
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-flow-menu]")) {
+        setOpenMenuFlowId(null);
+      }
+    };
+    window.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      window.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [openMenuFlowId]);
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -633,6 +659,347 @@ export default function WebFlowHubPage() {
     navigator.clipboard.writeText(url);
     toast.success("Workflow link copied to clipboard!");
   };
+
+  // Toggle workflow visibility
+  const handleToggleVisibility = async (flow: WebFlowItem) => {
+    const nextVis: WebFlowVisibility = flow.visibility === "public" ? "private" : "public";
+    try {
+      const res = await fetchWithAuth(`/api/webflows/${flow._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visibility: nextVis }),
+      });
+      if (!res.ok) throw new Error("Failed to update visibility");
+      setMyFlows((flows) =>
+        flows.map((f) => (f._id === flow._id ? { ...f, visibility: nextVis } : f))
+      );
+      toast.success(`Workflow set to ${nextVis}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Update failed";
+      toast.error(message);
+    }
+  };
+
+  // Direct Single JSON Export
+  const handleDownloadFlowJSON = (flow: WebFlowItem) => {
+    const exportData = {
+      webflow: {
+        name: flow.name,
+        description: flow.description,
+        category: flow.category,
+        nodes: flow.nodes || [],
+        edges: flow.edges || [],
+        variables: flow.variables || [],
+      },
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${flow.name.toLowerCase().replace(/[^a-z0-9_-]/g, "_")}-workflow.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Workflow JSON downloaded!");
+  };
+
+  // Multi-select toggle for a single flow
+  const toggleSelectFlow = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedFlowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Toggle select all flows
+  const toggleSelectAllFlows = () => {
+    if (selectedFlowIds.size === filteredMyFlows.length) {
+      setSelectedFlowIds(new Set());
+    } else {
+      setSelectedFlowIds(new Set(filteredMyFlows.map((f) => f._id)));
+    }
+  };
+
+  // Batch delete selected flows
+  const handleBatchDelete = async () => {
+    if (selectedFlowIds.size === 0) return;
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedFlowIds.size} selected workflow${
+          selectedFlowIds.size > 1 ? "s" : ""
+        }? This cannot be undone.`
+      )
+    )
+      return;
+
+    setIsBatchDeleting(true);
+    const toastId = toast.loading(`Deleting ${selectedFlowIds.size} workflows...`);
+    try {
+      const res = await fetchWithAuth("/api/webflows", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedFlowIds) }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Batch delete failed");
+      }
+
+      toast.success(`Successfully deleted ${selectedFlowIds.size} workflows`, { id: toastId });
+      setMyFlows((flows) => flows.filter((f) => !selectedFlowIds.has(f._id)));
+      setSelectedFlowIds(new Set());
+      refreshStats();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Batch delete failed";
+      toast.error(message, { id: toastId });
+    } finally {
+      setIsBatchDeleting(false);
+    }
+  };
+
+  // Batch export selected flows into one JSON backup
+  const handleBatchExport = () => {
+    if (selectedFlowIds.size === 0) return;
+    const selected = myFlows.filter((f) => selectedFlowIds.has(f._id));
+    const exportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      total: selected.length,
+      workflows: selected,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `webflows-backup-${selected.length}-items-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${selected.length} workflows to JSON!`);
+  };
+
+  // Render Single 3-Dots Action Dropdown Menu for My Flows
+  const renderMyFlowMenu = (flow: WebFlowItem, isSelected: boolean) => (
+    <div className="relative" data-flow-menu>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpenMenuFlowId((cur) => (cur === flow._id ? null : flow._id));
+        }}
+        aria-label="Workflow options"
+        title="More options"
+        className="flex size-7 sm:size-8 items-center justify-center rounded-lg border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt active:scale-95 transition-all cursor-pointer"
+      >
+        <MoreVertical className="size-4" />
+      </button>
+
+      {openMenuFlowId === flow._id && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-0 top-9 z-50 min-w-48 rounded-xl border-2 border-nb-border bg-nb-card p-1.5 shadow-nb-xl space-y-0.5 text-xs font-bold animate-in fade-in zoom-in-95 duration-100 text-nb-fg select-none"
+          style={{ borderColor: "var(--nb-border)", background: "var(--nb-card)" }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              setPreviewFlow(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Info className="size-3.5 text-indigo-500" />
+            <span>Quick Preview</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              setQuickExportFlow(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Bot className="size-3.5 text-amber-500" />
+            <span>Export for AI Spec</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleDownloadFlowJSON(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Download className="size-3.5 text-emerald-500" />
+            <span>Download JSON</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleDuplicate(flow._id);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt transition-colors cursor-pointer"
+          >
+            <Copy className="size-3.5 text-blue-500" />
+            <span>Duplicate</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleCopyShareLink(flow._id);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt transition-colors cursor-pointer"
+          >
+            <Share2 className="size-3.5 text-cyan-500" />
+            <span>Copy Share Link</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleToggleVisibility(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt transition-colors cursor-pointer"
+          >
+            {flow.visibility === "public" ? (
+              <>
+                <Lock className="size-3.5 text-zinc-500" />
+                <span>Make Private</span>
+              </>
+            ) : (
+              <>
+                <Globe className="size-3.5 text-emerald-500" />
+                <span>Make Public</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              setOpenMenuFlowId(null);
+              toggleSelectFlow(flow._id, e);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt transition-colors cursor-pointer"
+          >
+            <Check className="size-3.5 text-indigo-500" />
+            <span>{isSelected ? "Deselect Workflow" : "Select Workflow"}</span>
+          </button>
+
+          <div className="my-1 border-t border-nb-border/30" />
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleDelete(flow._id, flow.name);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          >
+            <Trash2 className="size-3.5" />
+            <span>Delete Workflow</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  // Render Single 3-Dots Action Dropdown Menu for Explore Community Flows
+  const renderExploreFlowMenu = (flow: WebFlowItem) => (
+    <div className="relative" data-flow-menu>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpenMenuFlowId((cur) => (cur === flow._id ? null : flow._id));
+        }}
+        aria-label="Workflow options"
+        title="More options"
+        className="flex size-7 sm:size-8 items-center justify-center rounded-lg border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt active:scale-95 transition-all cursor-pointer"
+      >
+        <MoreVertical className="size-4" />
+      </button>
+
+      {openMenuFlowId === flow._id && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-0 top-9 z-50 min-w-44 rounded-xl border-2 border-nb-border bg-nb-card p-1.5 shadow-nb-xl space-y-0.5 text-xs font-bold animate-in fade-in zoom-in-95 duration-100 text-nb-fg select-none"
+          style={{ borderColor: "var(--nb-border)", background: "var(--nb-card)" }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              setPreviewFlow(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Info className="size-3.5 text-indigo-500" />
+            <span>Quick Preview</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              setQuickExportFlow(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Bot className="size-3.5 text-amber-500" />
+            <span>Export for AI Spec</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleDownloadFlowJSON(flow);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt hover:text-indigo-600 transition-colors cursor-pointer"
+          >
+            <Download className="size-3.5 text-emerald-500" />
+            <span>Download JSON</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleRemix(flow._id);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt text-emerald-600 font-bold transition-colors cursor-pointer"
+          >
+            <GitFork className="size-3.5" />
+            <span>Remix to My Flows</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenuFlowId(null);
+              handleCopyShareLink(flow._id);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-nb-surface-alt transition-colors cursor-pointer"
+          >
+            <Share2 className="size-3.5 text-cyan-500" />
+            <span>Copy Share Link</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   // Helper to extract node kind icon and badge
   const getNodeKindIcon = (kind: string) => {
@@ -1096,6 +1463,29 @@ export default function WebFlowHubPage() {
                 </button>
               </div>
 
+              {/* Select All Toggle for My Flows */}
+              {activeTab === "my-flows" && filteredMyFlows.length > 0 && (
+                <button
+                  type="button"
+                  onClick={toggleSelectAllFlows}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border-2 border-nb-border bg-nb-card hover:bg-nb-surface-alt text-xs font-bold text-nb-fg shadow-nb-xs transition-colors cursor-pointer"
+                  title={selectedFlowIds.size === filteredMyFlows.length ? "Deselect all workflows" : "Select all workflows"}
+                >
+                  <Check
+                    className={`h-3.5 w-3.5 stroke-[3] ${
+                      selectedFlowIds.size === filteredMyFlows.length && filteredMyFlows.length > 0
+                        ? "text-indigo-600"
+                        : "text-nb-muted"
+                    }`}
+                  />
+                  <span className="hidden sm:inline">
+                    {selectedFlowIds.size === filteredMyFlows.length && filteredMyFlows.length > 0
+                      ? "Deselect All"
+                      : "Select All"}
+                  </span>
+                </button>
+              )}
+
               {/* Refresh Button */}
               <button
                 type="button"
@@ -1308,46 +1698,70 @@ export default function WebFlowHubPage() {
                       const websiteCount = (flow.nodes || []).filter((n) => n.data?.kind === "website").length;
                       const catStyle = CATEGORY_STYLES[flow.category] || CATEGORY_STYLES.Other;
                       const nodesList = flow.nodes || [];
+                      const isSelected = selectedFlowIds.has(flow._id);
 
                       return (
                         <div
                           key={flow._id}
-                          className="group relative flex flex-col justify-between rounded-2xl border-3 border-nb-border bg-nb-card p-5 shadow-nb-md transition-all hover:-translate-y-1 hover:shadow-nb-lg"
+                          className={`group relative flex flex-col justify-between rounded-2xl border-3 bg-nb-card p-5 shadow-nb-md transition-all hover:-translate-y-1 hover:shadow-nb-lg overflow-visible ${
+                            isSelected ? "border-indigo-600 ring-2 ring-indigo-500/50 bg-indigo-50/10" : "border-nb-border"
+                          }`}
                         >
                           <div className="space-y-3">
-                            {/* Card Header: Badges & Visibility */}
+                            {/* Card Top: Checkbox, Category, Badges, Visibility & Single 3-Dots Menu */}
                             <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span
-                                  className={`rounded-lg px-2.5 py-0.5 text-[10px] font-black border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <button
+                                  type="button"
+                                  onClick={(e) => toggleSelectFlow(flow._id, e)}
+                                  aria-label={isSelected ? "Deselect workflow" : "Select workflow"}
+                                  title={isSelected ? "Deselect workflow" : "Select workflow"}
+                                  className={`flex size-6 sm:size-7 items-center justify-center rounded-lg border-2 transition-all cursor-pointer shrink-0 ${
+                                    isSelected
+                                      ? "border-indigo-600 bg-indigo-600 text-white shadow-nb-xs opacity-100"
+                                      : "border-nb-border bg-nb-surface text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-indigo-500 hover:text-indigo-300"
+                                  }`}
                                 >
-                                  {flow.category}
-                                </span>
-                                {(flow.isRemix || flow.forkedFromId) && (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-400 text-black px-1.5 py-0.5 text-[9px] font-black uppercase shadow-nb-xs border border-black">
-                                    <GitFork className="h-2.5 w-2.5" /> Remix
+                                  <Check className="size-3.5 stroke-[3]" />
+                                </button>
+
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span
+                                    className={`rounded-lg px-2.5 py-0.5 text-[10px] font-black border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+                                  >
+                                    {flow.category}
                                   </span>
-                                )}
+                                  {(flow.isRemix || flow.forkedFromId) && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-400 text-black px-1.5 py-0.5 text-[9px] font-black uppercase shadow-nb-xs border border-black">
+                                      <GitFork className="size-2.5" /> Remix
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="flex items-center gap-2 text-xs text-nb-muted">
-                                <span
-                                  className="flex items-center gap-1 text-[11px] font-mono font-bold"
-                                  title={`${flow.viewCount || 0} total views`}
-                                >
-                                  <Eye className="h-3 w-3 text-indigo-500" />
-                                  <span>{flow.viewCount || 0}</span>
-                                </span>
-                                <span className="text-nb-border/40">•</span>
-                                {flow.visibility === "public" ? (
-                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-                                    <Globe className="h-3 w-3" /> Public
+                              <div className="flex items-center gap-2 shrink-0">
+                                <div className="hidden xs:flex items-center gap-1.5 text-xs text-nb-muted">
+                                  <span
+                                    className="flex items-center gap-1 text-[11px] font-mono font-bold"
+                                    title={`${flow.viewCount || 0} total views`}
+                                  >
+                                    <Eye className="size-3 text-indigo-500" />
+                                    <span>{flow.viewCount || 0}</span>
                                   </span>
-                                ) : (
-                                  <span className="flex items-center gap-1 text-zinc-500 text-[10px]">
-                                    <Lock className="h-3 w-3" /> Private
-                                  </span>
-                                )}
+                                  <span className="text-nb-border/40">•</span>
+                                  {flow.visibility === "public" ? (
+                                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
+                                      <Globe className="size-3" /> Public
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 text-zinc-500 text-[10px]">
+                                      <Lock className="size-3" /> Private
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Strictly 1 3-Dots Button */}
+                                {renderMyFlowMenu(flow, isSelected)}
                               </div>
                             </div>
 
@@ -1443,57 +1857,26 @@ export default function WebFlowHubPage() {
                             </div>
                           </div>
 
-                          {/* Footer Actions */}
-                          <div className="mt-4 flex items-center justify-between gap-2 border-t-2 border-nb-border/30 pt-3">
-                            <div className="flex items-center gap-1">
+                          {/* Footer: Glance stats & Open Canvas primary CTA */}
+                          <div className="mt-4 flex items-center justify-between gap-3 border-t-2 border-nb-border/30 pt-3">
+                            <div className="flex items-center gap-2 text-xs font-mono text-nb-muted">
+                              <span><strong className="text-nb-fg">{nodesList.length}</strong> steps</span>
+                              <span>•</span>
                               <button
                                 type="button"
                                 onClick={() => setPreviewFlow(flow)}
-                                className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-indigo-600 hover:border-indigo-500 transition-colors cursor-pointer"
-                                title="Quick Preview"
+                                className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
                               >
-                                <Info className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setQuickExportFlow(flow)}
-                                className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-indigo-600 hover:border-indigo-500 transition-colors cursor-pointer"
-                                title="Export for AI Prompts"
-                              >
-                                <Bot className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDuplicate(flow._id)}
-                                className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-nb-fg transition-colors cursor-pointer"
-                                title="Duplicate Workflow"
-                              >
-                                <Copy className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyShareLink(flow._id)}
-                                className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-nb-fg transition-colors cursor-pointer"
-                                title="Copy Share Link"
-                              >
-                                <Share2 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(flow._id, flow.name)}
-                                className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-rose-600 transition-colors cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Info className="size-3" /> Glance
                               </button>
                             </div>
 
                             <Link
                               href={`/webflow/${flow._id}`}
-                              className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer"
+                              className="flex items-center gap-1.5 rounded-xl border-2 border-nb-border bg-indigo-600 hover:bg-indigo-700 px-3.5 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer shrink-0"
                             >
                               <span>Open Canvas</span>
-                              <ArrowRight className="h-3 w-3" />
+                              <ArrowRight className="size-3.5" />
                             </Link>
                           </div>
                         </div>
@@ -1502,20 +1885,38 @@ export default function WebFlowHubPage() {
                   </div>
                 ) : (
                   /* LIST / TABLE VIEW */
-                  <div className="rounded-2xl border-3 border-nb-border bg-nb-card overflow-hidden shadow-nb-md">
+                  <div className="rounded-2xl border-3 border-nb-border bg-nb-card overflow-visible shadow-nb-md">
                     <div className="divide-y-2 divide-nb-border/30">
                       {filteredMyFlows.map((flow) => {
                         const websiteCount = (flow.nodes || []).filter((n) => n.data?.kind === "website").length;
                         const catStyle = CATEGORY_STYLES[flow.category] || CATEGORY_STYLES.Other;
+                        const isSelected = selectedFlowIds.has(flow._id);
 
                         return (
                           <div
                             key={flow._id}
-                            className="p-4 hover:bg-nb-surface-alt/40 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                            className={`p-4 hover:bg-nb-surface-alt/40 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
+                              isSelected ? "bg-indigo-50/20" : ""
+                            }`}
                           >
                             <div className="flex items-start sm:items-center gap-3 min-w-0">
+                              {/* Selection Checkbox */}
+                              <button
+                                type="button"
+                                onClick={(e) => toggleSelectFlow(flow._id, e)}
+                                aria-label={isSelected ? "Deselect workflow" : "Select workflow"}
+                                title={isSelected ? "Deselect workflow" : "Select workflow"}
+                                className={`flex size-6 sm:size-7 items-center justify-center rounded-lg border-2 transition-all cursor-pointer shrink-0 mt-0.5 sm:mt-0 ${
+                                  isSelected
+                                    ? "border-indigo-600 bg-indigo-600 text-white shadow-nb-xs opacity-100"
+                                    : "border-nb-border bg-nb-card text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-indigo-500"
+                                }`}
+                              >
+                                <Check className="size-3.5 stroke-[3]" />
+                              </button>
+
                               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 border border-nb-border shrink-0 font-black">
-                                <Workflow className="h-5 w-5" />
+                                <Workflow className="size-5" />
                               </div>
                               <div className="min-w-0 space-y-1">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1532,11 +1933,11 @@ export default function WebFlowHubPage() {
                                   </span>
                                   {flow.visibility === "public" ? (
                                     <span className="flex items-center gap-0.5 text-[9px] font-bold text-emerald-600">
-                                      <Globe className="h-2.5 w-2.5" /> Public
+                                      <Globe className="size-2.5" /> Public
                                     </span>
                                   ) : (
                                     <span className="flex items-center gap-0.5 text-[9px] text-zinc-500">
-                                      <Lock className="h-2.5 w-2.5" /> Private
+                                      <Lock className="size-2.5" /> Private
                                     </span>
                                   )}
                                 </div>
@@ -1553,33 +1954,18 @@ export default function WebFlowHubPage() {
                                 <span>{websiteCount} tools</span>
                                 <span>•</span>
                                 <span className="flex items-center gap-1 font-bold text-nb-fg">
-                                  <Eye className="h-3 w-3 text-indigo-500" /> {flow.viewCount || 0}
+                                  <Eye className="size-3 text-indigo-500" /> {flow.viewCount || 0}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewFlow(flow)}
-                                  className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-indigo-600 transition-colors cursor-pointer"
-                                  title="Quick Preview"
-                                >
-                                  <Info className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setQuickExportFlow(flow)}
-                                  className="p-1.5 rounded-lg border border-nb-border/40 text-nb-muted hover:text-indigo-600 transition-colors cursor-pointer"
-                                  title="Export for AI"
-                                >
-                                  <Bot className="h-3.5 w-3.5" />
-                                </button>
+                              <div className="flex items-center gap-2">
+                                {renderMyFlowMenu(flow, isSelected)}
                                 <Link
                                   href={`/webflow/${flow._id}`}
                                   className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer"
                                 >
                                   <span>Open</span>
-                                  <ArrowRight className="h-3 w-3" />
+                                  <ArrowRight className="size-3" />
                                 </Link>
                               </div>
                             </div>
@@ -1613,12 +1999,12 @@ export default function WebFlowHubPage() {
                       return (
                         <div
                           key={flow._id}
-                          className="flex flex-col justify-between rounded-2xl border-3 border-nb-border bg-nb-card p-5 shadow-nb-md transition-all hover:-translate-y-1 hover:shadow-nb-lg"
+                          className="flex flex-col justify-between rounded-2xl border-3 border-nb-border bg-nb-card p-5 shadow-nb-md transition-all hover:-translate-y-1 hover:shadow-nb-lg overflow-visible"
                         >
                           <div className="space-y-3">
-                            {/* Card Header: Category & Author */}
+                            {/* Card Header: Category, Author & Single 3-Dots Menu */}
                             <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                                 <span
                                   className={`rounded-lg px-2.5 py-0.5 text-[10px] font-black border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
                                 >
@@ -1629,13 +2015,17 @@ export default function WebFlowHubPage() {
                                     <GitFork className="h-2.5 w-2.5" /> Remix
                                   </span>
                                 )}
+                                <span
+                                  className="text-[11px] text-nb-muted font-mono truncate max-w-[120px]"
+                                  title={`Author: ${flow.authorName}`}
+                                >
+                                  by @{flow.authorName || "Community"}
+                                </span>
                               </div>
-                              <span
-                                className="text-[11px] text-nb-muted font-mono truncate max-w-[140px]"
-                                title={`Author: ${flow.authorName}`}
-                              >
-                                by @{flow.authorName || "Community"}
-                              </span>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {renderExploreFlowMenu(flow)}
+                              </div>
                             </div>
 
                             {/* Community Remix Attribution */}
@@ -1800,76 +2190,80 @@ export default function WebFlowHubPage() {
                   </div>
                 ) : (
                   /* LIST VIEW FOR EXPLORE */
-                  <div className="rounded-2xl border-3 border-nb-border bg-nb-card overflow-hidden shadow-nb-md divide-y-2 divide-nb-border/30">
-                    {filteredExploreFlows.map((flow) => {
-                      const catStyle = CATEGORY_STYLES[flow.category] || CATEGORY_STYLES.Other;
+                  <div className="rounded-2xl border-3 border-nb-border bg-nb-card overflow-visible shadow-nb-md">
+                    <div className="divide-y-2 divide-nb-border/30">
+                      {filteredExploreFlows.map((flow) => {
+                        const catStyle = CATEGORY_STYLES[flow.category] || CATEGORY_STYLES.Other;
 
-                      return (
-                        <div
-                          key={flow._id}
-                          className="p-4 hover:bg-nb-surface-alt/40 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                        >
-                          <div className="flex items-start sm:items-center gap-3 min-w-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 border border-nb-border shrink-0 font-black">
-                              <Globe className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 space-y-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Link
-                                  href={`/webflow/${flow._id}`}
-                                  className="text-sm font-black text-nb-fg hover:underline truncate cursor-pointer"
-                                >
-                                  {flow.name}
-                                </Link>
-                                <span
-                                  className={`rounded-md px-2 py-0.2 text-[9px] font-black border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
-                                >
-                                  {flow.category}
-                                </span>
-                                <span className="text-[10px] text-nb-muted font-mono">
-                                  by @{flow.authorName || "Community"}
-                                </span>
+                        return (
+                          <div
+                            key={flow._id}
+                            className="p-4 hover:bg-nb-surface-alt/40 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                          >
+                            <div className="flex items-start sm:items-center gap-3 min-w-0">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 border border-nb-border shrink-0 font-black">
+                                <Globe className="h-5 w-5" />
                               </div>
-                              <p className="text-xs text-nb-muted truncate max-w-xl">
-                                {flow.description || "Community curated workflow."}
-                              </p>
+                              <div className="min-w-0 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Link
+                                    href={`/webflow/${flow._id}`}
+                                    className="text-sm font-black text-nb-fg hover:underline truncate cursor-pointer"
+                                  >
+                                    {flow.name}
+                                  </Link>
+                                  <span
+                                    className={`rounded-md px-2 py-0.2 text-[9px] font-black border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+                                  >
+                                    {flow.category}
+                                  </span>
+                                  <span className="text-[10px] text-nb-muted font-mono">
+                                    by @{flow.authorName || "Community"}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-nb-muted truncate max-w-xl">
+                                  {flow.description || "Community curated workflow."}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleLike(flow._id)}
+                                className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                                  flow.isLiked
+                                    ? "border-rose-400 bg-rose-50 dark:bg-rose-950/60 text-rose-600"
+                                    : "border-nb-border/40 text-nb-muted hover:text-rose-600"
+                                }`}
+                              >
+                                <Heart className={`h-3.5 w-3.5 ${flow.isLiked ? "fill-rose-600" : ""}`} />
+                                <span>{flow.likeCount || 0}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleRemix(flow._id)}
+                                className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-emerald-500 text-black px-3 py-1.5 text-xs font-black shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer"
+                              >
+                                <GitFork className="h-3 w-3" />
+                                <span>Remix</span>
+                              </button>
+
+                              <Link
+                                href={`/webflow/${flow._id}`}
+                                className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer"
+                              >
+                                <span>View</span>
+                                <ArrowRight className="h-3 w-3" />
+                              </Link>
+
+                              {renderExploreFlowMenu(flow)}
                             </div>
                           </div>
-
-                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleLike(flow._id)}
-                              className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                                flow.isLiked
-                                  ? "border-rose-400 bg-rose-50 dark:bg-rose-950/60 text-rose-600"
-                                  : "border-nb-border/40 text-nb-muted hover:text-rose-600"
-                              }`}
-                            >
-                              <Heart className={`h-3.5 w-3.5 ${flow.isLiked ? "fill-rose-600" : ""}`} />
-                              <span>{flow.likeCount || 0}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleRemix(flow._id)}
-                              className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-emerald-500 text-black px-3 py-1.5 text-xs font-black shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer"
-                            >
-                              <GitFork className="h-3 w-3" />
-                              <span>Remix</span>
-                            </button>
-
-                            <Link
-                              href={`/webflow/${flow._id}`}
-                              className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer"
-                            >
-                              <span>View</span>
-                              <ArrowRight className="h-3 w-3" />
-                            </Link>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </>
@@ -2247,6 +2641,49 @@ export default function WebFlowHubPage() {
         onClose={() => setIsAIGenerateOpen(false)}
         mode="create"
       />
+
+      {/* ========================================================================= */}
+      {/* FLOATING BATCH SELECTION BAR (Bottom)                                     */}
+      {/* ========================================================================= */}
+      {selectedFlowIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-2xl border-2 border-nb-border bg-nb-card p-2 sm:px-4 sm:py-3 shadow-nb-xl max-w-[95vw] animate-in fade-in slide-in-from-bottom-4 text-xs font-bold text-nb-fg">
+          <span className="font-black whitespace-nowrap">{selectedFlowIds.size} selected</span>
+          <div className="h-4 w-[1px] bg-nb-border/40 shrink-0" />
+          <button
+            type="button"
+            onClick={toggleSelectAllFlows}
+            className="rounded-xl border border-nb-border/40 bg-nb-surface px-2.5 py-1.5 hover:bg-nb-surface-alt transition-colors whitespace-nowrap cursor-pointer"
+          >
+            {selectedFlowIds.size === filteredMyFlows.length ? "Deselect All" : "Select All"}
+          </button>
+          <button
+            type="button"
+            onClick={handleBatchExport}
+            className="rounded-xl border border-nb-border/40 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-2.5 py-1.5 hover:bg-indigo-100 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+          >
+            <Download className="size-3.5" />
+            <span className="hidden sm:inline">Export JSON</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleBatchDelete}
+            disabled={isBatchDeleting}
+            className="rounded-xl border-2 border-rose-600 bg-rose-500 text-white px-2.5 py-1.5 hover:bg-rose-600 shadow-nb-xs transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            {isBatchDeleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            <span>Delete ({selectedFlowIds.size})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedFlowIds(new Set())}
+            className="p-1.5 rounded-lg text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors cursor-pointer"
+            title="Clear selection"
+            aria-label="Clear selection"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

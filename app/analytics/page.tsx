@@ -19,6 +19,7 @@ import {
   FolderOpen,
   Globe,
   Heart,
+  LayoutDashboard,
   LayoutGrid,
   LineChart,
   ListTodo,
@@ -27,6 +28,7 @@ import {
   Pause,
   PieChart,
   Play,
+  Presentation,
   RotateCcw,
   Sparkles,
   Star,
@@ -82,6 +84,7 @@ const SLIDES = [
 ] as const;
 
 export default function AnalyticsPage() {
+  const [viewMode, setViewMode] = useState<"dashboard" | "slides">("dashboard");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [streak, setStreak] = useState<Streak | null>(null);
@@ -103,6 +106,7 @@ export default function AnalyticsPage() {
 
   // Keyboard navigation for slider: Left & Right arrow keys
   useEffect(() => {
+    if (viewMode !== "slides") return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "ArrowRight") {
@@ -113,16 +117,16 @@ export default function AnalyticsPage() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [viewMode]);
 
-  // Autoplay slider interval (if enabled)
+  // Autoplay slider interval (if enabled in slide mode)
   useEffect(() => {
-    if (!autoPlay) return;
+    if (!autoPlay || viewMode !== "slides") return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
     }, 9000);
     return () => clearInterval(timer);
-  }, [autoPlay]);
+  }, [autoPlay, viewMode]);
 
   // Generate realistic fallback / demo data if user is a guest or brand new
   const generateFallbackData = useCallback(() => {
@@ -132,7 +136,6 @@ export default function AnalyticsPage() {
 
     const demoVisits = Array.from({ length: daysCount }, (_, i) => {
       const key = dateKeyAtOffset(start + i * 86_400_000, tz);
-      // Realistic weekday fluctuations
       const d = new Date(start + i * 86_400_000).getDay();
       const base = d === 0 || d === 6 ? 3 : 7;
       const count = Math.max(1, Math.floor(base + Math.sin(i * 0.8) * 4));
@@ -373,27 +376,27 @@ export default function AnalyticsPage() {
       targetSlide: 1,
     },
     {
-      id: "favorites",
-      label: "Favorites",
-      value: summary?.favoriteWebsites ?? 0,
-      icon: Star,
-      accent: "#f59e0b",
-      description: "Starred essential sites",
-      targetSlide: 0,
+      id: "streak",
+      label: "Active Streak",
+      value: `${streak?.currentStreak ?? 0}d`,
+      icon: Flame,
+      accent: "#f97316",
+      description: "Consecutive active days",
+      targetSlide: 3,
     },
   ];
 
   return (
-    <div className="h-screen w-screen max-w-full overflow-hidden flex flex-col font-sans bg-nb-bg selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen md:h-screen w-full max-w-full flex flex-col font-sans bg-nb-bg selection:bg-indigo-500 selection:text-white md:overflow-hidden overflow-y-auto">
       <Navbar />
 
-      {/* Main Full-Space Container with NO SCROLLING */}
-      <main className="flex-1 w-full min-h-0 flex flex-col px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 overflow-hidden">
+      {/* Main Full-Space Container with Adaptive Responsive Scrolling */}
+      <main className="flex-1 w-full min-h-0 flex flex-col px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 md:overflow-hidden overflow-y-auto">
         {/* ========================================================================= */}
-        {/* COMPACT TOP CONTROL BAR (Takes all space, minimal vertical footprint)     */}
+        {/* COMPACT TOP CONTROL BAR (Adaptive layout, robust touch targets)           */}
         {/* ========================================================================= */}
         <header className="shrink-0 flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b-2 border-nb-border">
-          {/* Title & Active Indicator */}
+          {/* Title & Mode Indicator */}
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="flex size-9 sm:size-10 items-center justify-center rounded-xl border-2 border-nb-border bg-indigo-600 text-white shadow-nb-xs shrink-0 font-black">
               <BarChart3 className="size-5" />
@@ -403,80 +406,119 @@ export default function AnalyticsPage() {
                 <h1 className="text-lg sm:text-2xl font-black tracking-tight text-nb-fg truncate">
                   Workspace Analytics
                 </h1>
-                <span className="rounded-md border border-nb-border bg-indigo-500/10 px-2 py-0.2 text-[10px] font-mono font-black text-indigo-600 dark:text-indigo-400 shrink-0">
-                  SLIDE {currentSlide + 1}/4
-                </span>
+                {viewMode === "slides" && (
+                  <span className="rounded-md border border-nb-border bg-indigo-500/10 px-2 py-0.5 text-[10px] font-mono font-black text-indigo-600 dark:text-indigo-400 shrink-0">
+                    SLIDE {currentSlide + 1}/4
+                  </span>
+                )}
                 {isGuest && (
-                  <span className="rounded-md border border-amber-500 bg-amber-500/15 px-2 py-0.2 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 shrink-0">
+                  <span className="rounded-md border border-amber-500 bg-amber-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 shrink-0">
                     Guest Demo
                   </span>
                 )}
               </div>
               <p className="text-[11px] text-nb-muted hidden sm:block truncate">
-                {SLIDES[currentSlide].desc}
+                {viewMode === "dashboard"
+                  ? "Real-time traffic trends, bookmark performance, and habit velocity"
+                  : SLIDES[currentSlide].desc}
               </p>
             </div>
           </div>
 
-          {/* Slider Step Pills & Actions */}
+          {/* Controls: View Switcher, Range Filter & Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Stepper Navigation Pills */}
-            <nav aria-label="Analytics Sections" className="hidden md:flex items-center rounded-xl border-2 border-nb-border bg-nb-card p-0.5 shadow-nb-xs">
-              {SLIDES.map((s) => {
-                const Icon = s.icon;
-                const isActive = currentSlide === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setCurrentSlide(s.id)}
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-indigo-600 text-white shadow-nb-xs font-black"
-                        : "text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt"
-                    }`}
-                  >
-                    <Icon className="size-3.5" />
-                    <span>{s.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Slider Arrow Controls */}
+            {/* View Mode Toggle: Full Dashboard vs Slide Deck */}
             <div className="flex items-center rounded-xl border-2 border-nb-border bg-nb-card p-0.5 shadow-nb-xs">
               <button
                 type="button"
-                onClick={() => setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length)}
-                className="p-1 rounded-lg text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors cursor-pointer"
-                title="Previous Slide (← Arrow)"
+                onClick={() => setViewMode("dashboard")}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === "dashboard"
+                    ? "bg-indigo-600 text-white font-black shadow-nb-xs"
+                    : "text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt"
+                }`}
+                title="Unified Dashboard View with all charts"
               >
-                <ChevronLeft className="size-4" />
+                <LayoutDashboard className="size-3.5" />
+                <span className="hidden sm:inline">Dashboard</span>
               </button>
-              <span className="px-2 font-mono text-xs font-black text-nb-fg">
-                {currentSlide + 1} / {SLIDES.length}
-              </span>
               <button
                 type="button"
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % SLIDES.length)}
-                className="p-1 rounded-lg text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors cursor-pointer"
-                title="Next Slide (→ Arrow)"
+                onClick={() => setViewMode("slides")}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === "slides"
+                    ? "bg-indigo-600 text-white font-black shadow-nb-xs"
+                    : "text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt"
+                }`}
+                title="Presentation Slide Deck View"
               >
-                <ChevronRight className="size-4" />
+                <Presentation className="size-3.5" />
+                <span className="hidden sm:inline">Slides</span>
               </button>
             </div>
 
-            {/* Autoplay Toggle */}
-            <button
-              type="button"
-              onClick={() => setAutoPlay(!autoPlay)}
-              className={`p-1.5 rounded-xl border-2 border-nb-border shadow-nb-xs transition-colors cursor-pointer ${
-                autoPlay ? "bg-amber-400 text-black font-black" : "bg-nb-card text-nb-muted hover:text-nb-fg"
-              }`}
-              title={autoPlay ? "Pause Auto-Slide" : "Enable Auto-Slide"}
-            >
-              {autoPlay ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-            </button>
+            {/* Slide Navigation Controls (Only in Slide Deck Mode) */}
+            {viewMode === "slides" && (
+              <>
+                <nav aria-label="Analytics Sections" className="hidden lg:flex items-center rounded-xl border-2 border-nb-border bg-nb-card p-0.5 shadow-nb-xs">
+                  {SLIDES.map((s) => {
+                    const Icon = s.icon;
+                    const isActive = currentSlide === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setCurrentSlide(s.id)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-indigo-600 text-white shadow-nb-xs font-black"
+                            : "text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt"
+                        }`}
+                      >
+                        <Icon className="size-3.5" />
+                        <span>{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+
+                <div className="flex items-center rounded-xl border-2 border-nb-border bg-nb-card p-0.5 shadow-nb-xs">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length)}
+                    className="size-7 flex items-center justify-center rounded-lg text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors cursor-pointer"
+                    title="Previous Slide (← Arrow)"
+                    aria-label="Previous Slide"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <span className="px-2 font-mono text-xs font-black text-nb-fg">
+                    {currentSlide + 1}/{SLIDES.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev + 1) % SLIDES.length)}
+                    className="size-7 flex items-center justify-center rounded-lg text-nb-muted hover:text-nb-fg hover:bg-nb-surface-alt transition-colors cursor-pointer"
+                    title="Next Slide (→ Arrow)"
+                    aria-label="Next Slide"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAutoPlay(!autoPlay)}
+                  className={`size-7 flex items-center justify-center rounded-xl border-2 border-nb-border shadow-nb-xs transition-colors cursor-pointer ${
+                    autoPlay ? "bg-amber-400 text-black font-black" : "bg-nb-card text-nb-muted hover:text-nb-fg"
+                  }`}
+                  title={autoPlay ? "Pause Auto-Slide" : "Enable Auto-Slide"}
+                  aria-label={autoPlay ? "Pause Auto-Slide" : "Enable Auto-Slide"}
+                >
+                  {autoPlay ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+                </button>
+              </>
+            )}
 
             {/* Time Range Selector */}
             <div className="flex items-center rounded-xl border-2 border-nb-border bg-nb-card p-0.5 shadow-nb-xs">
@@ -485,9 +527,9 @@ export default function AnalyticsPage() {
                   key={opt}
                   type="button"
                   onClick={() => setRange(opt)}
-                  className={`rounded-lg px-2 py-0.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg px-2 sm:px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                     range === opt
-                      ? "bg-indigo-600 text-white font-black"
+                      ? "bg-indigo-600 text-white font-black shadow-nb-xs"
                       : "text-nb-muted hover:text-nb-fg"
                   }`}
                 >
@@ -501,8 +543,9 @@ export default function AnalyticsPage() {
               <button
                 type="button"
                 onClick={exportReport}
-                className="p-1.5 rounded-xl border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors cursor-pointer"
+                className="size-7 flex items-center justify-center rounded-xl border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors cursor-pointer"
                 title="Export Analytics JSON"
+                aria-label="Export Analytics JSON"
               >
                 <Download className="size-3.5" />
               </button>
@@ -510,8 +553,9 @@ export default function AnalyticsPage() {
                 type="button"
                 onClick={() => load(true)}
                 disabled={refreshing}
-                className="p-1.5 rounded-xl border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors cursor-pointer disabled:opacity-50"
+                className="size-7 flex items-center justify-center rounded-xl border-2 border-nb-border bg-nb-card text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors cursor-pointer disabled:opacity-50"
                 title="Refresh Analytics"
+                aria-label="Refresh Analytics"
               >
                 <RotateCcw className={`size-3.5 ${refreshing ? "animate-spin text-indigo-500" : ""}`} />
               </button>
@@ -520,9 +564,9 @@ export default function AnalyticsPage() {
         </header>
 
         {/* ========================================================================= */}
-        {/* SLIDER VIEWPORT (Full Remaining Height, Zero Page Scrolling)              */}
+        {/* MAIN VIEWPORT: UNIFIED DASHBOARD OR SLIDES                                */}
         {/* ========================================================================= */}
-        <section className="flex-1 w-full min-h-0 pt-2.5 pb-1 flex flex-col overflow-hidden relative">
+        <section className="flex-1 w-full min-h-0 pt-2.5 pb-1 flex flex-col md:overflow-hidden overflow-y-auto relative">
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-3">
@@ -530,14 +574,186 @@ export default function AnalyticsPage() {
                 <p className="text-xs font-black text-nb-fg">Synthesizing Workspace Intelligence...</p>
               </div>
             </div>
+          ) : viewMode === "dashboard" ? (
+            /* ===================================================================== */
+            /* 1. UNIFIED EXECUTIVE DASHBOARD VIEW (ALL CHARTS AT A GLANCE)          */
+            /* ===================================================================== */
+            <div className="w-full h-full flex flex-col gap-2.5 overflow-y-auto scrollbar-thin pr-0.5 animate-in fade-in duration-150">
+              {/* Top 6 KPI Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 shrink-0">
+                {summaryCards.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <div
+                      key={card.id}
+                      className="rounded-2xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-xs flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-nb-muted truncate">
+                          {card.label}
+                        </span>
+                        <span className="flex size-6 items-center justify-center rounded-lg border border-nb-border/30 bg-nb-surface text-nb-fg">
+                          <Icon className="size-3" style={{ color: card.accent }} />
+                        </span>
+                      </div>
+                      <p className="mt-1 text-2xl font-black text-nb-fg truncate">
+                        {card.value}
+                      </p>
+                      <p className="text-[10px] font-medium text-nb-muted truncate">
+                        {card.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Primary Dual-Chart Grid: Traffic Trends & Folder Architecture */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 shrink-0">
+                {/* Visits Over Time Chart (7 cols) */}
+                <div className="lg:col-span-7 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-600 text-white font-black">
+                        <TrendingUp className="size-4" />
+                      </span>
+                      <div>
+                        <h2 className="text-xs sm:text-sm font-black text-nb-fg">
+                          Visits Over Time ({range.toUpperCase()})
+                        </h2>
+                        <p className="text-[10px] text-nb-muted">
+                          Daily browsing frequency and velocity trends
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="py-1">
+                    <VisitsLineChart data={visits} height={230} />
+                  </div>
+                </div>
+
+                {/* Folder Distribution Donut (5 cols) */}
+                <div className="lg:col-span-5 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-600 text-white font-black">
+                        <FolderOpen className="size-4" />
+                      </span>
+                      <div>
+                        <h2 className="text-xs sm:text-sm font-black text-nb-fg">
+                          Category Breakdown
+                        </h2>
+                        <p className="text-[10px] text-nb-muted">
+                          Bookmark organization across folders
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>Folders</span>
+                      <ExternalLink className="size-3" />
+                    </Link>
+                  </div>
+
+                  <div className="py-1">
+                    <FolderDistributionPieChart data={folders} height={230} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Dual-Chart Grid: Top Visited Websites & Habits Bento */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 shrink-0">
+                {/* Top Websites (6 cols) */}
+                <div className="lg:col-span-6 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500 text-black font-black">
+                        <Trophy className="size-4" />
+                      </span>
+                      <div>
+                        <h2 className="text-xs sm:text-sm font-black text-nb-fg">
+                          Top Visited Websites
+                        </h2>
+                        <p className="text-[10px] text-nb-muted">
+                          Ranked by click volume &amp; launch engagement
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="py-1">
+                    <TopWebsitesBarChart data={top} height={220} />
+                  </div>
+                </div>
+
+                {/* Habits & Heatmap Bento (6 cols) */}
+                <div className="lg:col-span-6 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-500 text-white font-black">
+                        <Flame className="size-4" />
+                      </span>
+                      <div>
+                        <h2 className="text-xs sm:text-sm font-black text-nb-fg">
+                          Annual Habits &amp; Peak Times
+                        </h2>
+                        <p className="text-[10px] text-nb-muted">
+                          Research velocity &amp; consistency rhythm
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-nb-muted">
+                      <span>Peak: <strong>{peakStats?.mostActiveHour || "14:00"}</strong></span>
+                      <span>•</span>
+                      <span>Day: <strong>{peakStats?.mostActiveWeekday || "Wed"}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="py-1 overflow-x-auto scrollbar-thin">
+                    <ActivityHeatmap data={heatmap} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Velocity & Task Execution Bar */}
+              <div className="shrink-0 rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-600 text-white font-black shrink-0">
+                    <CheckCircle2 className="size-4" />
+                  </span>
+                  <div>
+                    <span className="font-black text-nb-fg block">
+                      Task Execution Velocity: {taskStats.completed} of {taskStats.total} todos ({taskStats.rate}%)
+                    </span>
+                    <span className="text-[11px] text-nb-muted">
+                      {taskStats.active} pending tasks remaining. Maintain your daily streak to boost productivity!
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/todo"
+                    className="rounded-xl border-2 border-nb-border bg-nb-card px-3 py-1 text-xs font-black text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors flex items-center gap-1.5"
+                  >
+                    <span>Manage Todos</span>
+                    <ArrowRight className="size-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="flex-1 w-full h-full min-h-0 relative overflow-hidden">
-              {/* ------------------------------------------------------------------- */}
-              {/* SLIDE 0: EXECUTIVE OVERVIEW & VELOCITY                              */}
-              {/* ------------------------------------------------------------------- */}
+            /* ===================================================================== */
+            /* 2. PRESENTATION SLIDE DECK VIEW (DEEP DIVE CAROUSEL)                  */
+            /* ===================================================================== */
+            <div className="flex-1 w-full h-full min-h-0 relative md:overflow-hidden">
+              {/* SLIDE 0: EXECUTIVE OVERVIEW WITH CHARTS */}
               {currentSlide === 0 && (
-                <div className="w-full h-full flex flex-col justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-200">
-                  {/* Top KPI Metric Cards (Clickable Drilldown) */}
+                <div className="w-full min-h-full flex flex-col justify-between gap-3 pb-4 md:pb-0 animate-in fade-in zoom-in-95 duration-200">
+                  {/* Top KPI Metric Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 shrink-0">
                     {summaryCards.map((card) => {
                       const Icon = card.icon;
@@ -552,9 +768,7 @@ export default function AnalyticsPage() {
                             <span className="text-[10px] font-extrabold uppercase tracking-wider text-nb-muted truncate">
                               {card.label}
                             </span>
-                            <span
-                              className="flex size-6 items-center justify-center rounded-lg border border-nb-border/30 bg-nb-surface text-nb-fg group-hover:scale-110 transition-transform"
-                            >
+                            <span className="flex size-6 items-center justify-center rounded-lg border border-nb-border/30 bg-nb-surface text-nb-fg group-hover:scale-110 transition-transform">
                               <Icon className="size-3" style={{ color: card.accent }} />
                             </span>
                           </div>
@@ -569,199 +783,67 @@ export default function AnalyticsPage() {
                     })}
                   </div>
 
-                  {/* Middle Habit Streak & Peak Times Bento Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 shrink-0">
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs font-black text-nb-muted uppercase tracking-wider text-[10px]">
-                        <span>Current Streak</span>
-                        <span className="flex size-5 items-center justify-center rounded-md bg-amber-500/20 text-amber-600">
-                          <Flame className="size-3 animate-pulse" />
+                  {/* Primary Chart on Slide 0: Visits Over Time */}
+                  <div className="flex-1 min-h-[220px] rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-600 text-white font-black">
+                          <TrendingUp className="size-4" />
                         </span>
+                        <div>
+                          <h2 className="text-xs sm:text-sm font-black text-nb-fg">
+                            Visits Over Time ({range.toUpperCase()})
+                          </h2>
+                          <p className="text-[10px] text-nb-muted">
+                            Real-time traffic trends &amp; velocity
+                          </p>
+                        </div>
                       </div>
-                      <div className="my-1 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-nb-fg">{streak?.currentStreak ?? 0}</span>
-                        <span className="text-[11px] font-bold text-nb-muted">consecutive days</span>
-                      </div>
-                      <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                        🔥 Active research momentum
-                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentSlide(1)}
+                        className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Deep Dive</span>
+                        <ArrowRight className="size-3" />
+                      </button>
                     </div>
 
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs font-black text-nb-muted uppercase tracking-wider text-[10px]">
-                        <span>Longest Streak</span>
-                        <span className="flex size-5 items-center justify-center rounded-md bg-emerald-500/20 text-emerald-600">
-                          <Trophy className="size-3" />
-                        </span>
-                      </div>
-                      <div className="my-1 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-nb-fg">{streak?.longestStreak ?? 0}</span>
-                        <span className="text-[11px] font-bold text-nb-muted">days personal record</span>
-                      </div>
-                      <p className="text-[10px] font-bold text-nb-muted">
-                        🏆 Peak habit milestone
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs font-black text-nb-muted uppercase tracking-wider text-[10px]">
-                        <span>Peak Browsing Time</span>
-                        <span className="flex size-5 items-center justify-center rounded-md bg-indigo-500/20 text-indigo-500">
-                          <Clock className="size-3" />
-                        </span>
-                      </div>
-                      <div className="my-1 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-nb-fg truncate">
-                          {peakStats?.mostActiveHour || "14:00"}
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-bold text-nb-muted">
-                        ⚡ High velocity hours
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-3 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs font-black text-nb-muted uppercase tracking-wider text-[10px]">
-                        <span>Most Active Day</span>
-                        <span className="flex size-5 items-center justify-center rounded-md bg-purple-500/20 text-purple-600">
-                          <Calendar className="size-3" />
-                        </span>
-                      </div>
-                      <div className="my-1 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-nb-fg truncate">
-                          {peakStats?.mostActiveWeekday || "Wednesday"}
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-bold text-nb-muted">
-                        📅 Peak workload day
-                      </p>
+                    <div className="py-1">
+                      <VisitsLineChart data={visits} height={200} />
                     </div>
                   </div>
 
-                  {/* Bottom Balanced Row: Task Execution Velocity + Productivity Insights */}
-                  <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-2.5">
-                    {/* Task Execution Velocity Card */}
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-surface p-3.5 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-xl bg-emerald-600 text-white font-black">
-                            <CheckCircle2 className="size-4" />
-                          </span>
-                          <div>
-                            <h3 className="text-xs sm:text-sm font-black text-nb-fg">
-                              Task Execution Velocity
-                            </h3>
-                            <p className="text-[11px] text-nb-muted">
-                              {taskStats.completed} completed of {taskStats.total} total todos ({taskStats.rate}%)
-                            </p>
-                          </div>
-                        </div>
-                        <Link
-                          href="/todo"
-                          className="flex items-center gap-1 rounded-xl border-2 border-nb-border bg-nb-card px-2.5 py-1 text-xs font-black text-nb-fg shadow-nb-xs hover:bg-nb-surface-alt transition-colors cursor-pointer"
-                        >
-                          <span>Manage Todos</span>
-                          <ArrowRight className="size-3" />
-                        </Link>
-                      </div>
-
-                      {/* Velocity Progress Bar */}
-                      <div className="my-2">
-                        <div className="h-3 w-full rounded-full border border-nb-border bg-nb-surface-alt overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${taskStats.rate}%` }}
-                          />
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-nb-muted">
-                          <span className="flex items-center gap-1.5">
-                            <span className="size-2 rounded-full bg-indigo-500" />
-                            {taskStats.active} pending tasks
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <span className="size-2 rounded-full bg-emerald-500" />
-                            {taskStats.completed} completed tasks
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl border border-nb-border/30 bg-nb-surface-alt/70 p-2 text-[11px] text-nb-muted leading-relaxed">
-                        💡 <strong>Productivity Pulse:</strong> Keep your momentum steady by breaking down large tasks and syncing with Google Calendar alerts!
-                      </div>
+                  {/* Bottom Streak Bento */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 shrink-0">
+                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-xs flex flex-col justify-between">
+                      <span className="text-[10px] font-black uppercase text-nb-muted">Current Streak</span>
+                      <p className="text-xl font-black text-nb-fg">{streak?.currentStreak ?? 0} days</p>
+                      <p className="text-[10px] font-bold text-emerald-600">🔥 Active momentum</p>
                     </div>
-
-                    {/* Productivity Insights Card */}
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-surface p-3.5 shadow-nb-xs flex flex-col justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="size-4 text-amber-500" />
-                        <h3 className="text-xs sm:text-sm font-black text-nb-fg">
-                          Workspace Health &amp; Takeaways
-                        </h3>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 my-2">
-                        <div className="rounded-xl border border-nb-border/30 bg-nb-surface-alt p-2.5 space-y-0.5">
-                          <span className="text-[10px] font-black uppercase text-nb-muted flex items-center gap-1">
-                            <TrendingUp className="size-3 text-indigo-500" /> Frequency
-                          </span>
-                          <p className="text-xs font-black text-nb-fg">
-                            {summary?.averageVisitsPerDay ?? 0} visits/day
-                          </p>
-                          <p className="text-[10px] text-nb-muted leading-tight">
-                            Peak around {peakStats?.mostActiveHour || "afternoon"}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl border border-nb-border/30 bg-nb-surface-alt p-2.5 space-y-0.5">
-                          <span className="text-[10px] font-black uppercase text-nb-muted flex items-center gap-1">
-                            <Folder className="size-3 text-amber-500" /> Structure
-                          </span>
-                          <p className="text-xs font-black text-nb-fg">
-                            {summary?.totalFolders ?? 0} folders
-                          </p>
-                          <p className="text-[10px] text-nb-muted leading-tight">
-                            Across {summary?.totalWebsites ?? 0} bookmarks
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl border border-nb-border/30 bg-nb-surface-alt p-2.5 space-y-0.5">
-                          <span className="text-[10px] font-black uppercase text-nb-muted flex items-center gap-1">
-                            <Flame className="size-3 text-emerald-500" /> Consistency
-                          </span>
-                          <p className="text-xs font-black text-nb-fg">
-                            {streak?.totalActiveDays ?? 0} active days
-                          </p>
-                          <p className="text-[10px] text-nb-muted leading-tight">
-                            Ongoing streak of {streak?.currentStreak ?? 0}d
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] text-nb-muted">
-                          Want deeper insights into specific categories?
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentSlide(1)}
-                          className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          <span>Explore Traffic Trends</span>
-                          <ArrowRight className="size-3" />
-                        </button>
-                      </div>
+                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-xs flex flex-col justify-between">
+                      <span className="text-[10px] font-black uppercase text-nb-muted">Longest Streak</span>
+                      <p className="text-xl font-black text-nb-fg">{streak?.longestStreak ?? 0} days</p>
+                      <p className="text-[10px] font-bold text-nb-muted">🏆 Personal record</p>
+                    </div>
+                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-xs flex flex-col justify-between">
+                      <span className="text-[10px] font-black uppercase text-nb-muted">Peak Hour</span>
+                      <p className="text-xl font-black text-nb-fg">{peakStats?.mostActiveHour || "14:00"}</p>
+                      <p className="text-[10px] font-bold text-nb-muted">⚡ High velocity</p>
+                    </div>
+                    <div className="rounded-2xl border-2 border-nb-border bg-nb-card p-2.5 shadow-nb-xs flex flex-col justify-between">
+                      <span className="text-[10px] font-black uppercase text-nb-muted">Peak Day</span>
+                      <p className="text-xl font-black text-nb-fg">{peakStats?.mostActiveWeekday || "Wednesday"}</p>
+                      <p className="text-[10px] font-bold text-nb-muted">📅 Peak workload</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ------------------------------------------------------------------- */}
-              {/* SLIDE 1: TRAFFIC & VISITS TRENDS                                    */}
-              {/* ------------------------------------------------------------------- */}
+              {/* SLIDE 1: TRAFFIC & VISITS TRENDS */}
               {currentSlide === 1 && (
-                <div className="w-full h-full flex flex-col justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-full min-h-full flex flex-col justify-between gap-3 pb-4 md:pb-0 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5">
-                    {/* Left 7 Columns: Visits Over Time Interactive Chart */}
                     <div className="lg:col-span-7 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
                       <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
                         <div className="flex items-center gap-2">
@@ -779,12 +861,11 @@ export default function AnalyticsPage() {
                         </div>
                       </div>
 
-                      <div className="flex-1 min-h-[220px] flex flex-col justify-center py-1">
-                        <VisitsLineChart data={visits} />
+                      <div className="flex-1 flex flex-col justify-center py-1">
+                        <VisitsLineChart data={visits} height={250} />
                       </div>
                     </div>
 
-                    {/* Right 5 Columns: Most Visited Websites Leaderboard */}
                     <div className="lg:col-span-5 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
                       <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
                         <div className="flex items-center gap-2">
@@ -802,13 +883,12 @@ export default function AnalyticsPage() {
                         </div>
                       </div>
 
-                      <div className="flex-1 min-h-[220px] flex flex-col justify-center py-1 overflow-hidden">
-                        <TopWebsitesBarChart data={top} />
+                      <div className="flex-1 flex flex-col justify-center py-1 overflow-hidden">
+                        <TopWebsitesBarChart data={top} height={250} />
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom Traffic Velocity Banner */}
                   <div className="shrink-0 rounded-2xl border-2 border-nb-border bg-nb-surface p-2.5 shadow-nb-xs flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-3">
                       <span className="font-black text-nb-fg flex items-center gap-1.5">
@@ -820,27 +900,22 @@ export default function AnalyticsPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentSlide(2)}
-                        className="rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <span>Next: Folder Structure</span>
-                        <ArrowRight className="size-3" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentSlide(2)}
+                      className="rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Next: Folder Structure</span>
+                      <ArrowRight className="size-3" />
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* ------------------------------------------------------------------- */}
-              {/* SLIDE 2: STRUCTURE & FOLDERS                                        */}
-              {/* ------------------------------------------------------------------- */}
+              {/* SLIDE 2: STRUCTURE & FOLDERS */}
               {currentSlide === 2 && (
-                <div className="w-full h-full flex flex-col justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-full min-h-full flex flex-col justify-between gap-3 pb-4 md:pb-0 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5">
-                    {/* Left 6 Columns: Folder Distribution Donut Chart */}
                     <div className="lg:col-span-6 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
                       <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
                         <div className="flex items-center gap-2">
@@ -858,12 +933,11 @@ export default function AnalyticsPage() {
                         </div>
                       </div>
 
-                      <div className="flex-1 min-h-[220px] flex flex-col justify-center py-1">
-                        <FolderDistributionPieChart data={folders} />
+                      <div className="flex-1 flex flex-col justify-center py-1">
+                        <FolderDistributionPieChart data={folders} height={250} />
                       </div>
                     </div>
 
-                    {/* Right 6 Columns: Interactive Folder Breakdown Cards Grid */}
                     <div className="lg:col-span-6 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
                       <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
                         <div className="flex items-center gap-2">
@@ -888,7 +962,6 @@ export default function AnalyticsPage() {
                         </Link>
                       </div>
 
-                      {/* Folder Cards List */}
                       <div className="flex-1 min-h-[200px] overflow-y-auto pr-1 space-y-2 py-2 scrollbar-thin">
                         {folders.length === 0 ? (
                           <div className="h-full flex items-center justify-center text-xs text-nb-muted font-bold">
@@ -935,7 +1008,6 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
 
-                  {/* Bottom Organization Health Bar */}
                   <div className="shrink-0 rounded-2xl border-2 border-nb-border bg-nb-surface p-2.5 shadow-nb-xs flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-3">
                       <span className="font-black text-nb-fg flex items-center gap-1.5">
@@ -947,26 +1019,21 @@ export default function AnalyticsPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentSlide(3)}
-                        className="rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <span>Next: Annual Heatmap</span>
-                        <ArrowRight className="size-3" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentSlide(3)}
+                      className="rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Next: Annual Heatmap</span>
+                      <ArrowRight className="size-3" />
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* ------------------------------------------------------------------- */}
-              {/* SLIDE 3: ANNUAL HABITS & HEATMAP                                    */}
-              {/* ------------------------------------------------------------------- */}
+              {/* SLIDE 3: ANNUAL HABITS & HEATMAP */}
               {currentSlide === 3 && (
-                <div className="w-full h-full flex flex-col justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-200">
-                  {/* Top: 53-Week Annual Activity Heatmap */}
+                <div className="w-full min-h-full flex flex-col justify-between gap-3 pb-4 md:pb-0 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex-1 min-h-0 rounded-2xl border-2 border-nb-border bg-nb-card p-3.5 shadow-nb-xs flex flex-col justify-between overflow-hidden">
                     <div className="flex items-center justify-between border-b border-nb-border/30 pb-2">
                       <div className="flex items-center gap-2">
@@ -990,12 +1057,11 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 min-h-[160px] flex flex-col justify-center py-1 overflow-x-auto">
+                    <div className="flex-1 flex flex-col justify-center py-1 overflow-x-auto scrollbar-thin pb-2">
                       <ActivityHeatmap data={heatmap} />
                     </div>
                   </div>
 
-                  {/* Bottom: Research Rhythm & Peak Productivity Bento */}
                   <div className="shrink-0 grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     <div className="rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs flex items-center gap-3">
                       <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 shrink-0">
@@ -1020,36 +1086,32 @@ export default function AnalyticsPage() {
                       </span>
                       <div className="min-w-0">
                         <span className="text-[10px] font-black uppercase tracking-wider text-nb-muted block">
-                          Primary Research Day
+                          Most Active Day
                         </span>
                         <p className="text-sm font-black text-nb-fg truncate">
                           {peakStats?.mostActiveWeekday || "Wednesday"}
                         </p>
                         <p className="text-[10px] text-nb-muted">
-                          Most frequent workspace research day
+                          Consistently peak activity day
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs flex items-center justify-between gap-2">
+                    <div className="rounded-2xl border-2 border-nb-border bg-nb-surface p-3 shadow-nb-xs flex items-center gap-3">
+                      <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 shrink-0">
+                        <Trophy className="size-4" />
+                      </span>
                       <div className="min-w-0">
                         <span className="text-[10px] font-black uppercase tracking-wider text-nb-muted block">
-                          Habit Completion
+                          All-Time Streak
                         </span>
-                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                          {streak?.currentStreak ?? 0} Days Active Streak
+                        <p className="text-sm font-black text-nb-fg truncate">
+                          {streak?.longestStreak ?? 0} consecutive days
                         </p>
-                        <p className="text-[10px] text-nb-muted truncate">
-                          Keep visiting daily to expand your record!
+                        <p className="text-[10px] text-nb-muted">
+                          Workspace habit record
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentSlide(0)}
-                        className="rounded-xl border-2 border-nb-border bg-indigo-600 px-3 py-1.5 text-xs font-black text-white shadow-nb-xs hover:translate-x-0.5 transition-all cursor-pointer shrink-0"
-                      >
-                        Back to Overview
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -1057,42 +1119,6 @@ export default function AnalyticsPage() {
             </div>
           )}
         </section>
-
-        {/* ========================================================================= */}
-        {/* BOTTOM SLIDER INDICATOR BAR (Zero scroll, full visibility)                */}
-        {/* ========================================================================= */}
-        <footer className="shrink-0 pt-2 border-t border-nb-border/40 flex items-center justify-between gap-3 text-xs">
-          {/* Slide Dots with Click */}
-          <div className="flex items-center gap-1.5">
-            {SLIDES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setCurrentSlide(s.id)}
-                className={`transition-all cursor-pointer rounded-full ${
-                  currentSlide === s.id
-                    ? "w-8 h-2.5 bg-indigo-600"
-                    : "w-2.5 h-2.5 bg-nb-border/40 hover:bg-nb-border"
-                }`}
-                title={`Jump to ${s.label}`}
-              />
-            ))}
-            <span className="ml-2 text-[11px] font-mono font-bold text-nb-muted hidden sm:inline">
-              {SLIDES[currentSlide].label}
-            </span>
-          </div>
-
-          {/* Keyboard & Swipe Hint */}
-          <div className="flex items-center gap-3 text-[11px] text-nb-muted font-mono">
-            <span className="hidden md:inline">
-              Use <kbd className="rounded bg-nb-surface-alt px-1.5 py-0.5 border border-nb-border/40 font-black">←</kbd> / <kbd className="rounded bg-nb-surface-alt px-1.5 py-0.5 border border-nb-border/40 font-black">→</kbd> to slide
-            </span>
-            <span>•</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-              Fit Viewport Active
-            </span>
-          </div>
-        </footer>
       </main>
     </div>
   );
